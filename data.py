@@ -5,9 +5,9 @@ import datetime
 
 windows_vid_url, unix_vid_url = 'https://www.youtube.com/watch?v=IolxqkL7cD8', 'https://www.youtube.com/watch?v=5iWhQWVXosU'
 
-url = os.environ.get('Bday_Data_URL')
+url = os.environ.get('bday_data_URL')
 assert url is not None, ("The data URL could not be found in environment variables.\n"
-                        "See this video on how add the url to the environment variables (name the enviroment variable 'Bday_Data_URL' without quotes): "
+                        "See this video on how add the url to the environment variables (name the enviroment variable 'bday_data_URL' without quotes): "
                         f"{windows_vid_url}" if 'nt' in os.name else f"{unix_vid_url}")
 
 raw_data = urllib.request.urlopen(url).read().decode('UTF-8')
@@ -45,4 +45,5 @@ bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
 bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
 bday_df = bday_df.sort_values(['Timedelta', 'Last Name', 'First Name'])
 print(bday_df.info())
+print(bday_df[bday_df['Timedelta'] == datetime.timedelta()])
 bday_df.to_csv('beta_bdays.csv', index=False)
