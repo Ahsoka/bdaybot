@@ -2,7 +2,6 @@ import pandas
 import urllib.request
 import os
 import datetime
-from tqdm import tqdm
 
 windows_vid_url, unix_vid_url = 'https://www.youtube.com/watch?v=IolxqkL7cD8', 'https://www.youtube.com/watch?v=5iWhQWVXosU'
 
@@ -18,7 +17,7 @@ data_dict = dict(((column_name, []) for column_name in ['PeriodNumber', 'Birthda
 # Eight rows before it's someone elses data
 keys = list(data_dict.keys())
 raw_data_list = raw_data.split('\n')[:-1]
-for index, attr in tqdm(enumerate(raw_data_list), desc='Processing Raw Web Data', unit='lines', total=len(raw_data_list)):
+for index, attr in enumerate(raw_data_list):
     index %= 8
     if index == 0:
         continue
