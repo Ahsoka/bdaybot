@@ -49,7 +49,7 @@ def timedelta_today(date):
 
 bday_df = pandas.DataFrame(data_dict)
 bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
-bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
+
 official_student_df = pandas.concat([pandas.read_csv('Student Locator Spring 2020.csv', usecols=['StuID', 'LastName', 'FirstName', 'Grd']), pandas.DataFrame({'StuID': [123456], 'LastName': ['Neat'], 'FirstName': ['Dr.'], 'Grd': [-1]})])
 bday_df = bday_df[bday_df['StuID'].isin(official_student_df['StuID'])]
 bday_df.drop_duplicates(['StuID'], inplace=True)
@@ -58,4 +58,9 @@ bday_df.set_index('StuID', inplace=True); official_student_df.set_index('StuID',
 filt = official_student_df.index.isin(bday_df.index)
 bday_df[['FirstName', 'LastName']] = official_student_df[filt][['FirstName', 'LastName']]
 bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
-bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=True)
+
+def update_data(inplace=True):
+    bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
+    return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
+
+update_data()
