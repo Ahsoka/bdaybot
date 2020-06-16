@@ -54,8 +54,7 @@ bday_df = bday_df[bday_df['StuID'].isin(official_student_df['StuID'])]
 bday_df.drop_duplicates(['StuID'], inplace=True)
 bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
 bday_df.set_index('StuID', inplace=True); official_student_df.set_index('StuID', inplace=True)
-filt = official_student_df.index.isin(bday_df.index)
-bday_df[['FirstName', 'LastName']] = official_student_df[filt][['FirstName', 'LastName']]
+bday_df[['FirstName', 'LastName']] = official_student_df[['FirstName', 'LastName']]
 bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
 
 def update_data(inplace=True):
@@ -63,3 +62,4 @@ def update_data(inplace=True):
     return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
 
 update_data()
+# bday_df.to_csv('beta_bdays.csv')
