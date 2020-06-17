@@ -13,6 +13,26 @@ assert TOKEN is not None, ("The Discord token could not be found in environment 
                         "See this video on how add the url to the environment variables (name the enviroment variable 'Bday_Token' without quotes): "
                         f"{data.windows_vid_url}" if 'nt' in os.name else f"{data.unix_vid_url}")
 
+def get_latest():
+    # returns a list of the latest birthay(s)
+    names, fname, lname = [], [], []
+
+    andres.update_data()
+    andres.bday_df.to_csv('beta_bdays.csv')
+    if len(fname) != 0:
+        latest = andres.bday_df.loc[andres.bday_df['Birthdate'] == datetime.date.today().strftime("%Y-%m-%d")]
+    else
+        latest2 = andres.bday_df.loc[andres.bday_df['Birthdate'] == andres.bday_df.iloc[1, 4]]
+    fname = latest['FirstName'].tolist()
+    lname = latest['LastName'].tolist()
+    for x in range(len(fname)):
+        names.append(f"{fname[x]} {lname[x]}")
+    return names
+
+def update():
+    get_latest()
+
+
 def update():
 
 

@@ -62,4 +62,4 @@ def update_data(inplace=True):
     return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
 
 update_data()
-# bday_df.to_csv('beta_bdays.csv')
+bday_df.to_csv('beta_bdays.csv')
