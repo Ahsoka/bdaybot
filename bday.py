@@ -2,11 +2,12 @@ import discord
 from discord.ext import commands
 import os
 import time
-import schedule
-import data
+import datetime
+# import schedule
+import data as andres
 import pandas
 
-bot = commands.Bot(command_prefix = "!", description = description)
+bot = commands.Bot(command_prefix = "!")
 # Use enviroment variables to access the Discord token so it's not visible in the code
 TOKEN = os.environ.get('Bday_Token')
 assert TOKEN is not None, ("The Discord token could not be found in environment variables.\n"
@@ -21,7 +22,7 @@ def get_latest():
     andres.bday_df.to_csv('beta_bdays.csv')
     if len(fname) != 0:
         latest = andres.bday_df.loc[andres.bday_df['Birthdate'] == datetime.date.today().strftime("%Y-%m-%d")]
-    else
+    else:
         latest2 = andres.bday_df.loc[andres.bday_df['Birthdate'] == andres.bday_df.iloc[1, 4]]
     fname = latest['FirstName'].tolist()
     lname = latest['LastName'].tolist()
