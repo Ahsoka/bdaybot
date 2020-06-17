@@ -59,7 +59,8 @@ bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
 
 def update_data(inplace=True):
     bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
+    bday_df['Fullname'] = df['FirstName'] + " " + df['LastName']
     return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
 
 update_data()
-bday_df.to_csv('beta_bdays.csv')
+# bday_df.to_csv('beta_bdays.csv')
