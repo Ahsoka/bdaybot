@@ -11,7 +11,7 @@ bot = commands.Bot(command_prefix = "!", description = description)
 TOKEN = os.environ.get('Bday_Token')
 assert TOKEN is not None, ("The Discord token could not be found in environment variables.\n"
                         "See this video on how add the url to the environment variables (name the enviroment variable 'Bday_Token' without quotes): "
-                        f"{data.windows_vid_url}" if 'nt' in os.name else f"{data.unix_vid_url}")
+                        f"{andres.windows_vid_url}" if 'nt' in os.name else f"{andres.unix_vid_url}")
 
 def get_latest():
     # returns a list of the latest birthay(s)
