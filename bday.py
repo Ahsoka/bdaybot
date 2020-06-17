@@ -16,19 +16,13 @@ assert TOKEN is not None, ("The Discord token could not be found in environment 
 
 def get_latest():
     # returns a list of the latest birthay(s)
-    names, fname, lname = [], [], []
-
     andres.update_data()
     andres.bday_df.to_csv('beta_bdays.csv')
-    if len(fname) != 0:
-        latest = andres.bday_df.loc[andres.bday_df['Birthdate'] == datetime.date.today().strftime("%Y-%m-%d")]
+    if len(andres.bday_df.loc[andres.bday_df['Birthdate'] == datetime.date.today().replace(minute = 0, second = 0, microsecond = 0, hour = 0)]) != 0:
+        latest = andres.bday_df.loc[andres.bday_df['Birthdate'] == datetime.date.today().replace(minute = 0, second = 0, microsecond = 0, hour = 0)]
     else:
-        latest2 = andres.bday_df.loc[andres.bday_df['Birthdate'] == andres.bday_df.iloc[1, 4]]
-    fname = latest['FirstName'].tolist()
-    lname = latest['LastName'].tolist()
-    for x in range(len(fname)):
-        names.append(f"{fname[x]} {lname[x]}")
-    return names
+        latest = andres.bday_df.loc[andres.bday_df['Birthdate'] == andres.bday_df.iloc[0, 4]]
+    return latest['Fullname'].tolist()
 
 def update():
     get_latest()
