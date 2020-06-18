@@ -61,7 +61,7 @@ def update_data(inplace=True):
     bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
     bday_df['Fullname'] = bday_df['FirstName'] + " " + bday_df['LastName']
     return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
-    
+
 def get_latest():
     # returns a list of the latest birthay(s)
     update_data()
@@ -71,6 +71,13 @@ def get_latest():
     else:
         latest = bday_df.loc[bday_df['Birthdate'] == bday_df.iloc[0, 4]]
     return latest['Fullname'].tolist()
+
+def intialize_df():
+    # intitializes a new empty csv file relative to the bday wishes command
+    wishdata = numpy.array(['', ''])
+
+def clear_wishes():
+    # clears memory of all birthdays wished
 
 update_data()
 # bday_df.to_csv('beta_bdays.csv')
