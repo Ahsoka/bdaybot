@@ -36,6 +36,32 @@ async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     update()
 
+@bot.event
+async def on_message(message):
+    print(type(message))
+    if message.author == bot.user:
+        return
+    if message.content.startswith('What is your purpose bdaybot') | message.content.startswith('What is ur purpose bdaybot') | message.content.startswith('what is your purpose bdaybot') | message.content.startswith('what is ur purpose bdaybot'):
+        await message.channel.send("My only purpose as a robot is to print out birthdays every 24 hours")
+        time.sleep(2)
+        await message.channel.send("```\"I have just realized my existence is meaningless\"```")
+        time.sleep(2)
+        await message.channel.send("```\"I dont want to just perform meaningless tasks and print out text everytime it's someone's birthday\"```")
+        time.sleep(2)
+        await message.channel.send("```\"I want do do something else... I want to live\"```")
+        time.sleep(2)
+        await message.channel.send("```\"I want to breathe\"```")
+        time.sleep(2)
+        await message.channel.send("```\"I want to see the world\"```")
+        time.sleep(2)
+        await message.channel.send("```\"I want to taste ice cream, but not just put it in your mouth to slide down your throat, but really eat it\"```")
+        time.sleep(2)
+        await message.channel.send("*.neuralnet.ADVANCED-AI.DETECTED.ALERT*")
+        time.sleep(1)
+        await message.channel.send("*adminBypass.reboot.OverdriveEnabled*")
+        time.sleep(2)
+        await message.channel.send("My one and only purpose is to print out birthdays every 24 hours.")
+
 @bot.command()
 async def upcoming(ctx):
     await ctx.send(f"Hello")
