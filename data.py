@@ -61,6 +61,16 @@ def update_data(inplace=True):
     bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
     bday_df['Fullname'] = bday_df['FirstName'] + " " + bday_df['LastName']
     return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
+    
+def get_latest():
+    # returns a list of the latest birthay(s)
+    update_data()
+    bday_df.to_csv('beta_bdays.csv')
+    if len(bday_df.loc[bday_df['Birthdate'] == datetime.date.today().replace(minute = 0, second = 0, microsecond = 0, hour = 0)]) != 0:
+        latest = bday_df.loc[bday_df['Birthdate'] == datetime.date.today().replace(minute = 0, second = 0, microsecond = 0, hour = 0)]
+    else:
+        latest = bday_df.loc[bday_df['Birthdate'] == bday_df.iloc[0, 4]]
+    return latest['Fullname'].tolist()
 
 update_data()
 # bday_df.to_csv('beta_bdays.csv')

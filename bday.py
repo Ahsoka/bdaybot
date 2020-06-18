@@ -66,5 +66,4 @@ async def on_message(message):
 async def upcoming(ctx):
     await ctx.send(f"Hello")
 
-
 bot.run(TOKEN)
