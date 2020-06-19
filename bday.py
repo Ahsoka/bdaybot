@@ -81,7 +81,7 @@ def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
         assert birthyear is not None, 'format_discord() cannot accept birthyear as a None value'
         age = datetime.datetime.today().year - birthyear
         age_portion = '' if age >= 100 or age <= 14  else f' on turning _**{age}**_'
-        return f"Happy Birthday to {full_name}{age_portion}*!!!* 🎈 🎊 🎂 🎉\nIf you want to wish a happy birthday, use a `!wish`"
+        return f"Happy Birthday to {full_name}{age_portion}*!!!* 🎈 🎊 🎂 🎉"
     else:
         assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'
         return f"Upcoming Birthday for {full_name} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
@@ -95,6 +95,7 @@ async def on_message(message):
                     await message.channel.send(format_discord(person['FirstName'], person['LastName'], birthyear=person['Birthyear']))
                 else:
                     await message.channel.send(format_discord(person['FirstName'], person['LastName'], birthdate=person['Birthdate']))
+            await message.channel.send("If you want to wish a happy birthday, use `!wish`")
 
     if message.content.startswith('What is your purpose bdaybot') | message.content.startswith('What is ur purpose bdaybot') | message.content.startswith('what is ur purpose bdaybot') | message.content.startswith('what is your purpose bdaybot'):
         await message.channel.send("My only purpose as a robot is to print out birthdays every 24 hours")
