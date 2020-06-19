@@ -119,8 +119,9 @@ async def on_message(message):
 
 @bot.command(aliases = 'wish')
 async def wish(ctx, *, message):
-    for x in len(getlatest):
-        if message.content.channel.startswith(getlatest[x]):
+    fullname_list = (today_df['FirstName'] + " " today_df['LastName']).tolist()
+    for fullname in fullname_list:
+        if message.content.channel.startswith(fullname):
             pass
         else:
             await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
