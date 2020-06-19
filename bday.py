@@ -75,11 +75,11 @@ async def on_message(message):
             andres.update_data()
             top_person = andres.bday_df.iloc[0]
             if top_person['Timedelta'] == datetime.timedelta():
-                for person in andres.bday_df[andres.bday_df['Timedelta'] == datetime.timedelta()].iterrows():
+                for index_num, person in andres.bday_df[andres.bday_df['Timedelta'] == datetime.timedelta()].iterrows():
                     await message.channel.send(format_discord(person['FirstName'], person['LastName'], birthyear=person['Birthyear']))
             else:
                 other_ppl_df = andres.bday_df[andres.bday_df['Timedelta'] == top_person['Timedelta']]
-                for person in other_ppl_df:
+                for index_num, person in other_ppl_df.iterrows():
                     await message.channel.send(format_discord(person['FirstName'], person['LastName'], birthdate=person['Birthdate']))
 
     if message.content.startswith('What is your purpose bdaybot') | message.content.startswith('What is ur purpose bdaybot') | message.content.startswith('what is ur purpose bdaybot') | message.content.startswith('what is your purpose bdaybot'):
