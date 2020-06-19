@@ -53,6 +53,10 @@ async def change_name():
     for guild in bot.guilds:
         await guild.text_channels[2].send('Birthday Time!')
 
+@tasks.loop(minutes = 5)
+async def change_name():
+    pass
+
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -65,8 +69,8 @@ async def on_message(message):
                     await message.channel.send(f"__Happy Birthday to ***{latest_list[x]}*** on turning ***{ages[x]}***!!!__🎈🎊🎂🎉")
 
             else:
-                    for x in range(len(latest_list)):
-                        await message.channel.send(f"__Upcoming birthday for ***{latest_list[x]}***!__***")
+                for x in range(len(latest_list)):
+                    await message.channel.send(f"__Upcoming birthday for ***{latest_list[x]}***!__***")
     elif message.author == bot.user:
         return
 

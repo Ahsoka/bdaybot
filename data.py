@@ -70,7 +70,6 @@ def get_latest():
     bday_df.to_csv('beta_bdays.csv')
     if len(bday_df.loc[bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)]) != 0:
         latest = bday_df.loc[bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)]
-        anytoday = True
         print('yeraedsfasfewf')
     else:
         latest = bday_df.loc[bday_df['Birthdate'] == bday_df.iloc[0, 4]]
