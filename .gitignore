@@ -1,5 +1,6 @@
-# If this repository ever goes public do not forget to add the Data.txt and Student Locator Spring 2020.csv files to the .gitignore!
 Legacy BDay Bot Code
 __pycache__
 Data.txt
 .ipynb_checkpoints
+beta_bdays.csv
+Student Locator Spring 2020.csv
