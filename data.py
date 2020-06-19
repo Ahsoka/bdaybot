@@ -64,16 +64,23 @@ def update_data(inplace=True):
     bday_df['Newage'] = int(datetime.datetime.today().strftime("%Y")) - bday_df['Birthyear']
     return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
 
-def get_latest():
+def get_latest(to_csv=False):
     # returns a list of the latest birthay(s)
+    if to_csv:
+        bday_df.to_csv('beta_bdays.csv')
     update_data()
-    bday_df.to_csv('beta_bdays.csv')
-    if len(bday_df.loc[bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)]) != 0:
-        latest = bday_df.loc[bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)]
-        print('yeraedsfasfewf')
+    top_person = bday_df.iloc[0]
+    if top_person['Timedelta'] == datetime.timedelta():
+        return (True, bday_df[bday_df['Timedelta'] == datetime.timedelta()])
     else:
-        latest = bday_df.loc[bday_df['Birthdate'] == bday_df.iloc[0, 4]]
-    return latest['Fullname'].tolist()
+        return (False, bday_df[bday_df['Timedelta'] == top_person['Timedelta']])
+
+    # if len(bday_df.loc[bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)]) != 0:
+    #     latest = bday_df.loc[bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)]
+    #     print('yeraedsfasfewf')
+    # else:
+    #     latest = bday_df.loc[bday_df['Birthdate'] == bday_df.iloc[0, 4]]
+    # return latest['Fullname'].tolist()
 
 # def initialize_w():
 #

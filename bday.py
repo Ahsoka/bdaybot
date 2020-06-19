@@ -52,19 +52,19 @@ async def on_ready():
 
 @tasks.loop(hours = 24)
 async def send_bdays():
-    global getlatest
-    getlatest = andres.get_latest()
-    global wishlist
+    global bday_today, today_df, wishlist
+    bday_today, today_df = andres.get_latest()
     wishlist = []
-    global namess
-    namess = cycle(andres.get_latest())
     for guild in bot.guilds:
         await guild.text_channels[2].send('Birthday Time!')
 
-@tasks.loop(seconds = 5)
+@tasks.loop(seconds=5)
 async def change_name():
+    if 'names_cycler' not in globals():
+        global names_cycler
+        names_cycler = cycle((today_df['FirstName'] + " " today_df['LastName']).tolist())
     for guild in bot.guilds:
-        await guild.me.edit(nick=next(namess))
+        await guild.me.edit(nick=next(names_cycler))
 
 def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
     full_name = f"***__{first_name} {last_name}__***"
@@ -81,14 +81,10 @@ def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
 async def on_message(message):
     if message.author == bot.user:
         if message.content.startswith('Birthday Time!'):
-            andres.update_data()
-            top_person = andres.bday_df.iloc[0]
-            if top_person['Timedelta'] == datetime.timedelta():
-                for index_num, person in andres.bday_df[andres.bday_df['Timedelta'] == datetime.timedelta()].iterrows():
+            for index_num, person in today_df.iterrows():
+                if bday_today:
                     await message.channel.send(format_discord(person['FirstName'], person['LastName'], birthyear=person['Birthyear']))
-            else:
-                other_ppl_df = andres.bday_df[andres.bday_df['Timedelta'] == top_person['Timedelta']]
-                for index_num, person in other_ppl_df.iterrows():
+                else:
                     await message.channel.send(format_discord(person['FirstName'], person['LastName'], birthdate=person['Birthdate']))
 
     if message.content.startswith('What is your purpose bdaybot') | message.content.startswith('What is ur purpose bdaybot') | message.content.startswith('what is ur purpose bdaybot') | message.content.startswith('what is your purpose bdaybot'):
@@ -128,7 +124,7 @@ async def wish(ctx, *, message):
             pass
         else:
             await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
-            
+
 
 
 
