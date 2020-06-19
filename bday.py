@@ -71,7 +71,7 @@ async def send_bdays():
 async def change_name():
     if 'names_cycler' not in globals():
         global names_cycler
-        names_cycler = cycle((today_df['FirstName'] + " " today_df['LastName']).tolist())
+        names_cycler = cycle((today_df['FirstName'] + " " + today_df['LastName']).tolist())
     for guild in bot.guilds:
         await guild.me.edit(nick=next(names_cycler))
 
@@ -80,10 +80,10 @@ def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
     if birthdate is None:
         assert birthyear is not None, 'format_discord() cannot accept birthyear as a None value'
         age = datetime.datetime.today().year - birthyear
-        age_portion = '' if age >= 100 or age <= 14  else f' on turning _**{age}**_'            
+        age_portion = '' if age >= 100 or age <= 14  else f' on turning _**{age}**_'
         return f"Happy Birthday to {full_name}{age_portion}*!!!* 🎈 🎊 🎂 🎉\nIf you want to wish a happy birthday, use a `!wish`"
     else:
-        assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'            
+        assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'
         return f"Upcoming Birthday for {full_name} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
 
 @bot.event
