@@ -44,18 +44,19 @@ def update():
 @bot.event
 async def on_ready():
     # print_bday.start()
+    send_bdays.start()
     change_name.start()
     print(f"""{bot.user} has connected to Discord!""")
     # await channel.send(introduction)
 
 @tasks.loop(hours = 24)
-async def change_name():
+async def send_bdays():
     for guild in bot.guilds:
         await guild.text_channels[2].send('Birthday Time!')
 
 @tasks.loop(minutes = 5)
 async def change_name():
-    pass
+    await client.change_presence(activity=discord.Game('jack'))))
 
 @bot.event
 async def on_message(message):
