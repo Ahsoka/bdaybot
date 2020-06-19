@@ -56,7 +56,7 @@ async def send_bdays():
 
 @tasks.loop(minutes = 5)
 async def change_name():
-    await bot.change_presence(activity=discord.Game('jack'))))
+    await bot.change_presence(activity=discord.Game('jack'))
 
 def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
     if birthdate is None:
@@ -66,7 +66,7 @@ def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
         return f"Happy Birthday to _**{first_name + last_name}**_{age_portion}*!!!* 🎈🎊🎂🎉"
     else:
         assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'
-        return f"Upcoming Birthday for _**{first_name + last_name}**_ on {birthdate.format("%A, %b %d")}! 💕⏳"
+        return f"Upcoming Birthday for _**{first_name + last_name}**_ on {birthdate.format("%A, %b, %d")}! 💕⏳"
 
 @bot.event
 async def on_message(message):
