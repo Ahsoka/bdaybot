@@ -126,7 +126,7 @@ async def on_message(message):
             time.sleep(1)
             await message.channel.send("Sorry, you got the wrong bot")
 
-@bot.command(aliases = ['wish'])
+@bot.command()
 async def wish(ctx, message):
     fullname_list = (today_df['FirstName'] + " " + today_df['LastName']).tolist()
     for fullname in fullname_list:
