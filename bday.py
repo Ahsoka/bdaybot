@@ -52,6 +52,10 @@ async def on_ready():
 
 @tasks.loop(hours = 24)
 async def send_bdays():
+    global getlatest
+    getlatest = andres.get_latest()
+    global wishlist
+    wishlist = []
     global namess
     namess = cycle(andres.get_latest())
     for guild in bot.guilds:
@@ -68,7 +72,7 @@ def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
         assert birthyear is not None, 'format_discord() cannot accept birthyear as a None value'
         age = datetime.datetime.today().year - birthyear
         age_portion = '' if age >= 100 or age <= 14  else f' on turning _**{age}**_'
-        return f"Happy Birthday to {full_name}{age_portion}*!!!* 🎈 🎊 🎂 🎉"
+        return f"Happy Birthday to {full_name}{age_portion}*!!!* 🎈 🎊 🎂 🎉\nIf you want to wish a happy birthday, use a `!wish`"
     else:
         assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'
         return f"Upcoming Birthday for {full_name} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
@@ -117,8 +121,16 @@ async def on_message(message):
             time.sleep(1)
             await message.channel.send("Sorry, you got the wrong bot")
 
-@bot.command
-async def wish(message)
+@bot.command(aliases = 'wish')
+async def wish(ctx, *, message):
+    for x in len(getlatest):
+        if message.content.channel.startswith(getlatest[x]):
+            pass
+        else:
+            await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
+            
+
+
 
 # andres.bday_df = pandas.read_csv('beta_bdays.csv', index_col = 'StuID')
 # andres.bday_df['Birthdate'], andres.bday_df['Timedelta'] = pandas.to_datetime(andres.bday_df['Birthdate']), pandas.to_timedelta(andres.bday_df['Timedelta'])
