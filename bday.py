@@ -57,6 +57,13 @@ async def send_bdays():
     wishlist = []
     for guild in bot.guilds:
         await guild.text_channels[2].send('Birthday Time!')
+        member = guild.me
+        await bot.remove_roles(member, role)
+        if bday_today:
+            role = discord.utils.get(member.server.roles, name="Happy Birthday: ")
+        else:
+            role = discord.utils.get(member.server.roles, "Upcoming Bday" in name)
+        await bot.add_roles(member, role)
 
 @tasks.loop(seconds=5)
 async def change_name():
@@ -71,18 +78,10 @@ def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
     if birthdate is None:
         assert birthyear is not None, 'format_discord() cannot accept birthyear as a None value'
         age = datetime.datetime.today().year - birthyear
-        age_portion = '' if age >= 100 or age <= 14  else f' on turning _**{age}**_'
-        for guild in bot.guilds:
-            member = guild.me
-            role = get(member.server.roles, name="Happy Birthday: ")
-            await bot.add_roles(member, role)
+        age_portion = '' if age >= 100 or age <= 14  else f' on turning _**{age}**_'            
         return f"Happy Birthday to {full_name}{age_portion}*!!!* 🎈 🎊 🎂 🎉\nIf you want to wish a happy birthday, use a `!wish`"
     else:
-        assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'
-        for guild in bot.guilds:
-            member = guild.me
-            role = get(member.server.roles, "Upcoming Bday" in name)
-            await bot.add_roles(member, role)
+        assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'            
         return f"Upcoming Birthday for {full_name} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
 
 @bot.event
