@@ -58,22 +58,29 @@ async def send_bdays():
 async def change_name():
     await client.change_presence(activity=discord.Game('jack'))))
 
+def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
+    if birthdate is None:
+        assert birthyear is not None, 'format_discord() cannot accept birthyear as a None value'
+        age = datetime.datetime.today().year - birthyear
+        age_portion = '' if age >= 100 or age <= 14  else f' on turning _**{age}**_'
+        return f"Happy Birthday to _**{first_name + last_name}**_{age_portion}*!!!* 🎈🎊🎂🎉"
+    else:
+        assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'
+        return f"Upcoming Birthday for _**{first_name + last_name}**_ on {birthdate.format("%A, %b %d")}! 💕⏳"
+
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
-        print('fdsf')
         if message.content.startswith('Birthday Time!'):
-            latest_list = andres.get_latest()
-            ages = andres.bday_df['Newage'].tolist()
-            if(len(andres.bday_df.loc[andres.bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)])) != 0):
-                for x in range(len(latest_list)):
-                    await message.channel.send(f"__Happy Birthday to ***{latest_list[x]}*** on turning ***{ages[x]}***!!!__🎈🎊🎂🎉")
-
+            andres.update_data()
+            top_person = andres.bday_df.iloc[0]
+            if top_person['Timedelta'] == datetime.timedelta():
+                for person in andres.bday_df[andres.bday_df['Timedelta'] == datetime.timedelta()].iterrows():
+                    await message.channel.send(format_discord(person['FirstName'], person['LastName'], birthyear=person['Birthyear']))
             else:
-                for x in range(len(latest_list)):
-                    await message.channel.send(f"__Upcoming birthday for ***{latest_list[x]}***!__***")
-    elif message.author == bot.user:
-        return
+                other_ppl_df = andres.bday_df[andres.bday_df['Timedelta'] == top_person['Timedelta']]
+                for person in other_ppl_df:
+                    await message.channel.send(format_discord(person['FirstName'], person['LastName'], birthdate=person['Birthdate']))
 
     if message.content.startswith('What is your purpose bdaybot') | message.content.startswith('What is ur purpose bdaybot') | message.content.startswith('what is ur purpose bdaybot') | message.content.startswith('what is your purpose bdaybot'):
         await message.channel.send("My only purpose as a robot is to print out birthdays every 24 hours")
