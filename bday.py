@@ -58,9 +58,9 @@ async def send_bdays():
     for guild in bot.guilds:
         await guild.text_channels[2].send('Birthday Time!')
         member = guild.me
-        bdayRole = discord.utils.get(member.server.roles, name="Happy Birthday: ")
+        bdayRole = discord.utils.find(lambda role:"happy birthday" in role.name.lower(), member.server.roles)
         await bot.remove_roles(member, role)
-        upRole = discord.utils.get(member.server.roles, "Upcoming Bday" in name)
+        upRole = discord.utils.find(lambda role:"upcoming bday" in role.name.lower(), member.server.roles)
         await bot.remove_roles(member, role)
         if bday_today:
             await bot.add_roles(member, bdayRole)
