@@ -46,6 +46,7 @@ async def on_ready():
     # print_bday.start()
     send_bdays.start()
     change_name.start()
+    raise RuntimeError("This should be visible :)")
     print(f"""{bot.user} has connected to Discord!""")
     for guild in bot.guilds:
         await guild.text_channels[2].send(introduction)
