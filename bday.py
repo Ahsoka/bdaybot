@@ -56,7 +56,7 @@ async def send_bdays():
 
 @tasks.loop(minutes = 5)
 async def change_name():
-    await client.change_presence(activity=discord.Game('jack'))))
+    await bot.change_presence(activity=discord.Game('jack'))))
 
 def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
     if birthdate is None:
