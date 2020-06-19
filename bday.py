@@ -16,10 +16,10 @@ from itertools import cycle
 bot = commands.Bot( command_prefix="!", description='A bot used for bdays', case_insensitive=True)
 TOKEN = os.environ.get('Bday_Token')
 
-introduction = """
+introduction = """@everyone
 ```The Bday bot has been been revamped!
 With the help of a couple reaaaally awesome people (including me), we got rid of most of the old code and created the
-new bdaybot on one language (Python), and we moved the location ofthe Bday bot server onto a small, yet powerful, raspberry pi.
+new bdaybot on one language (Python!), and we moved the location ofthe Bday bot server onto a small, yet powerful, raspberry pi.
 But that's not it! The Bday bot not only prints birthday statements every 24 hours, but it also
 has some hidden methods (and that's for you to find out!)```
 """
@@ -47,17 +47,16 @@ async def on_ready():
     send_bdays.start()
     change_name.start()
     print(f"""{bot.user} has connected to Discord!""")
-    # await channel.send(introduction)
+    for guild in bot.guilds:
+        await guild.text_channels[2].send(introduction)
 
 @tasks.loop(hours = 24)
 async def send_bdays():
-    namess = cycle()
+    global namess
+    namess = cycle(andres.get_latest())
     for guild in bot.guilds:
         await guild.text_channels[2].send('Birthday Time!')
 
-
-
-namess = cycle()
 @tasks.loop(seconds = 5)
 async def change_name():
     for guild in bot.guilds:
@@ -117,6 +116,9 @@ async def on_message(message):
         if message.content.channel.startswith('Hey Alexa') | message.content.channel.startswith('Hey alexa'):
             time.sleep(1)
             await message.channel.send("Sorry, you got the wrong bot")
+
+@bot.command
+async def wish(message)
 
 # andres.bday_df = pandas.read_csv('beta_bdays.csv', index_col = 'StuID')
 # andres.bday_df['Birthdate'], andres.bday_df['Timedelta'] = pandas.to_datetime(andres.bday_df['Birthdate']), pandas.to_timedelta(andres.bday_df['Timedelta'])
