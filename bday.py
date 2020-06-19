@@ -72,9 +72,17 @@ def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
         assert birthyear is not None, 'format_discord() cannot accept birthyear as a None value'
         age = datetime.datetime.today().year - birthyear
         age_portion = '' if age >= 100 or age <= 14  else f' on turning _**{age}**_'
+        for guild in bot.guilds:
+            member = guild.me
+            role = get(member.server.roles, name="Happy Birthday: ")
+            await bot.add_roles(member, role)
         return f"Happy Birthday to {full_name}{age_portion}*!!!* 🎈 🎊 🎂 🎉\nIf you want to wish a happy birthday, use a `!wish`"
     else:
         assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'
+        for guild in bot.guilds:
+            member = guild.me
+            role = get(member.server.roles, "Upcoming Bday" in name)
+            await bot.add_roles(member, role)
         return f"Upcoming Birthday for {full_name} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
 
 @bot.event
