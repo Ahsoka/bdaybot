@@ -60,14 +60,15 @@ async def change_name():
     # await bot.change_presence(activity=discord.Game('jack'))
 
 def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
+    full_name = f"{first_name} {last_name}"
     if birthdate is None:
         assert birthyear is not None, 'format_discord() cannot accept birthyear as a None value'
         age = datetime.datetime.today().year - birthyear
         age_portion = '' if age >= 100 or age <= 14  else f' on turning _**{age}**_'
-        return f"Happy Birthday to _**{first_name + last_name}**_{age_portion}*!!!* 🎈🎊🎂🎉"
+        return f"Happy Birthday to _**{full_name}**_{age_portion}*!!!* 🎈🎊🎂🎉"
     else:
         assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'
-        return f"Upcoming Birthday for _**{first_name + last_name}**_ on {format(birthdate, '%A, %b %d')}! 💕⏳"
+        return f"Upcoming Birthday for _**{full_name}**_ on {format(birthdate, '%A, %b %d')}! 💕⏳"
 
 @bot.event
 async def on_message(message):
