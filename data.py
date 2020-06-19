@@ -56,28 +56,29 @@ bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
 bday_df.set_index('StuID', inplace=True); official_student_df.set_index('StuID', inplace=True)
 bday_df[['FirstName', 'LastName']] = official_student_df[['FirstName', 'LastName']]
 bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
+bday_df['Birthyear'] = bday_df['Birthyear'].astype(str).astype(int)
 
 def update_data(inplace=True):
     bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
     bday_df['Fullname'] = bday_df['FirstName'] + " " + bday_df['LastName']
+    bday_df['Newage'] = int(datetime.datetime.today().strftime("%Y")) - bday_df['Birthyear']
     return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
 
 def get_latest():
     # returns a list of the latest birthay(s)
     update_data()
     bday_df.to_csv('beta_bdays.csv')
-    if len(bday_df.loc[bday_df['Birthdate'] == datetime.date.today().replace(minute = 0, second = 0, microsecond = 0, hour = 0)]) != 0:
-        latest = bday_df.loc[bday_df['Birthdate'] == datetime.date.today().replace(minute = 0, second = 0, microsecond = 0, hour = 0)]
+    if len(bday_df.loc[bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)]) != 0:
+        latest = bday_df.loc[bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)]
+        anytoday = True
+        print('yeraedsfasfewf')
     else:
         latest = bday_df.loc[bday_df['Birthdate'] == bday_df.iloc[0, 4]]
     return latest['Fullname'].tolist()
 
-def intialize_df():
-    # intitializes a new empty csv file relative to the bday wishes command
-    wishdata = numpy.array(['', ''])
-
-def clear_wishes():
-    # clears memory of all birthdays wished
+# def initialize_w():
+#
+#     for x
 
 update_data()
-# bday_df.to_csv('beta_bdays.csv')
+bday_df.to_csv('beta_bdays.csv')
