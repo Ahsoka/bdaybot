@@ -51,13 +51,17 @@ async def on_ready():
 
 @tasks.loop(hours = 24)
 async def send_bdays():
+    namess = cycle()
     for guild in bot.guilds:
         await guild.text_channels[2].send('Birthday Time!')
 
-@tasks.loop(minutes = 5)
+
+
+namess = cycle()
+@tasks.loop(seconds = 5)
 async def change_name():
-    message.guild.me.edit(nick=name)
-    # await bot.change_presence(activity=discord.Game('jack'))
+    for guild in bot.guilds:
+        await guild.me.edit(nick=next(namess))
 
 def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
     full_name = f"{first_name} {last_name}"
