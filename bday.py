@@ -60,7 +60,7 @@ async def on_message(message):
         if message.content.startswith('Birthday Time!'):
             latest_list = andres.get_latest()
             ages = andres.bday_df['Newage'].tolist()
-            if(len(latest_list) != 0):
+            if(len(andres.bday_df.loc[andres.bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)])) != 0):
                 for x in range(len(latest_list)):
                     await message.channel.send(f"__Happy Birthday to ***{latest_list[x]}*** on turning ***{ages[x]}***!!!__🎈🎊🎂🎉")
 
