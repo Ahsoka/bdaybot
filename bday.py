@@ -127,7 +127,7 @@ async def on_message(message):
     if message.content.startswith('Who are your creators bdaybot'):
         await message.channel.send("The masters of my creation are: Elliot, Andres, and my name jeff")
 
-    if message.content.channel.startswith('Hey Alexa') | message.content.channel.startswith('Hey alexa'):
+    if message.content.startswith('Hey Alexa') | message.content.startswith('Hey alexa'):
         time.sleep(1)
         await message.channel.send("Sorry, you got the wrong bot")
 
