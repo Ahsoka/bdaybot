@@ -40,7 +40,6 @@ def update():
 async def on_ready():
     global announcements
     announcements = [channel for guild in bot.guilds for channel in guild.text_channels if "announcements" in channel.name.lower()]
-    # print_bday.start()
     send_bdays.start()
     change_name.start()
     print(f"""{bot.user} has connected to Discord!""")
@@ -86,6 +85,10 @@ def format_discord(first_name, last_name, *, birthyear=None, birthdate=None):
         assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'
         return f"Upcoming Birthday for {full_name} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
 
+@bot.command()
+async def test(ctx):
+    await ctx.send("test")
+
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -130,24 +133,18 @@ async def on_message(message):
     if message.content.startswith('Hey Alexa') | message.content.startswith('Hey alexa'):
         time.sleep(1)
         await message.channel.send("Sorry, you got the wrong bot")
+    await bot.process_commands(message)
 
 @bot.command
 async def wish(ctx, message):
     print(ctx, type(ctx))
     print(message, type(message))
-    # fullname_list = (today_df['FirstName'] + " " + today_df['LastName']).tolist()
-    # for fullname in fullname_list:
-    #     if message.content.channel.startswith(fullname):
-    #         pass
-    #     else:
-    #         await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
+    fullname_list = (today_df['FirstName'] + " " + today_df['LastName']).tolist()
+    for fullname in fullname_list:
+        if message.content.channel.startswith(fullname):
+            pass
+        else:
+            await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
     await bot.channel.send(message)
-
-
-@bot.command()
-async def echo(ctx, *, content:str):
-    print(ctx, type(ctx))
-    print(content, type(content))
-    await ctx.send(content)
 
 bot.run(TOKEN)
