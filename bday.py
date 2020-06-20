@@ -46,7 +46,6 @@ async def on_ready():
     # print_bday.start()
     send_bdays.start()
     change_name.start()
-    raise RuntimeError("This should be visible :)")
     print(f"""{bot.user} has connected to Discord!""")
     for guild in bot.guilds:
         await guild.text_channels[2].send(introduction)
@@ -58,10 +57,10 @@ async def send_bdays():
     wishlist = []
     for guild in bot.guilds:
         await guild.text_channels[2].send('Birthday Time!')
-        member = guild.me
-        bdayRole = discord.utils.find(lambda role:"happy birthday" in role.name.lower(), member.server.roles)
+        print(guild.roles[0], type(guild.roles[0]))
+        bdayRole = discord.utils.find(lambda role:"happy birthday" in role.name.lower(), guild.roles)
         await bot.remove_roles(member, role)
-        upRole = discord.utils.find(lambda role:"upcoming bday" in role.name.lower(), member.server.roles)
+        upRole = discord.utils.find(lambda role:"upcoming bday" in role.name.lower(), guild.roles)
         await bot.remove_roles(member, role)
         if bday_today:
             await bot.add_roles(member, bdayRole)
