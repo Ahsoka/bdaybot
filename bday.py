@@ -69,7 +69,7 @@ async def send_bdays():
         #upRole = discord.utils.find(lambda role:"upcoming bday" in role.name.lower(), guild.roles)
         if bday_today and False:
             await member.add_roles(bdayRole)
-        elif True:
+        elif False:
             await member.add_roles(upRole)
 
 @tasks.loop(seconds=5)
