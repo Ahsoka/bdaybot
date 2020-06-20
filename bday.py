@@ -3,15 +3,10 @@ from discord.ext import commands, tasks
 import os
 import time
 import datetime
-# import schedule
 import data as andres
 import pandas
 import numpy
-# from concurrent.futures import ThreadPoolExecutor
 from itertools import cycle
-
-# multi = ThreadPoolExecutor()
-
 
 bot = commands.Bot( command_prefix="!", description='A bot used for bdays', case_insensitive=True)
 TOKEN = os.environ.get('Bday_Token')
@@ -43,22 +38,24 @@ def update():
 
 @bot.event
 async def on_ready():
+    global announcements
+    announcements = [channel for channel in guild.text_channels for guild in bot.guilds if "announcements" in channel.name.lower()]
     # print_bday.start()
     send_bdays.start()
     change_name.start()
     print(f"""{bot.user} has connected to Discord!""")
-    for guild in bot.guilds:
-        await guild.text_channels[2].send(introduction)
+    for a in announcements
+        await a.send(introduction)
 
 @tasks.loop(hours = 24)
 async def send_bdays():
     global bday_today, today_df, wishlist
     bday_today, today_df = andres.get_latest()
     wishlist = []
-    for guild in bot.guilds:
-        await guild.text_channels[2].send('Birthday Time!')
+    assert len(bot.guilds) == len(announcements), "announcements is not the same length as the bot.guilds"
+    for guild, a in zip(bot.guilds, announcements):
+        await a.send('Birthday Time!')
         for role in guild.roles:
-            print(role)
             if "happy birthday" in role.name.lower():
                 bdayRole = role
             elif "upcoming bday" in role.name.lower():
@@ -123,12 +120,12 @@ async def on_message(message):
         time.sleep(5)
         await message.channel.send("My one and only purpose is to print out birthdays every 24 hours.")
 
-        if message.content.startswith('Who are your creators bdaybot'):
-            await message.channel.send("The masters of my creation are: Elliot, Andres, and my name jeff")
+    if message.content.startswith('Who are your creators bdaybot'):
+        await message.channel.send("The masters of my creation are: Elliot, Andres, and my name jeff")
 
-        if message.content.channel.startswith('Hey Alexa') | message.content.channel.startswith('Hey alexa'):
-            time.sleep(1)
-            await message.channel.send("Sorry, you got the wrong bot")
+    if message.content.channel.startswith('Hey Alexa') | message.content.channel.startswith('Hey alexa'):
+        time.sleep(1)
+        await message.channel.send("Sorry, you got the wrong bot")
 
 @bot.command()
 async def wish(ctx, message):
@@ -139,28 +136,4 @@ async def wish(ctx, message):
         else:
             await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
 
-
-
-
-# andres.bday_df = pandas.read_csv('beta_bdays.csv', index_col = 'StuID')
-# andres.bday_df['Birthdate'], andres.bday_df['Timedelta'] = pandas.to_datetime(andres.bday_df['Birthdate']), pandas.to_timedelta(andres.bday_df['Timedelta'])
-# print(andres.bday_df)
-# print(andres.bday_df.columns)
-# with ThreadPoolExecutor() as something:
-#     something.submit(type(bot).run, bot, TOKEN)
-#     updated = False
-#     while True:
-#         # make sure to update under and overtime
-#         undertime = datetime.datetime.today().replace(hour=20, minute=0, second=0, microsecond=0)
-#         overtime = datetime.datetime.today().replace(hour=23, minute=0, second=0, microsecond=0)
-#         # print('okboomer')
-#         if (datetime.datetime.now() >= undertime and datetime.datetime.now() <= overtime) and not updated:
-#             andres.get_latest()
-#             channel = discord.utils.get(server.channels, name="|announcements", type="ChannelType.text")
-#             channel.send('hello')
-#             updated = True
-#             print('yee')
-#         elif (datetime.datetime.now() > overtime or datetime.datetime.now() < undertime):
-#             # print('this didnt work loser')
-#             updated = False
 bot.run(TOKEN)
