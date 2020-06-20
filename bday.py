@@ -141,6 +141,7 @@ async def wish(ctx, message):
     #         pass
     #     else:
     #         await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
-    await ctx.channel.send(message)
+    await bot.channel.send(message)
+    
 
 bot.run(TOKEN)
