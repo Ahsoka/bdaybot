@@ -97,7 +97,11 @@ async def on_message(message):
                     await message.channel.send(format_discord(person['FirstName'], person['LastName'], birthdate=person['Birthdate']))
             await message.channel.send("If you want to wish a happy birthday, use `!wish`")
 
-    if message.content.startswith('What is your purpose bdaybot') | message.content.startswith('What is ur purpose bdaybot') | message.content.startswith('what is ur purpose bdaybot') | message.content.startswith('what is your purpose bdaybot'):
+    valid_purposes_line = ['what is your purpose bdaybot', 'what is ur purpose bdaybot']
+
+    parsed = message.content.lower()
+
+    if message.content in valid_purposes_line:
         await message.channel.send("My only purpose as a robot is to print out birthdays every 24 hours")
         time.sleep(2)
         await message.channel.send("```\"I have just realized my existence is meaningless\"```")
@@ -127,13 +131,13 @@ async def on_message(message):
         time.sleep(1)
         await message.channel.send("Sorry, you got the wrong bot")
 
-@bot.command()
-async def wish(ctx, message):
-    fullname_list = (today_df['FirstName'] + " " + today_df['LastName']).tolist()
-    for fullname in fullname_list:
-        if message.content.channel.startswith(fullname):
-            pass
-        else:
-            await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
+# @bot.command()
+# async def wish(ctx, message):
+#     fullname_list = (today_df['FirstName'] + " " + today_df['LastName']).tolist()
+#     for fullname in fullname_list:
+#         if message.content.channel.startswith(fullname):
+#             pass
+#         else:
+#             await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
 
 bot.run(TOKEN)
