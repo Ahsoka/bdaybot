@@ -44,7 +44,7 @@ async def on_ready():
     send_bdays.start()
     change_name.start()
     print(f"""{bot.user} has connected to Discord!""")
-    for a in announcements
+    for a in announcements:
         await a.send(introduction)
 
 @tasks.loop(hours = 24)
