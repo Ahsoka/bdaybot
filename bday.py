@@ -39,7 +39,7 @@ def update():
 @bot.event
 async def on_ready():
     global announcements
-    announcements = [channel for channel in guild.text_channels for guild in bot.guilds if "announcements" in channel.name.lower()]
+    announcements = [channel for guild in bot.guild for channel in guild.text_channels if "announcements" in channel.name.lower()]
     # print_bday.start()
     send_bdays.start()
     change_name.start()
