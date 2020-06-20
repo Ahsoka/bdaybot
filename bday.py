@@ -142,10 +142,12 @@ async def wish(ctx, message):
     #     else:
     #         await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
     await bot.channel.send(message)
-    
+
 
 @bot.command()
 async def echo(ctx, *, content:str):
+    print(ctx, type(ctx))
+    print(content, type(content))
     await ctx.send(content)
 
 bot.run(TOKEN)
