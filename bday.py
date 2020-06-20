@@ -8,7 +8,7 @@ import pandas
 import numpy
 from itertools import cycle
 
-bot = commands.Bot( command_prefix="!", description='A bot used for bdays', case_insensitive=True)
+bot = commands.Bot(command_prefix="!", description='A bot used for bdays', case_insensitive=True)
 TOKEN = os.environ.get('Bday_Token')
 
 introduction = """@everyone
@@ -131,13 +131,14 @@ async def on_message(message):
         time.sleep(1)
         await message.channel.send("Sorry, you got the wrong bot")
 
-# @bot.command()
-# async def wish(ctx, message):
-#     fullname_list = (today_df['FirstName'] + " " + today_df['LastName']).tolist()
-#     for fullname in fullname_list:
-#         if message.content.channel.startswith(fullname):
-#             pass
-#         else:
-#             await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
+@bot.command
+async def wish(ctx, message):
+    # fullname_list = (today_df['FirstName'] + " " + today_df['LastName']).tolist()
+    # for fullname in fullname_list:
+    #     if message.content.channel.startswith(fullname):
+    #         pass
+    #     else:
+    #         await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
+    ctx.channel.send(message)
 
 bot.run(TOKEN)
