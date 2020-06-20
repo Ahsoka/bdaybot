@@ -5,7 +5,7 @@ import time
 import datetime
 import data as andres
 import pandas
-import numpy
+import dill
 from itertools import cycle
 
 bot = commands.Bot(command_prefix="!", description='A bot used for bdays', case_insensitive=True)
@@ -14,7 +14,7 @@ TOKEN = os.environ.get('Bday_Token')
 introduction = """@everyone
 ```The Bday bot has been been revamped!
 With the help of a couple reaaaally awesome people (including me), we got rid of most of the old code and created the
-new bdaybot on one language (Python!), and we moved the location ofthe Bday bot server onto a small, yet powerful, raspberry pi.
+new bdaybot on one language (Python!), and we moved the location of the Bday bot server onto a small, yet powerful, raspberry pi.
 But that's not it! The Bday bot not only prints birthday statements every 24 hours, but it also
 has some hidden methods (and that's for you to find out!)```
 """
@@ -43,8 +43,8 @@ async def on_ready():
     send_bdays.start()
     change_name.start()
     print(f"""{bot.user} has connected to Discord!""")
-    for a in announcements:
-        await a.send(introduction)
+    # for a in announcements:
+    #     await a.send(introduction)
 
 @tasks.loop(hours = 24)
 async def send_bdays():
@@ -53,7 +53,7 @@ async def send_bdays():
     wishlist = []
     assert len(bot.guilds) == len(announcements), "announcements is not the same length as the bot.guilds"
     for guild, a in zip(bot.guilds, announcements):
-        await a.send('Birthday Time!')
+        # await a.send('Birthday Time!')
         for role in guild.roles:
             if "happy birthday" in role.name.lower():
                 bdayRole = role
@@ -65,6 +65,8 @@ async def send_bdays():
             await member.add_roles(bdayRole)
         else:
             await member.add_roles(upRole)
+            await uprole.edit(name = "Upcoming Bday")
+            #await bot.edit_role(server = guild, role = upRole, name = "Upcoming Bday")
 
 @tasks.loop(seconds=5)
 async def change_name():
@@ -98,7 +100,7 @@ async def on_message(message):
                     await message.channel.send(format_discord(person['FirstName'], person['LastName'], birthyear=person['Birthyear']))
                 else:
                     await message.channel.send(format_discord(person['FirstName'], person['LastName'], birthdate=person['Birthdate']))
-            await message.channel.send("If you want to wish a happy birthday, use `!wish`")
+            await message.channel.send("If you want to wish a happy birthday, use \"!wish {Firstname} {Lastname} {Your 6 digit id}\" (Don't worry, we'll delete the id after you send the message)(THIS FUNCTION IS NOT AVAILABLE YET, PLEASE DONT DO THIS)")
 
     valid_purposes_line = ['what is your purpose bdaybot', 'what is ur purpose bdaybot']
 
@@ -133,18 +135,90 @@ async def on_message(message):
     if message.content.startswith('Hey Alexa') | message.content.startswith('Hey alexa'):
         time.sleep(1)
         await message.channel.send("Sorry, you got the wrong bot")
-    await bot.process_commands(message)
+    # await bot.process_commands(message)
 
-@bot.command
-async def wish(ctx, message):
-    print(ctx, type(ctx))
-    print(message, type(message))
-    fullname_list = (today_df['FirstName'] + " " + today_df['LastName']).tolist()
-    for fullname in fullname_list:
-        if message.content.channel.startswith(fullname):
-            pass
-        else:
-            await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
-    await ctx.send(message)
+# to get messageauthorusername: print(ctx.author)
+# to send message: await bot.send('')
+
+# @bot.command()
+# async def wish(ctx, *message):
+#     print(f"'dict_names' in globals(): {'dict_names' in globals()}")
+#     if 'dict_names' not in globals():
+#         global dict_names
+#         try:
+#             with open('dict_names.dill', mode='rb') as file:
+#                 dict_names = dill.load(file)
+#         except FileNotFoundError:
+#             dict_names = dict(((id, []) for id, _ in today_df.iterrows()))
+#
+#     if bday_today:
+#         try:
+#             studentID = int(message[-1])
+#         except ValueError:
+#             pass
+#             # if ctx.author not in previous_users:
+#             #     await ctx.send('If you are a first time wisher, please enter your ID as your last entry')
+#             #     return
+#
+#         if 'studentID' in locals() and not andres.official_student_df.index.isin([studentID]).any(axis=None):
+#             await ctx.send('ID invalid')
+#             return
+#
+#         name = " ".join(message[:-1]) if 'studentID' in locals() else " ".join(message)
+#         print(name)
+#         fullname_df = pandas.concat([today_df[['FirstName', 'LastName']], (today_df['FirstName'] + " " + today_df['LastName'])], axis='columns')
+#         if fullname_df.isin([name]).any(axis=None):
+#             row = today_df[fullname_df.isin([name]).any(axis='columns')]
+#             assert len(row) == 1, 'Somehow len(row) is not equal to 1'
+#
+#             if len(dict_names[row.index.to_list()[0]]) == 0:
+#                 dict_names[row.index.to_list()[0]].append({ctx.author:studentID})
+#
+#             for dictionary in dict_names[row.index.to_list()[0]]:
+#                 if ctx.author not in dictionary:
+#                     dict_names[row.index.to_list()[0]].append({ctx.author:studentID})
+#                     break
+#
+#             with open('dict_names.dill', mode='wb') as file:
+#                 dill.dump(dict_names, file)
+#
+#             await ctx.send('Thank you for your wish :)')
+#
+#
+#
+#
+#         else:
+#             await ctx.send(f'Name invalid: {name}')
+#         # if pandas.concat([today_df, (today_df['FirstName'] + " " + today_df['LastName'])], axis='columns').isin([message]):
+#         #     if ctx.author not in discord_list:
+#         #         pass
+#         #         # birthday_counter +=1
+#         #     else:
+#         #         await bot.send("You already wished this person a happy birthday!")
+#         # else:
+#         #     await bot.send("Either its not this person's birthday or you spelled the name of the person wrong")
+#
+#         # if 'studentID' not in locals() and (ctx.author not in discord_list):
+#         #     ctx.send('')
+#
+#     else:
+#         script = ("You cannot use the `!wish` command if it is no one's birthday today.\n"
+#                   "However, it will be ")
+#         for counter, (_, series) in enumerate(today_df.iterrows()):
+#             fullname = series['FirstName'] + " " + series['LastName']
+#             # print(counter, len(today_df))
+#             apostrophe = "'" if fullname[-1] == "s" else "'s"
+#             script += f'{fullname}{apostrophe} ' if counter == len(today_df) - 1 else fullname + " and "
+#         script += f"birthday on {format(series['Birthdate'], '%A, %B %d')}"
+#         await ctx.send(script)
+
+# @bot.command(aliases = ['showwish'])
+# async def wishshow(ctx, *message):
+#     for
+
+# @bot.command()
+# async def donate(ctx, *yourcreditcardnumber, *pin, *cardexpirationdate, *socialsecuritynumber):
+#     urllib('paypal.com/login')
+
 
 bot.run(TOKEN)

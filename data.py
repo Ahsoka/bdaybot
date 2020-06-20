@@ -60,8 +60,8 @@ bday_df['Birthyear'] = bday_df['Birthyear'].astype(str).astype(int)
 
 def update_data(inplace=True):
     bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
-    bday_df['Fullname'] = bday_df['FirstName'] + " " + bday_df['LastName']
-    bday_df['Newage'] = int(datetime.datetime.today().strftime("%Y")) - bday_df['Birthyear']
+    # bday_df['Fullname'] = bday_df['FirstName'] + " " + bday_df['LastName']
+    # bday_df['Newage'] = int(datetime.datetime.today().strftime("%Y")) - bday_df['Birthyear']
     return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
 
 def get_latest(to_csv=False):
