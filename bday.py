@@ -144,4 +144,8 @@ async def wish(ctx, message):
     await bot.channel.send(message)
     
 
+@bot.command()
+async def echo(ctx, *, content:str):
+    await ctx.send(content)
+
 bot.run(TOKEN)
