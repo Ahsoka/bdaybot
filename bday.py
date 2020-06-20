@@ -133,12 +133,14 @@ async def on_message(message):
 
 @bot.command
 async def wish(ctx, message):
+    print(ctx, type(ctx))
+    print(message, type(message))
     # fullname_list = (today_df['FirstName'] + " " + today_df['LastName']).tolist()
     # for fullname in fullname_list:
     #     if message.content.channel.startswith(fullname):
     #         pass
     #     else:
     #         await message.channel.send("Either you spelled the name wrong, or its not even this person's birthay, idk my code is bad")
-    ctx.channel.send(message)
+    await ctx.channel.send(message)
 
 bot.run(TOKEN)
