@@ -142,7 +142,7 @@ async def on_message(message):
 """
 Data Organization:
 mega_dictionary = {ID Number (of a person who's birthday is today) : {ctx.author:ctx.author's ID Number, another ctx.author:their ID number, etc},
-Another ID Number: (of a person who's birthday is today) : {ctx.author:ctx.author's ID Number, another ctx.author:their ID number, etc}, etc}
+Another ID Number (of a person who's birthday is today) : {ctx.author:ctx.author's ID Number, another ctx.author:their ID number, etc}, etc}
 """
 
 def have_ID(author):
@@ -194,6 +194,7 @@ def apostrophe(name):
     return "'" if name[-1] == "s" else "'s"
 
 def get_bday_names(punctation=True):
+    # TODO: This is broken, fixed for punctation/grammar!
     script = ''
     for counter, (_, series) in enumerate(today_df.iterrows()):
         fullname = series['FirstName'] + " " + series['LastName']
