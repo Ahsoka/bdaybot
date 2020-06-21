@@ -4,3 +4,5 @@ Data.txt
 .ipynb_checkpoints
 beta_bdays.csv
 Student Locator Spring 2020.csv
+*.dill
+*.pickle

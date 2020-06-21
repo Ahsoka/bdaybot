@@ -6,11 +6,13 @@ import datetime
 windows_vid_url, unix_vid_url = 'https://www.youtube.com/watch?v=IolxqkL7cD8', 'https://www.youtube.com/watch?v=5iWhQWVXosU'
 
 url = os.environ.get('bday_data_URL')
+print("\ndata.py sucessfully accessed the enviroment variable 'bday_data_URL'")
 assert url is not None, ("The data URL could not be found in environment variables.\n"
                         "See this video on how add the url to the environment variables (name the enviroment variable 'bday_data_URL' without quotes): "
                         f"{windows_vid_url}" if 'nt' in os.name else f"{unix_vid_url}")
 
 raw_data = urllib.request.urlopen(url).read().decode('UTF-8')
+print('data.py sucessfully read the raw data from drneato.com')
 # data_dict = dict(((column_name, []) for column_name in ['FirstName', 'LastName', 'PeriodNumber', 'Birthdate', 'Birthyear', 'Radio', 'Question#1', 'Question#2', 'Question#3', 'StuID']))
 data_dict = dict(((column_name, []) for column_name in ['PeriodNumber', 'Birthdate', 'Birthyear', 'Radio', 'Question#1', 'Question#2', 'Question#3', 'StuID']))
 
@@ -37,19 +39,22 @@ for index, attr in enumerate(raw_data_list):
             pass
         data_dict[keys[index - 1 if index == 1 else index]].append(attr)
         # data_dict[keys[index + 1 if index < 2 else index + 2]].append(attr)
+print('data.py has sucessfully parsed the raw data from drneato.com')
 
 def timedelta_today(date):
     if hasattr(date, 'to_pydatetime'):
         date = date.to_pydatetime()
     if hasattr(date, 'date'):
         date = date.date()
-    delta = date - datetime.date.today()
+    # delta = date - datetime.date.today()
+    delta = date - datetime.date.today().replace(day=19)
     return delta if delta >= datetime.timedelta() else delta + datetime.timedelta(days=365)
 
 bday_df = pandas.DataFrame(data_dict)
 bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
 
 official_student_df = pandas.concat([pandas.read_csv('Student Locator Spring 2020.csv', usecols=['StuID', 'LastName', 'FirstName', 'Grd']), pandas.DataFrame({'StuID': [123456], 'LastName': ['Neat'], 'FirstName': ['Dr.'], 'Grd': [-1]})])
+print("data.py has sucessfully accessed the 'Student Locator Spring 2020.csv' file")
 bday_df = bday_df[bday_df['StuID'].isin(official_student_df['StuID'])]
 bday_df.drop_duplicates(['StuID'], inplace=True)
 bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
@@ -57,34 +62,22 @@ bday_df.set_index('StuID', inplace=True); official_student_df.set_index('StuID',
 bday_df[['FirstName', 'LastName']] = official_student_df[['FirstName', 'LastName']]
 bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
 bday_df['Birthyear'] = bday_df['Birthyear'].astype(str).astype(int)
+print("data.py has sucessfully created and modified the 'bday_df'")
 
 def update_data(inplace=True):
     bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
-    # bday_df['Fullname'] = bday_df['FirstName'] + " " + bday_df['LastName']
-    # bday_df['Newage'] = int(datetime.datetime.today().strftime("%Y")) - bday_df['Birthyear']
+    print(f"On {format(datetime.datetime.today(), '%A, %B %d at %I:%M %p')}, data.py sucessfully updated 'bday_df'\n")
     return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
 
 def get_latest(to_csv=False):
-    # returns a list of the latest birthay(s)
     if to_csv:
-        bday_df.to_csv('beta_bdays.csv')
+        print("data.py has sucessfully saved 'bday_df' to 'bdays.csv'")
+        bday_df.to_csv('bdays.csv')
     update_data()
     top_person = bday_df.iloc[0]
     if top_person['Timedelta'] == datetime.timedelta():
         return (True, bday_df[bday_df['Timedelta'] == datetime.timedelta()])
     else:
         return (False, bday_df[bday_df['Timedelta'] == top_person['Timedelta']])
-
-    # if len(bday_df.loc[bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)]) != 0:
-    #     latest = bday_df.loc[bday_df['Birthdate'] == datetime.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)]
-    #     print('yeraedsfasfewf')
-    # else:
-    #     latest = bday_df.loc[bday_df['Birthdate'] == bday_df.iloc[0, 4]]
-    # return latest['Fullname'].tolist()
-
-# def initialize_w():
-#
-#     for x
-
+print()
 update_data()
-bday_df.to_csv('beta_bdays.csv')
