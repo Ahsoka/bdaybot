@@ -7,7 +7,7 @@ import data as andres
 import pandas
 import dill, pickle
 import warnings
-from itertools import cycle
+import itertools
 
 bot = commands.Bot(command_prefix="!", description='A bot used for bdays', case_insensitive=True)
 TOKEN = os.environ.get('Bday_Token')
@@ -78,7 +78,7 @@ async def send_bdays():
 async def change_name():
     if 'names_cycler' not in globals():
         global names_cycler
-        names_cycler = cycle((today_df['FirstName'] + " " + today_df['LastName']).tolist())
+        names_cycler = itertools.cycle((today_df['FirstName'] + " " + today_df['LastName']).tolist())
     for guild in bot.guilds:
         await guild.me.edit(nick=next(names_cycler))
 
