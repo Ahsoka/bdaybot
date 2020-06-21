@@ -69,9 +69,10 @@ async def send_bdays():
         if bday_today:
             await member.add_roles(bdayRole)
         else:
+            server = bot.get_server(guild.id)
+            await bot.edit_role(server = server, role = upRole, name = "Upcoming Bday")
             await member.add_roles(upRole)
-            await uprole.edit(name="Upcoming Bday")
-            #await bot.edit_role(server = guild, role = upRole, name = "Upcoming Bday")
+            
 
 @tasks.loop(seconds=5)
 async def change_name():
