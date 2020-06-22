@@ -3,6 +3,7 @@ import urllib.request
 import os
 import datetime
 
+print(f"Started on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}")
 windows_vid_url, unix_vid_url = 'https://www.youtube.com/watch?v=IolxqkL7cD8', 'https://www.youtube.com/watch?v=5iWhQWVXosU'
 
 url = os.environ.get('bday_data_URL')
@@ -62,22 +63,25 @@ bday_df.set_index('StuID', inplace=True); official_student_df.set_index('StuID',
 bday_df[['FirstName', 'LastName']] = official_student_df[['FirstName', 'LastName']]
 bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
 bday_df['Birthyear'] = bday_df['Birthyear'].astype(str).astype(int)
-print("data.py has sucessfully created and modified the 'bday_df'")
+print("data.py has sucessfully created and modified the 'bday_df' DataFrame")
 
-def update_data(inplace=True):
+def update_data(inplace=True, supress=False):
     bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
-    print(f"On {format(datetime.datetime.today(), '%A, %B %d at %I:%M %p')}, data.py sucessfully updated 'bday_df'\n")
+    if not supress:
+        print(f"On {format(datetime.datetime.today(), '%A, %B %d at %I:%M %p')}, data.py sucessfully updated 'bday_df'\n")
     return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
 
-def get_latest(to_csv=False):
+def get_latest(to_csv=False, supress=False):
     if to_csv:
         print("data.py has sucessfully saved 'bday_df' to 'bdays.csv'")
         bday_df.to_csv('bdays.csv')
-    update_data()
+    update_data(supress=supress)
     top_person = bday_df.iloc[0]
     if top_person['Timedelta'] == datetime.timedelta():
         return (True, bday_df[bday_df['Timedelta'] == datetime.timedelta()])
     else:
         return (False, bday_df[bday_df['Timedelta'] == top_person['Timedelta']])
+
 print()
+
 update_data()
