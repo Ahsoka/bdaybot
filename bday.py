@@ -110,6 +110,15 @@ class bdaybot_commands(commands.Cog):
     def wished_before(self, author, wishee_ID):
         return author.id in self.bday_dict[wishee_ID]
 
+    def update_pickle(self, updating, source=None):
+        valid_updating = ['bday_dict', 'temp_id_storage']
+        assert updating in valid_updating, ("update_pickle() received a invalid value for updating, "
+                                            f"the acceptable values for updating are '{valid_updating[0]}' and {valid_updating[1]}")
+        with open(f'{updating}.pickle', mode='wb') as file:
+            pickle.dump(getattr(self, updating), file)
+        extra_info = '' if source is None else f" [{source}]"
+        print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')} '{updating}.pickle' was sucessfully saved to.{extra_info}\n")
+
     @commands.command()
     @commands.bot_has_permissions(manage_messages=True)
     async def wish(self, ctx, *message):
@@ -147,7 +156,7 @@ class bdaybot_commands(commands.Cog):
                                         "Add yourself to database here ⬇\n"
                                         "**http://drneato.com/Bday/Bday2.php**"))
 
-                    temp_id_storage[ctx.author.id] = studentID
+                    self.temp_id_storage[ctx.author.id] = studentID
                     self.update_pickle('temp_id_storage', source='wish()')
 
                 if len(message) > 1:
@@ -183,7 +192,7 @@ class bdaybot_commands(commands.Cog):
                 await ctx.send(f"{ctx.author.mention} You cannot wish {proper_name} a happy birthday more than once! Try wishing someone else a happy birthday!{og_message_deleted}")
                 return
 
-            if have_ID(ctx.author):
+            if self.have_ID(ctx.author):
                 self.bday_dict[wishee_ID_number][ctx.author.id] = self.get_ID(ctx.author)
             else:
                 self.bday_dict[wishee_ID_number][ctx.author.id] = studentID
@@ -201,15 +210,6 @@ class bdaybot_commands(commands.Cog):
                       f"{self.get_bday_names()} birthday on {format(self.today_df.iloc[0]['Birthdate'], '%A, %B %d')}{og_message_deleted}")
             await ctx.send(script)
 
-    def update_pickle(self, updating, source=None):
-        valid_updating = ['bday_dict', 'temp_id_storage']
-        assert updating in valid_updating, ("update_pickle() received a invalid value for updating, "
-                                            f"the acceptable values for updating are '{valid_updating[0]}' and {valid_updating[1]}")
-        with open(f'{updating}.pickle', mode='wb') as file:
-            pickle.dump(getattr(self, updating), file)
-        extra_info = '' if source is None else f" [{source}]"
-        print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')} '{updating}.pickle' was sucessfully saved to.{extra_info}\n")
-
     @wish.error
     async def handle_wish_error(self, ctx, error):
         if isinstance(ctx.message.channel, discord.DMChannel):
@@ -223,6 +223,29 @@ class bdaybot_commands(commands.Cog):
             print(f"{ctx.author} caused the following error in {ctx.guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n{error}\n")
             await ctx.send((f"{ctx.author.mention} Congratulations, you managed to break the wish command. "
                             f"{dev_discord_ping['Andres']}, {dev_discord_ping['Elliot']}, or {dev_discord_ping['Ryan']} fix this!"))
+
+    @commands.command()
+    async def getID(self, ctx, *message):
+        try:
+            ID = self.get_ID(ctx.author)
+        except KeyError:
+            # Might want to edit this so that it does not tell ppl to use setID if it does not have the required permission
+            await ctx.send(f"{ctx.author.mention} You do not currently have a registered ID. Use `{self.parsed_command_prefix}setID` to set your ID")
+            return
+        await ctx.author.send(f"Your ID is {ID}.  If this is a mistake, use `{self.parsed_command_prefix}setID` to change it.")
+
+    # @commands.command()
+    # async def setID(self, ctx, *messages):
+    #     for message in messages:
+    #         try:
+    #             ID = int(message)
+    #             break
+    #         except ValueError:
+    #             pass
+    #     if len(messages) > 1:
+    #         await ctx.author.send(f"You gave me multiple arguments, I am using {ID} as your new ID, if you made a mistake use `{self.parsed_command_prefix}setID` again")
+
+
 
 class bdaybot(commands.Bot):
     TOKEN = os.environ['Bday_Token']
