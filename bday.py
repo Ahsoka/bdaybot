@@ -267,6 +267,7 @@ class bdaybot(commands.Bot):
         self.connected = False
         assert not hasattr(self, 'disconnected'), "__init__() when setting self.disconnected another attribute named self.disconnected was detected"
         self.disconnected = True
+        
 
     async def on_ready(self):
         if self.disconnected:
@@ -290,6 +291,25 @@ class bdaybot(commands.Bot):
                     print()
             self.disconnected = False
             self.connected = True
+            for guild, a in zip(self.guilds, self.announcements):
+            # await a.send('Birthday Time!')
+                for role in guild.roles:
+                    if "happy birthday" in role.name.lower():
+                        bdayRole = role
+                    elif "upcoming bday" in role.name.lower():
+                        upRole = role
+                member = guild.me
+                try:
+                    await member.remove_roles(bdayRole, upRole)
+                except UnboundLocalError:
+                    pass
+                if self.bday_today:
+                    await member.add_roles(bdayRole)
+                else:
+                    #server = self.get_server(guild.id)
+                    #await self.edit_role(server=guild, role=upRole, name="Upcoming Bday")
+                    await upRole.edit(name = f"Upcoming Bday-{format(self.today_df.iloc[0]['Birthdate'], '%a %b %d')}")
+                    await member.add_roles(upRole)
         else:
             print(f"{self.user} has succesfully reconnected to Discord on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}")
 
@@ -313,21 +333,21 @@ class bdaybot(commands.Bot):
         # By default next_iteration returns the time in the 'UTC' timezone; which caused much confusion
         # It now converted to the local time zone automatically
         print(f"The next iteration is schedule for {format(send_bdays.next_iteration.astimezone(), '%I:%M %p on %x')}\n")
-        # for guild, a in zip(self.guilds, announcements):
-        #     # await a.send('Birthday Time!')
-        #     for role in guild.roles:
-        #         if "happy birthday" in role.name.lower():
-        #             bdayRole = role
-        #         elif "upcoming bday" in role.name.lower():
-        #             upRole = role
-        #     member = guild.me
-        #     await member.remove_roles(bdayRole, upRole)
-        #     if bday_today:
-        #         await member.add_roles(bdayRole)
-        #     else:
-        #         server = self.get_server(guild.id)
-        #         await self.edit_role(server=server, role=upRole, name="Upcoming Bday")
-        #         await member.add_roles(upRole)
+        for guild, a in zip(self.guilds, announcements):
+            # await a.send('Birthday Time!')
+            for role in guild.roles:
+                if "happy birthday" in role.name.lower():
+                    bdayRole = role
+                elif "upcoming bday" in role.name.lower():
+                    upRole = role
+            member = guild.me
+            await member.remove_roles(bdayRole, upRole)
+            if bday_today:
+                await member.add_roles(bdayRole)
+            else:
+                server = self.get_server(guild.id)
+                await self.edit_role(server=server, role=upRole, name="Upcoming Bday")
+                await member.add_roles(upRole)
 
     @tasks.loop(seconds=5)
     async def change_name(self):
