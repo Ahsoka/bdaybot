@@ -19,7 +19,7 @@ data_dict = dict(((column_name, []) for column_name in ['PeriodNumber', 'Birthda
 
 # Eight rows before it's someone elses data
 keys = list(data_dict.keys())
-raw_data_list = raw_data.split('\n')[:-1]
+raw_data_list = raw_data.splitlines()
 for index, attr in enumerate(raw_data_list):
     index %= 8
     if index == 0:
@@ -48,7 +48,7 @@ def timedelta_today(date):
     if hasattr(date, 'date'):
         date = date.date()
     # delta = date - datetime.date.today()
-    delta = date - datetime.date.today().replace(day=21)
+    delta = date - datetime.date.today().replace(day=19)
     return delta if delta >= datetime.timedelta() else delta + datetime.timedelta(days=365)
 
 bday_df = pandas.DataFrame(data_dict)
