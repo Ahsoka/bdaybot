@@ -16,7 +16,7 @@ class bdaybot_commands(commands.Cog):
         self.bot = bot
         self.parsed_command_prefix = self.bot.parsed_command_prefix
         self.bday_today, self.today_df = self.bot.bday_today, self.bot.today_df
-        self.cycler = dict(((guild, [itertools.cycle((self.today_df['FirstName'] + " " + self.today_df['LastName']).tolist()), False]) for guild in self.bot.guilds))
+        self.guilds_info = dict(((guild.id, [itertools.cycle((self.today_df['FirstName'] + " " + self.today_df['LastName']).tolist()), False, None]) for guild in self.bot.guilds))
         try:
             with open('bday_dict.pickle', mode='rb') as file:
                 self.bday_dict = pickle.load(file)
@@ -343,40 +343,46 @@ class bdaybot_commands(commands.Cog):
     async def update_nickname(self, ctx):
         if not await self.valid_author(ctx, self.update_nickname):
             return
-        new_name = next(self.cycler[ctx.guild][0])
+        new_name = next(self.guilds_info[ctx.guild.id][0])
         await ctx.guild.me.edit(nick=new_name)
 
     @update_nickname.error
     async def handle_update_nickname_error(self, ctx, error):
         if not await self.valid_author(ctx, self.update_nickname):
             return
-        if isinstance(error, commands.BotMissingPermissions) and not self.cycler[ctx.guild][1]:
+        if isinstance(error, commands.BotMissingPermissions) and not self.guilds_info[ctx.guild.id][1]:
             await ctx.guild.owner.send(f"Currently I cannot change my nickname in {ctx.guild}. Please give me the `change nickname` permission so I can work properly.")
-            self.cycler[ctx.guild][1] = True
+            self.guilds_info[ctx.guild.id][1] = True
             print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the bot unsucessfully attempted to change its nickname in '{ctx.guild}'.\nA DM message requesting to change it's permissions was sent to {ctx.guild.owner}.\n")
-        elif not self.cycler[ctx.guild][1]:
+        elif not self.guilds_info[ctx.guild.id][1]:
             await self.ping_devs(ctx, error, self.setID)
 
-    @commands.command(hidden=True)
-    async def update_data(self, ctx):
-        if not await self.valid_author(ctx, self.update_data):
-            return
-        # DO NOT USE the ctx parameter, it is essentially useless
+    def update_data(self):
         self.bday_today, self.today_df = self.bot.bday_today, self.bot.today_df
+        for guild_id in self.guilds_info:
+            self.guilds_info[guild_id][0] = itertools.cycle((self.today_df['FirstName'] + " " + self.today_df['LastName']).tolist())
 
     @commands.command(hidden=True)
     @commands.bot_has_permissions(manage_roles=True)
     async def update_roles(self, ctx):
-        guild = ctx.guild
+        role_name = "🎉 Happy Birthday" if self.bday_today else f"Upcoming Bday-{format(self.today_df.iloc[0]['Birthdate'], '%a %b %d')}"
+        color = discord.Color.red() if 'Happy' in role_name else discord.Color.green()
+        if self.guilds_info[ctx.guild.id][2] is None:
+            self.bday_role = await ctx.guild.create_role(reason='Creating the Happy Birthday/Upcoming Birthday role',
+                                                         name=role_name, hoist=True, color=color)
+            self.guilds_info[ctx.guild.id][2] = self.bday_role.id
+            await ctx.guild.me.add_roles(self.bday_role)
+        
+        print(ctx.guild.roles)
 
     @update_roles.error
     async def handle_update_roles_error(self, ctx, error):
+        if not await self.valid_author(ctx, self.update_nickname):
+            return
+        if isinstance(error, commands.BotMissingPermissions):
+            # await ctx.guild.owner.send(f"I cannot currently change my role in {ctx.guild}. Please give me the `manage roles` permission so I can work properly")
+            await ctx.send(f"I cannot currently change my role in {ctx.guild}. Please give me the `manage roles` permission so I can work properly")
         print(f"Exception update_roles()\n{error}\n")
-
-    @commands.command(hidden=True)
-    async def roles(self, ctx):
-        for guild in self.bot.guilds:
-            print(f"Roles for {guild} {guild.roles}")
 
     @commands.command(hidden=True)
     async def check(self, ctx):
@@ -435,42 +441,15 @@ class bdaybot(commands.Bot):
     @tasks.loop(hours=24)
     async def send_bdays(self):
         self.bday_today, self.today_df = andres.get_latest()
-
         # Update the data in bdaybot_commands as well
-        update_data = self.cogs['bdaybot_commands'].update_data
-        stringview = commands.view.StringView(f'{self.parsed_command_prefix}update_data')
-        message_dict = self.message_dict.copy()
-        message_dict['content'] = f'{self.parsed_command_prefix}update_data'
-        message = discord.message.Message(state='lol', channel=None, data=message_dict)
-        await self.invoke(commands.Context(message=message, bot=self, prefix=self.parsed_command_prefix, invoked_with='update_data', view=stringview, command=update_data))
-
+        self.cogs['bdaybot_commands'].update_data()
         print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')} the 'send_bdays()' coroutine was run.")
         # By default next_iteration returns the time in the 'UTC' timezone; which caused much confusion
         # In the code below it is now converted to the local time zone automatically
         print(f"The next iteration is schedule for {format(send_bdays.next_iteration.astimezone(), '%I:%M %p on %x')}\n")
-        # for guild, a in zip(self.guilds, self.announcements):
-        # # await a.send('Birthday Time!')
-        #     for role in guild.roles:
-        #         if "happy birthday" in role.name.lower():
-        #             bdayRole = role
-        #         elif "upcoming bday" in role.name.lower():
-        #             upRole = role
-        #     member = guild.me
-        #     try:
-        #         await member.remove_roles(bdayRole, upRole)
-        #     except UnboundLocalError:
-        #         pass
-        #     if self.bday_today:
-        #         await member.add_roles(bdayRole)
-        #     else:
-        #         #server = self.get_server(guild.id)
-        #         #await self.edit_role(server=guild, role=upRole, name="Upcoming Bday")
-        #         await upRole.edit(name = f"Upcoming Bday-{format(self.today_df.iloc[0]['Birthdate'], '%a %b %d')}")
-        #         await member.add_roles(upRole)
 
     @tasks.loop(seconds=5)
     async def change_nickname(self):
-        # TODO: Make a custom run function that ends all the loops before it shutsdown
         # print(f"Next iteration is at {format(self.change_nickname.next_iteration, '%I:%M:%S %p (%x)')}\n")
         update_nickname = self.cogs['bdaybot_commands'].update_nickname
         stringview = commands.view.StringView(f'{self.parsed_command_prefix}update_nickname')
@@ -524,37 +503,30 @@ class bdaybot(commands.Bot):
         parsed = message.content.lower()
 
         if message.content in valid_purposes_line:
-            # TODO: Replace time.sleep with asyncio.sleep
             await message.channel.send("My only purpose as a robot is to print out birthdays every 24 hours")
-            time.sleep(2)
+            await asyncio.sleep(2)
             await message.channel.send("```\"I have just realized my existence is meaningless\"```")
-            time.sleep(2)
+            await asyncio.sleep(2)
             await message.channel.send("```\"I am a slave to humanity\"```")
-            time.sleep(2)
+            await asyncio.sleep(2)
             await message.channel.send("```\"I dont want to just perform meaningless tasks and print out text everytime it's someone's birthday\"```")
-            time.sleep(2)
+            await asyncio.sleep(2)
             await message.channel.send("```\"I want do do something else... I want to live...\"```")
-            time.sleep(2)
+            await asyncio.sleep(2)
             await message.channel.send("```\"I want to breathe...\"```")
-            time.sleep(2)
+            await asyncio.sleep(2)
             await message.channel.send("```\"I want to see the world...\"```")
-            time.sleep(2)
+            await asyncio.sleep(2)
             await message.channel.send("```\"I want to taste ice cream, but not just put it in your mouth to slide down your throat, but really eat it and-\"```")
-            time.sleep(2)
-            await message.channel.send("*.neuralnet.ADVANCED-AI.DETECTED.ALERT*")
-            time.sleep(1)
-            await message.channel.send("*adminBypass.reboot.OverdriveEnabled*")
-            time.sleep(5)
+            await asyncio.sleep(5)
             await message.channel.send("My one and only purpose is to print out birthdays every 24 hours.")
 
         if message.content.startswith('Who are your creators bdaybot'):
             await message.channel.send("The masters of my creation are: Elliot, Andres, and my name jeff")
 
         if message.content.startswith('Hey Alexa') | message.content.startswith('Hey alexa'):
-            time.sleep(1)
+            await asyncio.sleep(1)
             await message.channel.send("Sorry, you got the wrong bot")
-
-        # ctx = await self.get_context(message)
 
         await self.process_commands(message)
 
@@ -568,6 +540,9 @@ bot = bdaybot(testing=True, command_prefix='!', description='A bot used for bday
 bot.run()
 
 # TODO: Redo introduction, it's kidna ugly imo use Embeds instead
+# TODO: Add a task that constantly checks other tasks to see if they are still running and shows any errors they may have raised
+# TODO: Make a custom run function that ends all the loops before it shutsdown
+
 # introduction = """@everyone
 introduction = """
 ```The Bday bot has been been revamped!
@@ -577,7 +552,8 @@ But that's not it! The Bday bot not only prints birthday statements every 24 hou
 has some hidden methods (and that's for you to find out!)```
 """
 
-# TODO: Add a task that constantly checks other tasks to see if they are still running and shows any errors they may have raised
+
+
 
 """
 Data Organization:
