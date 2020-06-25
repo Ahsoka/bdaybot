@@ -9,6 +9,13 @@ import warnings
 import itertools
 import asyncio
 
+# Pre discord 1.4 compability
+if not hasattr(tasks.Loop, 'is_running'):
+    def is_running(self):
+        return not bool(self._task.done()) if self._task else False
+    tasks.Loop.is_running = is_running
+
+
 dev_discord_ping = {'Andres':388899325885022211, 'Elliot':349319578419068940, 'Ryan':262676325846876161}
 
 class bdaybot_commands(commands.Cog):
@@ -157,22 +164,25 @@ class bdaybot_commands(commands.Cog):
             source = 'update_data()' if source is None else f'{source} -> update_data()'
             self.update_pickle('guilds_info', source=source)
 
-    async def ping_devs(self, ctx, error, command):
-        parsed_ctx_guild = ctx.guild if ctx.guild else 'a DM message'
-        if hasattr(ctx, 'author'):
-            print(f"[{command.name}()] {ctx.author} caused the following error in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n{error}\n")
-        else:
-            print(f"The following error occured with the {command.name} command in {parsed_ctx_guild} at {format(datetime.datetime.today(), '%I:%M %p (%x)')}\n{error}\n")
-        if ctx.guild and hasattr(ctx, 'author'):
-            return (f" {self.bot.get_user(dev_discord_ping['Andres']).mention}, "
-                    f"{self.bot.get_user(dev_discord_ping['Elliot']).mention},"
-                    f" or {self.bot.get_user(dev_discord_ping['Ryan']).mention} fix this!")
+    async def ping_devs(self, error, command, ctx=None):
+        if ctx is not None:
+            parsed_ctx_guild = ctx.guild if ctx.guild else 'a DM message'
+            if hasattr(ctx, 'author'):
+                print(f"[{command.name}()] {ctx.author} caused the following error in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n{repr(error)}\n")
+            else:
+                print(f"The following error occured with the {command.name} command in {parsed_ctx_guild} at {format(datetime.datetime.today(), '%I:%M %p (%x)')}\n{repr(error)}\n")
+            if ctx.guild and hasattr(ctx, 'author'):
+                return (f" {self.bot.get_user(dev_discord_ping['Andres']).mention}, "
+                        f"{self.bot.get_user(dev_discord_ping['Elliot']).mention},"
+                        f" or {self.bot.get_user(dev_discord_ping['Ryan']).mention} fix this!")
         for dev_name in dev_discord_ping:
             dev = self.bot.get_user(dev_discord_ping[dev_name])
             if hasattr(ctx, 'author'):
-                await dev.send(f"{ctx.author.mention} caused the following error in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n[{command.name}()]  **{error}**")
+                await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}()` in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n  **{repr(error)}**")
+            elif ctx is None:
+                await dev.send(f"The following error occured with the `{command}()` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
             else:
-                await dev.send(f"The following error occured in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n[{command.name}()]  **{error}**")
+                await dev.send(f"The following error occured with `{command.name}()` in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
         return ''
 
     @commands.command()
@@ -276,7 +286,7 @@ class bdaybot_commands(commands.Cog):
             await ctx.send((f"The `{self.parsed_command_prefix}wish` command is currently unavailable because I do not have the `manage messages` permission.\n"
                             f"If you would like to use the `{self.parsed_command_prefix}wish` command please, give me the `manage messages` permission."))
         else:
-            await ctx.send(f"{ctx.author.mention} Congratulations, you managed to break the wish command.{await self.ping_devs(ctx, error, self.wish)}")
+            await ctx.send(f"{ctx.author.mention} Congratulations, you managed to break the wish command.{await self.ping_devs(error, self.wish, ctx=ctx)}")
 
     @commands.command()
     async def getID(self, ctx, *message):
@@ -346,7 +356,7 @@ class bdaybot_commands(commands.Cog):
             await ctx.send((f"The `{self.parsed_command_prefix}setID` command is currently unavailable because I do not have the `manage messages` permission.\n"
                             f"If you would like to use the `{self.parsed_command_prefix}setID` command please, give me the `manage messages` permission."))
         else:
-            await ctx.send(f"{maybe_mention(ctx)}Congrats, you managed to break the `{self.parsed_command_prefix}setID` command.{await self.ping_devs(ctx, error, self.setID)}")
+            await ctx.send(f"{self.maybe_mention(ctx)}Congrats, you managed to break the `{self.parsed_command_prefix}setID` command.{await self.ping_devs(error, self.setID, ctx=ctx)}")
 
     async def valid_author(self, ctx, command, send=True):
         # TODO: Might want to change this so it only recongizes itself as a valid_author as opposed to any bot user
@@ -377,7 +387,7 @@ class bdaybot_commands(commands.Cog):
                    f"A DM message requesting to change it's permissions was sent to {ctx.guild.owner}.\n"))
             self.update_pickle('guilds_info', source='handle_update_nickname_error()')
         elif not self.guilds_info[ctx.guild.id][1]:
-            await self.ping_devs(ctx, error, self.update_nickname)
+            await self.ping_devs(error, self.update_nickname, ctx=ctx)
 
     @commands.command(hidden=True)
     @commands.bot_has_permissions(manage_roles=True)
@@ -429,12 +439,18 @@ class bdaybot_commands(commands.Cog):
             dm_message = '' if self.guilds_info[ctx.guild.id][3] else f"A DM message requesting to change it's permissions was sent to {ctx.guild.owner}.\n"
             print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the bot unsucessfully changed its role in '{ctx.guild}'.\n{dm_message}")
         else:
-            await self.ping_devs(ctx, error, self.update_role)
+            await self.ping_devs(error, self.update_role, ctx=ctx)
 
-    @commands.command(hidden=True)
-    async def check(self, ctx):
-        print(self.bot.update_role.get_task())
+    @commands.command(aliases=['up'])
+    async def upcoming(self, ctx):
+        pass
 
+    async def handle_upcoming_error(self, ctx, error):
+        pass
+
+    # @commands.command(hidden=True)
+    # async def check(self, ctx):
+    #     print(self.bot.check_other_tasks.get_task())
 
 class bdaybot(commands.Bot):
     TOKEN = os.environ['Bday_Token']
@@ -459,17 +475,21 @@ class bdaybot(commands.Bot):
         if not self.init_connection:
             self.announcements = [channel for guild in self.guilds for channel in guild.text_channels if "announcements" in channel.name.lower()]
             self.add_cog(bdaybot_commands(self))
+            self.tasks_running = {'send_bdays':True, 'change_nicknames':True, 'change_roles':True}
             # ALWAYS start send_bdays before any other coroutine!
             self.send_bdays.before_loop(self.send_bdays_wait_to_run)
             self.send_bdays.start()
-            print("Succesfully started 'send_bdays()' task")
+            print("Succesfully started the 'send_bdays()' task")
 
             self.change_nicknames.start()
-            print("Sucessfully started 'change_nicknames()' task")
+            print("Sucessfully started the 'change_nicknames()' task")
 
-            self.change_roles.before_loop(self.change_role_wait_to_run)
+            self.change_roles.before_loop(self.change_roles_wait_to_run)
             self.change_roles.start()
-            print("Sucessfully started 'change_roles()' task\n")
+            print("Sucessfully started the 'change_roles()' task")
+
+            self.check_other_tasks.start()
+            print("Sucessfully started the 'check_other_tasks()' task\n")
 
             # Add some type of checking to ensure that self.announcements equals self.guilds
             for index, (channel, guild) in enumerate(zip(self.announcements, self.guilds)):
@@ -497,7 +517,32 @@ class bdaybot(commands.Bot):
         print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')} the 'send_bdays()' coroutine was run.")
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
-        print(f"The next iteration is scheduled for {format(send_bdays.next_iteration.astimezone(), '%I:%M %p on %x')}\n")
+        print(f"The next iteration is scheduled for {format(self.send_bdays.next_iteration.astimezone(), '%I:%M %p on %x')}\n")
+
+    # Might want to change interval, cause every second is kinda of a lot of checking
+    @tasks.loop(seconds=1)
+    async def check_other_tasks(self):
+        # NB IMPORTANT: The check_other_tasks method must be **EXTREMELY** robust
+        # because this is the only way to determine whether or not the other tasks have failed
+        # or are still running. If this task fails we will have no way of knowing whether or not
+        # the other tasks have failed.
+        script = f"unexpectedly ended at {format(datetime.datetime.today(), '%I:%M %p on %x')} due to following error:\n"
+        if not self.send_bdays.is_running() and self.tasks_running['send_bdays']:
+            error = self.send_bdays.get_task().exception()
+            print(f"send_bdays() {script}{repr(error)}\n")
+            self.tasks_running['send_bdays'] = False
+            await self.cogs['bdaybot_commands'].ping_devs(error, "send_bdays")
+        if not self.change_nicknames.is_running() and self.tasks_running['change_nicknames']:
+            error = self.change_nicknames.get_task().exception()
+            print(f"change_nicknames() {script}{repr(error)}\n")
+            self.tasks_running['change_nicknames'] = False
+            await self.cogs['bdaybot_commands'].ping_devs(error, "change_nicknames")
+        if not self.change_roles.is_running() and self.tasks_running['change_roles']:
+            error = self.change_roles.get_task().exception()
+            print(f"change_roles() {script}{repr(error)}\n")
+            self.tasks_running['change_roles'] = False
+            await self.cogs['bdaybot_commands'].ping_devs(error, "change_roles")
+
 
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
@@ -518,7 +563,7 @@ class bdaybot(commands.Bot):
         #     print(f"Time elasped since last call of change_nicknames(): {time2 - self.time1}")
         #     self.time1 = time2
 
-    async def change_roles_wait_to_run(self, *args):
+    async def run_update_role(self):
         update_role = self.cogs['bdaybot_commands'].update_role
         stringview = commands.view.StringView(f'{self.parsed_command_prefix}update_role')
         for guild in self.guilds:
@@ -528,6 +573,8 @@ class bdaybot(commands.Bot):
             await self.invoke(commands.Context(message=message, bot=self, prefix=self.parsed_command_prefix,
                                                invoked_with='update_role', view=stringview, command=update_role))
 
+    async def change_roles_wait_to_run(self, *args):
+        await self.run_update_role()
         time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.datetime.today()
         # time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=0)).replace(hour=0, minute=36, second=0, microsecond=0) - datetime.datetime.today()
         print(f"The change_roles coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.\n")
@@ -535,18 +582,11 @@ class bdaybot(commands.Bot):
 
     @tasks.loop(hours=24)
     async def change_roles(self):
-        update_role = self.cogs['bdaybot_commands'].update_role
-        stringview = commands.view.StringView(f'{self.parsed_command_prefix}update_role')
-        for guild in self.guilds:
-            message_dict = self.message_dict.copy()
-            message_dict['content'] = f'{self.parsed_command_prefix}update_role'
-            message = discord.message.Message(state='lol', channel=guild.text_channels[0], data=message_dict)
-            await self.invoke(commands.Context(message=message, bot=self, prefix=self.parsed_command_prefix,
-                                               invoked_with='update_role', view=stringview, command=update_role))
+        await self.run_update_role()
         print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')} the 'change_roles()' coroutine was run.")
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
-        print(f"The next iteration is scheduled for {format(send_bdays.next_iteration.astimezone(), '%I:%M %p on %x')}\n")
+        print(f"The next iteration is scheduled for {format(self.change_roles.next_iteration.astimezone(), '%I:%M %p on %x')}\n")
 
     def format_discord(self, first_name, last_name, *, birthyear=None, birthdate=None):
         full_name = f"***__{first_name} {last_name}__***"
@@ -607,7 +647,7 @@ class bdaybot(commands.Bot):
             token = self.TOKEN
         super().run(token, *args, **kwargs)
 
-
+# TODO: Change the command_prefix from `!` to something that does not trigger other bots.
 bot = bdaybot(testing=True, command_prefix='!', description='A bot used for bdays', case_insensitive=True)
 bot.run()
 print("Ended program!")
