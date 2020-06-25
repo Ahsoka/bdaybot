@@ -279,12 +279,12 @@ class bdaybot_commands(commands.Cog):
     @wish.error
     async def handle_wish_error(self, ctx, error):
         if isinstance(ctx.message.channel, discord.DMChannel):
-            print(f"{ctx.author} tried to use the wish command in a DM on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}")
-            await ctx.send(f"The `{self.parsed_command_prefix}wish` command is not currently available in DMs. Please try using it in a server with me.")
+            print(f"{ctx.author} tried to use the wish command in a DM on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}\n")
+            await ctx.send(f"The `{ctx.prefix}wish` command is not currently available in DMs. Please try using it in a server with me.")
         elif isinstance(error, commands.BotMissingPermissions):
             print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the wish command was used in {ctx.guild} without the 'manage_messages' permission by {ctx.author}\n")
-            await ctx.send((f"The `{self.parsed_command_prefix}wish` command is currently unavailable because I do not have the `manage messages` permission.\n"
-                            f"If you would like to use the `{self.parsed_command_prefix}wish` command please, give me the `manage messages` permission."))
+            await ctx.send((f"The `{ctx.prefix}wish` command is currently unavailable because I do not have the `manage messages` permission.\n"
+                            f"If you would like to use the `{ctx.prefix}wish` command please, give me the `manage messages` permission."))
         else:
             await ctx.send(f"{ctx.author.mention} Congratulations, you managed to break the wish command.{await self.ping_devs(error, self.wish, ctx=ctx)}")
 
@@ -294,9 +294,9 @@ class bdaybot_commands(commands.Cog):
             ID = self.get_ID(ctx.author, pop=False)
         except KeyError:
             # Might want to edit this so that it does not tell ppl to use setID if it does not have the required permission
-            await ctx.send(f"{ctx.author.mention} You do not currently have a registered ID. Use `{self.parsed_command_prefix}setID` to set your ID")
+            await ctx.send(f"{ctx.author.mention} You do not currently have a registered ID. Use `{ctx.prefix}setID` to set your ID")
             return
-        await ctx.author.send(f"Your ID is **{ID}**.  If this is a mistake use `{self.parsed_command_prefix}setID` to change it.")
+        await ctx.author.send(f"Your ID is **{ID}**.  If this is a mistake use `{ctx.prefix}setID` to change it.")
 
     @staticmethod
     def maybe_mention(ctx):
@@ -335,7 +335,7 @@ class bdaybot_commands(commands.Cog):
                 await ctx.author.send(f"**{ID}** is not a valid ID. Please use a valid 6-digit ID.")
             elif self.ID_in_use(ID):
                 if self.get_ID(ctx.author, 'invalid') == ID:
-                    await ctx.author.send(f"**{ID}** is already your current ID. Use `{self.parsed_command_prefix}getID` to view your current ID.")
+                    await ctx.author.send(f"**{ID}** is already your current ID. Use `{ctx.prefix}getID` to view your current ID.")
                 else:
                     await ctx.author.send(f"**{ID}** is already in use. Please use another ID.")
             else:
@@ -350,13 +350,13 @@ class bdaybot_commands(commands.Cog):
     async def handle_setID_error(self, ctx, error):
         if hasattr(error, 'original') and isinstance(error.original, ValueError):
             await ctx.send((f"{self.maybe_mention(ctx)}"
-                            f"'**{' '.join(ctx.message.content.split()[1:])}**' is not a valid number. "))
+                            f"'**{' '.join(ctx.message.content.split()[1:])}**' is not a valid number."))
         elif isinstance(error, commands.BotMissingPermissions):
             print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the setID command was used in {ctx.guild} without the 'manage_messages' permission by {ctx.author}\n")
-            await ctx.send((f"The `{self.parsed_command_prefix}setID` command is currently unavailable because I do not have the `manage messages` permission.\n"
-                            f"If you would like to use the `{self.parsed_command_prefix}setID` command please, give me the `manage messages` permission."))
+            await ctx.send((f"The `{ctx.prefix}setID` command is currently unavailable because I do not have the `manage messages` permission.\n"
+                            f"If you would like to use the `{ctx.prefix}setID` command please, give me the `manage messages` permission."))
         else:
-            await ctx.send(f"{self.maybe_mention(ctx)}Congrats, you managed to break the `{self.parsed_command_prefix}setID` command.{await self.ping_devs(error, self.setID, ctx=ctx)}")
+            await ctx.send(f"{self.maybe_mention(ctx)}Congrats, you managed to break the `{ctx.prefix}setID` command.{await self.ping_devs(error, self.setID, ctx=ctx)}")
 
     async def valid_author(self, ctx, command, send=True):
         # TODO: Might want to change this so it only recongizes itself as a valid_author as opposed to any bot user
@@ -405,11 +405,11 @@ class bdaybot_commands(commands.Cog):
             bday_role = ctx.guild.get_role(self.guilds_info[ctx.guild.id][2])
             if bday_role is None:
                 self.guilds_info[ctx.guild.id][2] = None
-                stringview = commands.view.StringView(f'{self.parsed_command_prefix}update_role')
+                stringview = commands.view.StringView(f'{ctx.prefix}update_role')
                 message_dict = bdaybot.message_dict.copy()
-                message_dict['content'] = f'{self.parsed_command_prefix}update_role'
+                message_dict['content'] = f'{ctx.prefix}update_role'
                 message = discord.message.Message(state='lol', channel=ctx.guild.text_channels[0], data=message_dict)
-                await self.bot.invoke(commands.Context(message=message, bot=self.bot, prefix=self.parsed_command_prefix, invoked_with='update_role', view=stringview, command=self.update_role))
+                await self.bot.invoke(commands.Context(message=message, bot=self.bot, prefix=ctx.prefix, invoked_with='update_role', view=stringview, command=self.update_role))
                 return
 
             await bday_role.edit(name=role_name, color=color)
@@ -445,6 +445,7 @@ class bdaybot_commands(commands.Cog):
     async def upcoming(self, ctx):
         pass
 
+    @upcoming.error
     async def handle_upcoming_error(self, ctx, error):
         pass
 
@@ -519,7 +520,7 @@ class bdaybot(commands.Bot):
         # In the code below it is now converted to the local time zone automatically
         print(f"The next iteration is scheduled for {format(self.send_bdays.next_iteration.astimezone(), '%I:%M %p on %x')}\n")
 
-    # Might want to change interval, cause every second is kinda of a lot of checking
+    # Might want to change interval, cause checking every second is kinda of a lot
     @tasks.loop(seconds=1)
     async def check_other_tasks(self):
         # NB IMPORTANT: The check_other_tasks method must be **EXTREMELY** robust
@@ -542,7 +543,6 @@ class bdaybot(commands.Bot):
             print(f"change_roles() {script}{repr(error)}\n")
             self.tasks_running['change_roles'] = False
             await self.cogs['bdaybot_commands'].ping_devs(error, "change_roles")
-
 
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
@@ -647,8 +647,16 @@ class bdaybot(commands.Bot):
             token = self.TOKEN
         super().run(token, *args, **kwargs)
 
+    async def on_command_error(self, ctx, error):
+        if ctx.command and hasattr(self.cogs['bdaybot_commands'], ctx.command.name):
+            return
+        elif isinstance(error, commands.CommandNotFound):
+            print(f"{ctx.author} tried to invoke the invalid command '{ctx.message.content}' on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}\n")
+            await ctx.send(f"{bdaybot_commands.maybe_mention(ctx)}`{ctx.message.content}` is not a valid command.")
+            # TODO maybe: Add a did you mean 'X' command, if u want.
+
 # TODO: Change the command_prefix from `!` to something that does not trigger other bots.
-bot = bdaybot(testing=True, command_prefix='!', description='A bot used for bdays', case_insensitive=True)
+bot = bdaybot(testing=True, command_prefix=['!', '.'], description='A bot used for bdays', case_insensitive=True)
 bot.run()
 print("Ended program!")
 
