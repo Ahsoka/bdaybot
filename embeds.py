@@ -81,8 +81,8 @@ def birthdayembed(discorduser, irlname, age):
 
     embed.set_image(url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/apple/237/face-with-party-horn-and-party-hat_1f973.png")
     ahelpwish.setauthor(name="!wish command", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/apple/237/face-with-party-horn-and-party-hat_1f973.png")
-    aintroembed.set_thumbnail(url=discorduser.avatar_url_as(*, format=None, static_format='webp', size=1024))
-    aintroembed.set_author(name=f"Happy Birthday to {discorduser.mention}!!!", icon_url=discorduser.avatar_url_as(*, format=None, static_format='webp', size=1024))
+    aintroembed.set_thumbnail(url=discorduser.avatar_url_as(format=None, static_format='webp', size=1024))
+    aintroembed.set_author(name=f"Happy Birthday to {discorduser.mention}!!!", icon_url=discorduser.avatar_url_as(format=None, static_format='webp', size=1024))
 
 
 embed = discord.Embed(title="title ~~(did you know you can have markdown here too?)~~", colour=discord.Colour(0x9a3c7d), url="https://discordapp.com", description="this supports [named links](https://discordapp.com) on top of the previously shown subset of markdown. ```\nyes, even code blocks```", timestamp=datetime.datetime.utcfromtimestamp(1593111022))
@@ -96,7 +96,7 @@ embed.add_field(name="🙄", value="an informative error should show up, and thi
 embed.add_field(name="<:thonkang:219069250692841473>", value="these last two", inline=True)
 embed.add_field(name="<:thonkang:219069250692841473>", value="are inline fields", inline=True)
 
-await bot.say(content="this `supports` __a__ **subset** *of* ~~markdown~~ 😃 ```js\nfunction foo(bar) {\n  console.log(bar);\n}\n\nfoo(1);```", embed=embed)
+# await bot.say(content="this `supports` __a__ **subset** *of* ~~markdown~~ 😃 ```js\nfunction foo(bar) {\n  console.log(bar);\n}\n\nfoo(1);```", embed=embed)
 
 @bot.command()
 async def showintro(ctx):
