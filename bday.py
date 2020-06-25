@@ -15,8 +15,19 @@ class bdaybot_commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.parsed_command_prefix = self.bot.parsed_command_prefix
-        self.bday_today, self.today_df = self.bot.bday_today, self.bot.today_df
-        self.guilds_info = dict(((guild.id, [itertools.cycle((self.today_df['FirstName'] + " " + self.today_df['LastName']).tolist()), False, None]) for guild in self.bot.guilds))
+        self.update_data(update_guild=False)
+        try:
+            with open('guilds_info.pickle', mode='rb') as file:
+                self.guilds_info = pickle.load(file)
+                print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, 'guilds_info.pickle' was sucessfully accessed.")
+            for guild in self.bot.guilds:
+                if guild.id not in self.guilds_info:
+                    self.guilds_info[guild.id] = [itertools.cycle((self.today_df['FirstName'] + " " + self.today_df['LastName']).tolist()), False, None, False]
+            self.update_data(source='__init__()')
+        except (FileNotFoundError, EOFError):
+            self.guilds_info = dict(((guild.id, [itertools.cycle((self.today_df['FirstName'] + " " + self.today_df['LastName']).tolist()), False, None, False]) for guild in self.bot.guilds))
+            print((f"Unsucessfully attempted to access 'guilds_info.pickle' at {format(datetime.datetime.today(), '%I:%M %p (%x)')}.\n"
+                    "Created a new an empty instance.\n"))
         try:
             with open('bday_dict.pickle', mode='rb') as file:
                 self.bday_dict = pickle.load(file)
@@ -131,13 +142,20 @@ class bdaybot_commands(commands.Cog):
     def update_pickle(self, updating, source=None):
         if updating.startswith('self.'):
             updating = updating[len('self.'):]
-        valid_updating = ['bday_dict', 'temp_id_storage']
-        assert updating in valid_updating, ("update_pickle() received a invalid value for updating, "
-                                            f"the acceptable values for updating are '{valid_updating[0]}' and {valid_updating[1]}")
+        valid_updating = ['bday_dict', 'temp_id_storage', 'guilds_info']
+        assert updating in valid_updating, "update_pickle() received a invalid value for updating"
         with open(f'{updating}.pickle', mode='wb') as file:
             pickle.dump(getattr(self, updating), file)
         extra_info = '' if source is None else f" [{source}]"
         print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')} '{updating}.pickle' was sucessfully saved to.{extra_info}\n")
+
+    def update_data(self, update_guild=True, source=None):
+        self.bday_today, self.today_df = self.bot.bday_today, self.bot.today_df
+        if update_guild:
+            for guild_id in self.guilds_info:
+                self.guilds_info[guild_id][0] = itertools.cycle((self.today_df['FirstName'] + " " + self.today_df['LastName']).tolist())
+            source = 'update_data()' if source is None else f'{source} -> update_data()'
+            self.update_pickle('guilds_info', source=source)
 
     async def ping_devs(self, ctx, error, command):
         parsed_ctx_guild = ctx.guild if ctx.guild else 'a DM message'
@@ -324,13 +342,15 @@ class bdaybot_commands(commands.Cog):
             await ctx.send((f"{self.maybe_mention(ctx)}"
                             f"'**{' '.join(ctx.message.content.split()[1:])}**' is not a valid number. "))
         elif isinstance(error, commands.BotMissingPermissions):
-            print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the wish command was used in {ctx.guild} without the 'manage_messages' permission by {ctx.author}\n")
+            print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the setID command was used in {ctx.guild} without the 'manage_messages' permission by {ctx.author}\n")
             await ctx.send((f"The `{self.parsed_command_prefix}setID` command is currently unavailable because I do not have the `manage messages` permission.\n"
                             f"If you would like to use the `{self.parsed_command_prefix}setID` command please, give me the `manage messages` permission."))
         else:
             await ctx.send(f"{maybe_mention(ctx)}Congrats, you managed to break the `{self.parsed_command_prefix}setID` command.{await self.ping_devs(ctx, error, self.setID)}")
 
     async def valid_author(self, ctx, command, send=True):
+        # TODO: Might want to change this so it only recongizes itself as a valid_author as opposed to any bot user
+        # Extremely unlikely that a bot will end up using command however if u have time fix this.
         if hasattr(ctx, 'author') and not ctx.author.bot:
             print(f"{ctx.author} attempted to use the {command.name} command at {format(datetime.datetime.today(), '%I:%M %p (%x)')}\n")
             if send:
@@ -353,40 +373,67 @@ class bdaybot_commands(commands.Cog):
         if isinstance(error, commands.BotMissingPermissions) and not self.guilds_info[ctx.guild.id][1]:
             await ctx.guild.owner.send(f"Currently I cannot change my nickname in {ctx.guild}. Please give me the `change nickname` permission so I can work properly.")
             self.guilds_info[ctx.guild.id][1] = True
-            print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the bot unsucessfully attempted to change its nickname in '{ctx.guild}'.\nA DM message requesting to change it's permissions was sent to {ctx.guild.owner}.\n")
+            print((f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the bot unsucessfully changed its nickname in '{ctx.guild}'.\n"
+                   f"A DM message requesting to change it's permissions was sent to {ctx.guild.owner}.\n"))
+            self.update_pickle('guilds_info', source='handle_update_nickname_error()')
         elif not self.guilds_info[ctx.guild.id][1]:
-            await self.ping_devs(ctx, error, self.setID)
-
-    def update_data(self):
-        self.bday_today, self.today_df = self.bot.bday_today, self.bot.today_df
-        for guild_id in self.guilds_info:
-            self.guilds_info[guild_id][0] = itertools.cycle((self.today_df['FirstName'] + " " + self.today_df['LastName']).tolist())
+            await self.ping_devs(ctx, error, self.update_nickname)
 
     @commands.command(hidden=True)
     @commands.bot_has_permissions(manage_roles=True)
-    async def update_roles(self, ctx):
+    async def update_role(self, ctx):
+        if not await self.valid_author(ctx, self.update_role):
+            return
         role_name = "🎉 Happy Birthday" if self.bday_today else f"Upcoming Bday-{format(self.today_df.iloc[0]['Birthdate'], '%a %b %d')}"
         color = discord.Color.red() if 'Happy' in role_name else discord.Color.green()
         if self.guilds_info[ctx.guild.id][2] is None:
-            self.bday_role = await ctx.guild.create_role(reason='Creating the Happy Birthday/Upcoming Birthday role',
-                                                         name=role_name, hoist=True, color=color)
-            self.guilds_info[ctx.guild.id][2] = self.bday_role.id
-            await ctx.guild.me.add_roles(self.bday_role)
-        
-        print(ctx.guild.roles)
+            bday_role = await ctx.guild.create_role(reason='Creating the Happy Birthday/Upcoming Birthday role',
+                                                    name=role_name, hoist=True, color=color)
+            self.guilds_info[ctx.guild.id][2] = bday_role.id
+            self.update_pickle('guilds_info', source='update_role()')
+        else:
+            bday_role = ctx.guild.get_role(self.guilds_info[ctx.guild.id][2])
+            if bday_role is None:
+                self.guilds_info[ctx.guild.id][2] = None
+                stringview = commands.view.StringView(f'{self.parsed_command_prefix}update_role')
+                message_dict = bdaybot.message_dict.copy()
+                message_dict['content'] = f'{self.parsed_command_prefix}update_role'
+                message = discord.message.Message(state='lol', channel=ctx.guild.text_channels[0], data=message_dict)
+                await self.bot.invoke(commands.Context(message=message, bot=self.bot, prefix=self.parsed_command_prefix, invoked_with='update_role', view=stringview, command=self.update_role))
+                return
 
-    @update_roles.error
-    async def handle_update_roles_error(self, ctx, error):
-        if not await self.valid_author(ctx, self.update_nickname):
+            await bday_role.edit(name=role_name, color=color)
+
+        await ctx.guild.me.add_roles(bday_role)
+
+        counter = itertools.count(bday_role.position)
+        no_error = True
+        while no_error:
+            position = next(counter)
+            try:
+                await bday_role.edit(position=position)
+            except discord.errors.HTTPException:
+                no_error = False
+        print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the bot's role was changed to '{bday_role.name}' in '{ctx.guild}'.\n")
+
+    @update_role.error
+    async def handle_update_role_error(self, ctx, error):
+        if not await self.valid_author(ctx, self.update_role):
             return
         if isinstance(error, commands.BotMissingPermissions):
-            # await ctx.guild.owner.send(f"I cannot currently change my role in {ctx.guild}. Please give me the `manage roles` permission so I can work properly")
-            await ctx.send(f"I cannot currently change my role in {ctx.guild}. Please give me the `manage roles` permission so I can work properly")
-        print(f"Exception update_roles()\n{error}\n")
+            if not self.guilds_info[ctx.guild.id][3]:
+                await ctx.guild.owner.send(f"I cannot currently change my role in {ctx.guild}. Please give me the `manage roles` permission so I can work properly")
+                # await ctx.send(f"I cannot currently change my role in {ctx.guild}. Please give me the `manage roles` permission so I can work properly")
+                self.guilds_info[ctx.guild.id][3] = True
+                self.update_pickle('guilds_info', source='handle_update_role_error()')
+            dm_message = '' if self.guilds_info[ctx.guild.id][3] else f"A DM message requesting to change it's permissions was sent to {ctx.guild.owner}.\n"
+            print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the bot unsucessfully changed its role in '{ctx.guild}'.\n{dm_message}")
+        else:
+            await self.ping_devs(ctx, error, self.update_role)
 
     @commands.command(hidden=True)
     async def check(self, ctx):
-        print(self.bot.update_roles.get_task())
+        print(self.bot.update_role.get_task())
 
 
 class bdaybot(commands.Bot):
@@ -415,10 +462,14 @@ class bdaybot(commands.Bot):
             # ALWAYS start send_bdays before any other coroutine!
             self.send_bdays.before_loop(self.send_bdays_wait_to_run)
             self.send_bdays.start()
-            print("Succesfully started 'send_bdays()' task\n")
+            print("Succesfully started 'send_bdays()' task")
 
-            self.change_nickname.start()
-            print("Sucessfully started 'change_nickname()' task\n")
+            self.change_nicknames.start()
+            print("Sucessfully started 'change_nicknames()' task")
+
+            self.change_roles.before_loop(self.change_role_wait_to_run)
+            self.change_roles.start()
+            print("Sucessfully started 'change_roles()' task\n")
 
             # Add some type of checking to ensure that self.announcements equals self.guilds
             for index, (channel, guild) in enumerate(zip(self.announcements, self.guilds)):
@@ -444,37 +495,58 @@ class bdaybot(commands.Bot):
         # Update the data in bdaybot_commands as well
         self.cogs['bdaybot_commands'].update_data()
         print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')} the 'send_bdays()' coroutine was run.")
-        # By default next_iteration returns the time in the 'UTC' timezone; which caused much confusion
+        # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
-        print(f"The next iteration is schedule for {format(send_bdays.next_iteration.astimezone(), '%I:%M %p on %x')}\n")
+        print(f"The next iteration is scheduled for {format(send_bdays.next_iteration.astimezone(), '%I:%M %p on %x')}\n")
 
     @tasks.loop(seconds=5)
-    async def change_nickname(self):
-        # print(f"Next iteration is at {format(self.change_nickname.next_iteration, '%I:%M:%S %p (%x)')}\n")
+    async def change_nicknames(self):
+        # print(f"Next iteration is at {format(self.change_nicknames.next_iteration, '%I:%M:%S %p (%x)')}\n")
         update_nickname = self.cogs['bdaybot_commands'].update_nickname
         stringview = commands.view.StringView(f'{self.parsed_command_prefix}update_nickname')
         for guild in self.guilds:
             message_dict = self.message_dict.copy()
             message_dict['content'] = f'{self.parsed_command_prefix}update_nickname'
             message = discord.message.Message(state='lol', channel=guild.text_channels[0], data=message_dict)
-            await self.invoke(commands.Context(message=message, bot=self, prefix=self.parsed_command_prefix, invoked_with='update_nickname', view=stringview, command=update_nickname))
+            await self.invoke(commands.Context(message=message, bot=self, prefix=self.parsed_command_prefix,
+                                               invoked_with='update_nickname', view=stringview, command=update_nickname))
         # if not hasattr(self, 'time1'):
         #     import time
         #     self.time1 = time.time()
         # else:
         #     time2 = time.time()
-        #     print(f"Time elasped since last call of change_nickname(): {time2 - self.time1}")
+        #     print(f"Time elasped since last call of change_nicknames(): {time2 - self.time1}")
         #     self.time1 = time2
 
-    async def change_role_wait_to_run(self, *args):
+    async def change_roles_wait_to_run(self, *args):
+        update_role = self.cogs['bdaybot_commands'].update_role
+        stringview = commands.view.StringView(f'{self.parsed_command_prefix}update_role')
+        for guild in self.guilds:
+            message_dict = self.message_dict.copy()
+            message_dict['content'] = f'{self.parsed_command_prefix}update_role'
+            message = discord.message.Message(state='lol', channel=guild.text_channels[0], data=message_dict)
+            await self.invoke(commands.Context(message=message, bot=self, prefix=self.parsed_command_prefix,
+                                               invoked_with='update_role', view=stringview, command=update_role))
+
         time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.datetime.today()
         # time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=0)).replace(hour=0, minute=36, second=0, microsecond=0) - datetime.datetime.today()
-        print(f"The change_role coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.\n")
+        print(f"The change_roles coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.\n")
         await asyncio.sleep(time_until_midnight.total_seconds())
 
     @tasks.loop(hours=24)
-    async def change_role(self):
-        pass
+    async def change_roles(self):
+        update_role = self.cogs['bdaybot_commands'].update_role
+        stringview = commands.view.StringView(f'{self.parsed_command_prefix}update_role')
+        for guild in self.guilds:
+            message_dict = self.message_dict.copy()
+            message_dict['content'] = f'{self.parsed_command_prefix}update_role'
+            message = discord.message.Message(state='lol', channel=guild.text_channels[0], data=message_dict)
+            await self.invoke(commands.Context(message=message, bot=self, prefix=self.parsed_command_prefix,
+                                               invoked_with='update_role', view=stringview, command=update_role))
+        print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')} the 'change_roles()' coroutine was run.")
+        # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
+        # In the code below it is now converted to the local time zone automatically
+        print(f"The next iteration is scheduled for {format(send_bdays.next_iteration.astimezone(), '%I:%M %p on %x')}\n")
 
     def format_discord(self, first_name, last_name, *, birthyear=None, birthdate=None):
         full_name = f"***__{first_name} {last_name}__***"
@@ -538,6 +610,7 @@ class bdaybot(commands.Bot):
 
 bot = bdaybot(testing=True, command_prefix='!', description='A bot used for bdays', case_insensitive=True)
 bot.run()
+print("Ended program!")
 
 # TODO: Redo introduction, it's kidna ugly imo use Embeds instead
 # TODO: Add a task that constantly checks other tasks to see if they are still running and shows any errors they may have raised
