@@ -510,7 +510,7 @@ class bdaybot_commands(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send(f"{ctx.author.mention} **{' '.join(ctx.message.content.split()[1:])}** is not a valid integer.")
         elif isinstance(error, commands.NoPrivateMessage):
-            print(f"{ctx.author} tried to use the wish command in a DM on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}\n")
+            print(f"{ctx.author} tried to use the upcoming command in a DM on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}\n")
             await ctx.send(f"The `{ctx.prefix}upcoming` command is currently unavailable in DMs. Please try using it in a server with me.")
         else:
             await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}upcoming` command. {await self.ping_devs(error, self.upcoming, ctx)}")
