@@ -5,6 +5,7 @@ import datetime
 
 myid = 262676325846876161
 andresid = 388899325885022211
+dylanid = 274912077985087489
 
 bot = commands.Bot(command_prefix='!')
 
@@ -52,7 +53,7 @@ def wishembed(author, bdaykid):
         colour=discord.Color.from_rgb(254, 254, 254), url="https://discordapp.com",
         description=body)
     awishembed.set_author(name="Bdaybot🎁🎁🎁", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/apple/237/face-with-party-horn-and-party-hat_1f973.png")
-    
+
 
 def helpwish():
     global ahelpwish
@@ -90,32 +91,32 @@ def birthdayembed(discorduser, irlname, age):
 @bot.command()
 async def showintro(ctx):
     introembed()
-    await bot.get_user(andresid).send(embed=aintroembed)
+    await bot.get_user(dylanid).send(embed=aintroembed)
 
 @bot.command()
 async def showhelp(ctx):
     helpembed()
-    await bot.get_user(andresid).send(embed=ahelpembed)
+    await bot.get_user(dylanid).send(embed=ahelpembed)
 
 @bot.command()
 async def showwish(ctx):
     wishembed("wisher", "bday kid")
-    await bot.get_user(andresid).send("<@388899325885022211>", embed=awishembed)
+    await bot.get_user(dylanid).send("<@388899325885022211>", embed=awishembed)
     await bot.get_user(myid).send(embed=awishembed)
 @bot.command()
 async def showhelpwish(ctx):
     helpwish()
-    await bot.get_user(andresid).send(embed=ahelpwish)
+    await bot.get_user(dylanid).send(embed=ahelpwish)
 
 @bot.command()
 async def showbirthday(ctx):
     birthdayembed(ctx.author, 'Ryan Lee', 17)
-    await bot.get_user(andresid).send(embed=abirthday)
+    await bot.get_user(dylanid).send(embed=abirthday)
 
 # @bot.command()
 # async def showbirthday(ctx):
 #     birthdayembed()
-#     await bot.get_user(andresid).send(embed=ahelpwish)
+#     await bot.get_user(dylanid).send(embed=ahelpwish)
 
 @bot.event
 async def on_ready():
