@@ -493,7 +493,7 @@ class bdaybot_commands(commands.Cog):
         upcoming_embed = discord.Embed(title="**Upcoming Birthdays!** 🎇 🎊", color=discord.Color.from_rgb(254, 254, 254))
         upcoming_df = andres.bday_df.drop(self.today_df.index) if self.bday_today else andres.bday_df
         if num > 8:
-            upcoming_embed.set_footer(text=f"The input value cannot exceed 8. Automatically showing the top 8 results.")
+            upcoming_embed.set_footer(text=f"The input value exceeded 8. Automatically showing the top 8 results.")
             num = 8
 
         for id, row in upcoming_df.iloc[:num].iterrows():
