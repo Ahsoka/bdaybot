@@ -207,7 +207,7 @@ class bdaybot_commands(commands.Cog):
             except RuntimeError as error:
                 if str(error).lower() == 'session is closed':
                     break
-                print(f"ping_devs() The following error occurred unexpectedly while trying to ping {dev_name} on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}.\n{repr(error)}")
+                print(f"ping_devs() The following error occurred unexpectedly while trying to ping {dev_name} on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}.\n{repr(error)}\n")
         return ''
 
     @commands.command()
@@ -515,8 +515,6 @@ class bdaybot_commands(commands.Cog):
         else:
             await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}upcoming` command. {await self.ping_devs(error, self.upcoming, ctx)}")
 
-        # print(f"Error occured in upcoming: {repr(error)}, type: {type(error)}")
-
     # @commands.command(hidden=True)
     # async def check(self, ctx):
     #     print(self.bot.check_other_tasks.get_task())
@@ -570,7 +568,7 @@ class bdaybot(commands.Bot):
             print(f"{self.user} has succesfully reconnected to Discord on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}")
 
     async def on_disconnect(self):
-        print(f"{self.user} disconnected from Discord on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}")
+        print(f"{self.user} disconnected from Discord on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}\n")
 
     async def send_bdays_wait_to_run(self, *args):
         time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.datetime.today()
