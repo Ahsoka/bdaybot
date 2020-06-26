@@ -8,6 +8,9 @@ import pickle
 import warnings
 import itertools
 import asyncio
+import time
+
+# Check here for any issues relating to the API ➡ https://status.discord.com/
 
 # Pre discord 1.4 compability
 if not hasattr(tasks.Loop, 'is_running'):
@@ -111,7 +114,24 @@ class bdaybot_commands(commands.Cog):
             for another_key in self.bday_dict[key]:
                 if ID == self.bday_dict[key][another_key]:
                     return True
-        return False
+        return ID in self.temp_id_storage
+
+    def ID_to_discord(self, ID, default=None, mention=False):
+        for authorID, studentID in self.temp_id_storage.items():
+            if studentID == ID:
+                user = self.bot.get_user(authorID)
+                return f" {user.mention}" if mention else user
+
+        for overarching in self.bday_dict:
+            for authorID, studentID in self.bday_dict[overarching].items():
+                if studentID == ID:
+                    user = self.bot.get_user(authorID)
+                    return f" {user.mention}" if mention else user
+
+        if default is None:
+            raise KeyError(f'ID_to_discord() could not find {ID} in the ID database')
+
+        return default
 
     @staticmethod
     def apostrophe(name):
@@ -169,7 +189,7 @@ class bdaybot_commands(commands.Cog):
             parsed_ctx_guild = ctx.guild if ctx.guild else 'a DM message'
             if hasattr(ctx, 'author'):
                 print(f"[{command.name}()] {ctx.author} caused the following error in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n{repr(error)}\n")
-            else:
+            elif not isinstance(error, commands.CommandInvokeError):
                 print(f"The following error occured with the {command.name} command in {parsed_ctx_guild} at {format(datetime.datetime.today(), '%I:%M %p (%x)')}\n{repr(error)}\n")
             if ctx.guild and hasattr(ctx, 'author'):
                 return (f" {self.bot.get_user(dev_discord_ping['Andres']).mention}, "
@@ -177,16 +197,22 @@ class bdaybot_commands(commands.Cog):
                         f" or {self.bot.get_user(dev_discord_ping['Ryan']).mention} fix this!")
         for dev_name in dev_discord_ping:
             dev = self.bot.get_user(dev_discord_ping[dev_name])
-            if hasattr(ctx, 'author'):
-                await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}()` in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n  **{repr(error)}**")
-            elif ctx is None:
-                await dev.send(f"The following error occured with the `{command}()` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
-            else:
-                await dev.send(f"The following error occured with `{command.name}()` in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
+            try:
+                if hasattr(ctx, 'author'):
+                    await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}()` in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n  **{repr(error)}**")
+                elif ctx is None:
+                    await dev.send(f"The following error occured with the `{command}()` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
+                else:
+                    await dev.send(f"The following error occured with `{command.name}()` in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
+            except RuntimeError as error:
+                if str(error).lower() == 'session is closed':
+                    break
+                print(f"ping_devs() The following error occurred unexpectedly while trying to ping {dev_name} on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}.\n{repr(error)}")
         return ''
 
     @commands.command()
     @commands.bot_has_permissions(manage_messages=True)
+    @commands.guild_only()
     async def wish(self, ctx, *message):
         try:
             studentID = int(message[-1])
@@ -198,7 +224,7 @@ class bdaybot_commands(commands.Cog):
 
         if self.bday_today:
             if not self.have_ID(ctx.author) and not studentID_defined:
-                await ctx.send(f"{ctx.author.mention} You are first-time wisher. You must include your ID at the end of the wish command to send a wish.")
+                await ctx.send(f"{ctx.author.mention} You are first-time wisher. You must include your 6-digit student ID at the end of the wish command to send a wish.")
                 return
 
             name_not_included = False
@@ -248,7 +274,7 @@ class bdaybot_commands(commands.Cog):
             proper_name = self.name_to_proper(name, self.today_df, self.name_to_proper(name, andres.bday_df, name, mute=True))
 
             if wishee_ID_number == 'invalid' or proper_name == 'invalid':
-                if name_to_ID(name, pandas.concat([andres.bday_df[['FirstName', 'LastName']], (andres.bday_df['FirstName'] + " " + andres.bday_df["LastName"])], axis='columns'), 'invalid', mute=True) == 'invalid':
+                if self.name_to_ID(name, pandas.concat([andres.bday_df[['FirstName', 'LastName']], (andres.bday_df['FirstName'] + " " + andres.bday_df["LastName"])], axis='columns'), 'invalid', mute=True) == 'invalid':
                     await ctx.send(f"{ctx.author.mention} '{old_name}' is not a name in the birthday database!{og_message_deleted}")
                 else:
                     await ctx.send(f"{ctx.author.mention} Today is not {proper_name}{apostrophe(proper_name)} birthday.\nIt is {get_bday_names()} birthday today. Wish them a happy birthday!{og_message_deleted}")
@@ -278,7 +304,7 @@ class bdaybot_commands(commands.Cog):
 
     @wish.error
     async def handle_wish_error(self, ctx, error):
-        if isinstance(ctx.message.channel, discord.DMChannel):
+        if isinstance(error, commands.NoPrivateMessage):
             print(f"{ctx.author} tried to use the wish command in a DM on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}\n")
             await ctx.send(f"The `{ctx.prefix}wish` command is not currently available in DMs. Please try using it in a server with me.")
         elif isinstance(error, commands.BotMissingPermissions):
@@ -358,13 +384,19 @@ class bdaybot_commands(commands.Cog):
         else:
             await ctx.send(f"{self.maybe_mention(ctx)}Congrats, you managed to break the `{ctx.prefix}setID` command.{await self.ping_devs(error, self.setID, ctx=ctx)}")
 
-    async def valid_author(self, ctx, command, send=True):
+    async def valid_author(self, ctx, command, send=True, devs=False):
         # TODO: Might want to change this so it only recongizes itself as a valid_author as opposed to any bot user
-        # Extremely unlikely that a bot will end up using command however if u have time fix this.
+        # Extremely unlikely that a bot will end up using the hidden commands however if u have time fix this.
+
         if hasattr(ctx, 'author') and not ctx.author.bot:
+            if devs:
+                for dev_name in dev_discord_ping:
+                    if ctx.author.id == dev_discord_ping[dev_name]:
+                        return True
             print(f"{ctx.author} attempted to use the {command.name} command at {format(datetime.datetime.today(), '%I:%M %p (%x)')}\n")
             if send:
-                await ctx.send(f"{self.maybe_mention(ctx)}This command is not available to non-bot accounts. Also how did you even find about this command?")
+                available = "only available to bdaybot developers" if devs else "not available to non-bot accounts"
+                await ctx.send(f"{self.maybe_mention(ctx)}This command is {available}. Also how did you even find about this command? Was it the source code?")
             return False
         return True
 
@@ -394,8 +426,11 @@ class bdaybot_commands(commands.Cog):
     async def update_role(self, ctx):
         if not await self.valid_author(ctx, self.update_role):
             return
-        role_name = "🎉 Happy Birthday" if self.bday_today else f"Upcoming Bday-{format(self.today_df.iloc[0]['Birthdate'], '%a %b %d')}"
-        color = discord.Color.red() if 'Happy' in role_name else discord.Color.green()
+
+        # Old colors in the comment below
+        # color = discord.Color.red() if self.bday_today else discord.Color.green()
+        role_name, color = ("🎉 Happy Birthday", discord.Color.from_rgb(255, 0, 0)) if self.bday_today else (f"Upcoming Bday-{format(self.today_df.iloc[0]['Birthdate'], '%a %b %d')}", discord.Color.from_rgb(162, 217, 145))
+
         if self.guilds_info[ctx.guild.id][2] is None:
             bday_role = await ctx.guild.create_role(reason='Creating the Happy Birthday/Upcoming Birthday role',
                                                     name=role_name, hoist=True, color=color)
@@ -441,13 +476,46 @@ class bdaybot_commands(commands.Cog):
         else:
             await self.ping_devs(error, self.update_role, ctx=ctx)
 
+    @commands.command(hidden=True)
+    async def quit(self, ctx, *messages):
+        if not await self.valid_author(ctx, self.quit, devs=True):
+            return
+        await ctx.author.send("Shutting down the bdaybot!")
+        print(f"{ctx.author} accessed the quit commmand at {format(datetime.datetime.today(), '%I:%M %p (%x)')}\n")
+        await self.bot.loop.stop()
+
     @commands.command(aliases=['up'])
-    async def upcoming(self, ctx):
-        pass
+    @commands.guild_only()
+    async def upcoming(self, ctx, num=5):
+        if num <= 0:
+            await ctx.send(f"{ctx.author.mention} **{num}** is less than 1. Please use a number greater than 0.")
+            return
+        upcoming_embed = discord.Embed(title="**Upcoming Birthdays!** 🎇 🎊", color=discord.Color.from_rgb(254, 254, 254))
+        upcoming_df = andres.bday_df.drop(self.today_df.index) if self.bday_today else andres.bday_df
+        if num > 8:
+            upcoming_embed.set_footer(text=f"The input value cannot exceed 8. Automatically showing the top 8 results.")
+            num = 8
+
+        for id, row in upcoming_df.iloc[:num].iterrows():
+            upcoming_embed.add_field(name='Name', value=f"{(row['FirstName'] + ' ' + row['LastName'])}{self.ID_to_discord(id, mention=True, default='')}")
+            upcoming_embed.add_field(name='Birthday', value=format(row['Birthdate'], '%b %d'))
+            upcoming_embed.add_field(name='Upcoming In', value=f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}")
+
+        # await ctx.send(f"{ctx.author.mention}", embed=upcoming_embed)
+        await ctx.send(embed=upcoming_embed)
+
 
     @upcoming.error
     async def handle_upcoming_error(self, ctx, error):
-        pass
+        if isinstance(error, commands.BadArgument):
+            await ctx.send(f"{ctx.author.mention} **{' '.join(ctx.message.content.split()[1:])}** is not a valid integer.")
+        elif isinstance(error, commands.NoPrivateMessage):
+            print(f"{ctx.author} tried to use the wish command in a DM on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}\n")
+            await ctx.send(f"The `{ctx.prefix}upcoming` command is currently unavailable in DMs. Please try using it in a server with me.")
+        else:
+            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}upcoming` command. {await self.ping_devs(error, self.upcoming, ctx)}")
+
+        # print(f"Error occured in upcoming: {repr(error)}, type: {type(error)}")
 
     # @commands.command(hidden=True)
     # async def check(self, ctx):
@@ -467,7 +535,7 @@ class bdaybot(commands.Bot):
             except KeyError:
                 warnings.warn("Could not find 'testing_token' in enviroment variables using 'Bday_Token' as backup.",
                                 category=RuntimeWarning, stacklevel=2)
-        self.bday_today, self.today_df = andres.get_latest()
+        self.bday_today, self.today_df = andres.get_latest(to_csv=True)
         super().__init__(*args, **kwargs)
         self.parsed_command_prefix = self.command_prefix[0] if isinstance(self.command_prefix, (list, tuple)) else self.command_prefix
         self.init_connection = False
@@ -546,7 +614,7 @@ class bdaybot(commands.Bot):
 
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
-        # print(f"Next iteration is at {format(self.change_nicknames.next_iteration, '%I:%M:%S %p (%x)')}\n")
+        # print(f"Next iteration is at {format(self.change_nicknames.next_iteration.astimezone(), '%I:%M:%S %p (%x)')}\n")
         update_nickname = self.cogs['bdaybot_commands'].update_nickname
         stringview = commands.view.StringView(f'{self.parsed_command_prefix}update_nickname')
         for guild in self.guilds:
@@ -556,7 +624,6 @@ class bdaybot(commands.Bot):
             await self.invoke(commands.Context(message=message, bot=self, prefix=self.parsed_command_prefix,
                                                invoked_with='update_nickname', view=stringview, command=update_nickname))
         # if not hasattr(self, 'time1'):
-        #     import time
         #     self.time1 = time.time()
         # else:
         #     time2 = time.time()
@@ -647,7 +714,26 @@ class bdaybot(commands.Bot):
             token = self.TOKEN
         super().run(token, *args, **kwargs)
 
+    async def close(self):
+        self.check_other_tasks.stop()
+        print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the 'check_other_tasks()' task was gracefully ended.")
+
+        self.send_bdays.stop()
+        print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the 'send_bdays()' task was gracefully ended.")
+
+        self.change_nicknames.stop()
+        print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the 'change_nicknames()' task was gracefully ended.")
+
+        self.change_roles.stop()
+        print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, the 'change_roles()' task was gracefully ended.\n")
+        await super().close()
+
     async def on_command_error(self, ctx, error):
+        if isinstance(error, commands.CommandInvokeError):
+            if isinstance(error.original, RuntimeError) and str(error.original).lower() == 'session is closed':
+                print((f"Wow, you managed to cause a very rare error with the {ctx.command.name} command at {format(datetime.datetime.today(), '%I:%M %p (%x)')} while the bot was shutting down.\n"
+                        "Do not worry though, the error did not cause any issues due to the fact that you are seeing this message.\n"))
+            return
         if ctx.command and hasattr(self.cogs['bdaybot_commands'], ctx.command.name):
             return
         elif isinstance(error, commands.CommandNotFound):
