@@ -46,12 +46,13 @@ def helpembed():
 def wishembed(author, bdaykid):
     global awishembed
     body = f"""
-    ***__{author}__ has wished __{bdaykid}__ a happy birthday!***
+    ***Congratulations! You have wished __{author}__ has wished __{bdaykid}__ a happy birthday!***
     """
     awishembed = discord.Embed(title="",
-        colour=discord.Colour(0xe86eff), url="https://discordapp.com",
+        colour=discord.Color.from_rgb(254, 254, 254), url="https://discordapp.com",
         description=body)
-    awishembed.set_author(name="Bdaybot", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/apple/237/face-with-party-horn-and-party-hat_1f973.png")
+    awishembed.set_author(name="Bdaybot🎁🎁🎁", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/apple/237/face-with-party-horn-and-party-hat_1f973.png")
+    
 
 def helpwish():
     global ahelpwish
@@ -66,37 +67,25 @@ def helpwish():
     ```!wish ryan``` or ```!wish lee```
     """
     ahelpwish = discord.Embed(title="",
-    colour=discord.Colour(0xffffff), url="https://discordapp.com",
+    colour=discord.Color.from_rgb(254, 254, 254), url="https://discordapp.com",
     description=body)
-    ahelpwish.setauthor(name="!wish command", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/apple/237/face-with-party-horn-and-party-hat_1f973.png")
+
+    ahelpwish.set_author(name="!wish command", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/apple/237/wrapped-present_1f381.png")
 
 def birthdayembed(discorduser, irlname, age):
     global abirthday
     body = f"""
-    Congratulations to {irlname} on turning {age}!
+    Congratulations to ***__{irlname}__*** ({discorduser.mention}) on turning ***__{age}__*** !
     """
     abirthday = discord.Embed(title="",
     colour=discord.Colour(0xe86eff), url="https://discordapp.com",
     description=body)
 
-    embed.set_image(url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/apple/237/face-with-party-horn-and-party-hat_1f973.png")
-    ahelpwish.setauthor(name="!wish command", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/apple/237/face-with-party-horn-and-party-hat_1f973.png")
-    aintroembed.set_thumbnail(url=discorduser.avatar_url_as(format=None, static_format='webp', size=1024))
-    aintroembed.set_author(name=f"Happy Birthday to {discorduser.mention}!!!", icon_url=discorduser.avatar_url_as(format=None, static_format='webp', size=1024))
+    abirthday.set_image(url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/apple/237/face-with-party-horn-and-party-hat_1f973.png")
+    abirthday.set_thumbnail(url=discorduser.avatar_url_as(format=None, static_format='webp', size=1024))
+    abirthday.set_author(name=f"Happy Birthday to {irlname}!!!", icon_url=discorduser.avatar_url_as(format=None, static_format='webp', size=1024))
 
 
-embed = discord.Embed(title="title ~~(did you know you can have markdown here too?)~~", colour=discord.Colour(0x9a3c7d), url="https://discordapp.com", description="this supports [named links](https://discordapp.com) on top of the previously shown subset of markdown. ```\nyes, even code blocks```", timestamp=datetime.datetime.utcfromtimestamp(1593111022))
-
-embed.set_thumbnail(url="https://cdn.discordapp.com/embed/avatars/0.png")
-embed.set_author(name="author name", url="https://discordapp.com", icon_url="https://cdn.discordapp.com/embed/avatars/0.png")
-
-embed.add_field(name="🤔", value="some of these properties have certain limits...")
-embed.add_field(name="😱", value="try exceeding some of them!")
-embed.add_field(name="🙄", value="an informative error should show up, and this view will remain as-is until all issues are fixed")
-embed.add_field(name="<:thonkang:219069250692841473>", value="these last two", inline=True)
-embed.add_field(name="<:thonkang:219069250692841473>", value="are inline fields", inline=True)
-
-# await bot.say(content="this `supports` __a__ **subset** *of* ~~markdown~~ 😃 ```js\nfunction foo(bar) {\n  console.log(bar);\n}\n\nfoo(1);```", embed=embed)
 
 @bot.command()
 async def showintro(ctx):
@@ -111,8 +100,8 @@ async def showhelp(ctx):
 @bot.command()
 async def showwish(ctx):
     wishembed("wisher", "bday kid")
-    await bot.get_user(andresid).send(embed=awishembed)
-
+    await bot.get_user(andresid).send("<@388899325885022211>", embed=awishembed)
+    await bot.get_user(myid).send(embed=awishembed)
 @bot.command()
 async def showhelpwish(ctx):
     helpwish()
@@ -120,8 +109,8 @@ async def showhelpwish(ctx):
 
 @bot.command()
 async def showbirthday(ctx):
-    birthdayembed()
-    await bot.get_user(andresid).send(embed=abirthday())
+    birthdayembed(ctx.author, 'Ryan Lee', 17)
+    await bot.get_user(andresid).send(embed=abirthday)
 
 # @bot.command()
 # async def showbirthday(ctx):
