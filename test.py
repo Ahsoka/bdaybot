@@ -5,9 +5,25 @@ import os
 import time
 import random
 
+myid = 388899325885022211
+
 command_prefixs = ['.', '!']
 # client = commands.Bot(command_prefix=command_prefixs)
 # client.add_cog(simple_cog(client))
+
+default_embed = discord.Embed(title="title ~~(did you know you can have markdown here too?)~~", colour=discord.Color.from_rgb(254, 254, 254), url="https://discordapp.com", description="this supports [named links](https://discordapp.com) on top of the previously shown subset of markdown. ```\nyes, even code blocks```")
+
+# default_embed.set_image(url="https://cdn.discordapp.com/embed/avatars/0.png")
+# default_embed.set_thumbnail(url="https://cdn.discordapp.com/embed/avatars/0.png")
+# default_embed.set_author(name="author name", url="https://discordapp.com", icon_url="https://cdn.discordapp.com/embed/avatars/0.png")
+# default_embed.set_footer(text="footer text", icon_url="https://cdn.discordapp.com/embed/avatars/0.png")
+
+default_embed.add_field(name="🤔", value="some of these properties have certain limits...", inline=False)
+default_embed.add_field(name="😱", value="try exceeding some of them!", inline=False)
+default_embed.add_field(name="🙄", value="an informative error should show up, and this view will remain as-is until all issues are fixed", inline=False)
+default_embed.add_field(name="Hello", value="these last two", inline=False)
+default_embed.add_field(name="World", value="are inline fields", inline=True)
+default_embed.add_field(name="Inline?", value="are inline fields", inline=True)
 
 class simple_cog(commands.Cog):
     def __init__(self, bot):
@@ -26,28 +42,33 @@ class simple_cog(commands.Cog):
     async def error_test(self, ctx, error):
         await ctx.send(f"Succesfully excepted error ➡ {error}")
 
+    @commands.command()
+    async def show(self, ctx, *args):
+        await self.bot.get_user(myid).send(embed=default_embed)
+
 class simple(commands.Bot):
     status = itertools.cycle(['Status 1', 'Status 2'])
 
     def __init__(self, *args, **kwargs):
         self.added = True
         super().__init__(*args, **kwargs)
-        self.add_cog(simple_cog(self))
     async def on_ready(self):
+        self.add_cog(simple_cog(self))
         self.change_status.start()
-        self.change_role.start()
+        # self.change_role.start()
         print('Bot is ready')
 
     @tasks.loop(seconds=10)
     async def change_status(self):
-        print('Changing status :)')
+        # print('Changing status :)')
         await client.change_presence(activity=discord.Game(next(self.status)))
-        if not hasattr(self, 'time1'):
-            self.time1 = time.time()
-        else:
-            time2 = time.time()
-            print(f'Time elasped: {time2 - self.time1}')
-            self.time1 = time2
+
+        # if not hasattr(self, 'time1'):
+        #     self.time1 = time.time()
+        # else:
+        #     time2 = time.time()
+        #     print(f'Time elasped: {time2 - self.time1}')
+        #     self.time1 = time2
         # try:
         #     print(f'change_role() raised the following exception {self.change_role.get_task().exception()}')
         # except InvalidStateError:
