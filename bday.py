@@ -36,16 +36,16 @@ class bdaybot_commands(commands.Cog):
             self.update_data(source='__init__()')
         except (FileNotFoundError, EOFError):
             self.guilds_info = dict(((guild.id, [itertools.cycle((self.today_df['FirstName'] + " " + self.today_df['LastName']).tolist()), False, None, False]) for guild in self.bot.guilds))
-            print((f"Unsucessfully attempted to access 'guilds_info.pickle' at {format(datetime.datetime.today(), '%I:%M %p (%x)')}.\n"
-                    "Created a new an empty instance.\n"))
+            print((f"Unsucessfully accessed 'guilds_info.pickle' at {format(datetime.datetime.today(), '%I:%M %p (%x)')}.\n"
+                    "Created a new empty instance.\n"))
         try:
             with open('bday_dict.pickle', mode='rb') as file:
                 self.bday_dict = pickle.load(file)
                 print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, 'bday_dict.pickle' was sucessfully accessed.\n")
         except (FileNotFoundError, EOFError):
             self.bday_dict = dict(((id, dict()) for id, _ in self.today_df.iterrows()))
-            print((f"Unsucessfully attempted to access 'bday_dict.pickle' at {format(datetime.datetime.today(), '%I:%M %p (%x)')}.\n"
-                    "Created a new an empty instance.\n"))
+            print((f"Unsucessfully accessed 'bday_dict.pickle' at {format(datetime.datetime.today(), '%I:%M %p (%x)')}.\n"
+                    "Created a new empty instance.\n"))
 
         try:
             with open('temp_id_storage.pickle', mode='rb') as file:
@@ -53,8 +53,8 @@ class bdaybot_commands(commands.Cog):
                 print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, 'temp_id_storage.pickle' was sucessfully accessed.\n")
         except (FileNotFoundError, EOFError):
             self.temp_id_storage = dict()
-            print((f"Unsucessfully attempted to access 'temp_id_storage.pickle' at {format(datetime.datetime.today(), '%I:%M %p (%x)')}.\n"
-                    "Created a new an empty instance.\n"))
+            print((f"Unsucessfully accessed 'temp_id_storage.pickle' at {format(datetime.datetime.today(), '%I:%M %p (%x)')}.\n"
+                    "Created a new empty instance.\n"))
 
     def have_ID(self, author):
         for key in self.bday_dict:
@@ -138,7 +138,6 @@ class bdaybot_commands(commands.Cog):
         return "'" if name[-1] == "s" else "'s"
 
     def get_bday_names(self, apos=True):
-
         if len(self.today_df) == 1:
             fullname0 = self.today_df.iloc[0]['FirstName'] + ' ' + self.today_df.iloc[0]['LastName']
             return f"{fullname0}{self.apostrophe(fullname0) if apos else ''}"
@@ -169,10 +168,15 @@ class bdaybot_commands(commands.Cog):
     def update_pickle(self, updating, source=None):
         if updating.startswith('self.'):
             updating = updating[len('self.'):]
-        valid_updating = ['bday_dict', 'temp_id_storage', 'guilds_info']
+        elif updating.startswith('self.bot.'):
+            updating = updating[len('self.bot.'):]
+        valid_updating = ['bday_dict', 'temp_id_storage', 'guilds_info', 'announcements']
         assert updating in valid_updating, "update_pickle() received a invalid value for updating"
         with open(f'{updating}.pickle', mode='wb') as file:
-            pickle.dump(getattr(self, updating), file)
+            if updating == 'announcements':
+                pickle.dump(getattr(self.bot, updating), file)
+            else:
+                pickle.dump(getattr(self, updating), file)
         extra_info = '' if source is None else f" [{source}]"
         print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')} '{updating}.pickle' was sucessfully saved to.{extra_info}\n")
 
@@ -185,6 +189,11 @@ class bdaybot_commands(commands.Cog):
             self.update_pickle('guilds_info', source=source)
 
     async def ping_devs(self, error, command, ctx=None):
+        # TODO: Edit this so it can be more informative when something goes wrong
+        # When someone breaks something in a DM message, have the bot send us the exact
+        # message that caused the bot to break.
+        # Also when something goes wrong in a server have the bot DM us the error just like
+        # when something breaks in DM message.
         if ctx is not None:
             parsed_ctx_guild = ctx.guild if ctx.guild else 'a DM message'
             if hasattr(ctx, 'author'):
@@ -199,7 +208,7 @@ class bdaybot_commands(commands.Cog):
             dev = self.bot.get_user(dev_discord_ping[dev_name])
             try:
                 if hasattr(ctx, 'author'):
-                    await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}()` in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n  **{repr(error)}**")
+                    await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}()` in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
                 elif ctx is None:
                     await dev.send(f"The following error occured with the `{command}()` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
                 else:
@@ -211,8 +220,7 @@ class bdaybot_commands(commands.Cog):
         return ''
 
     @commands.command()
-    @commands.bot_has_permissions(manage_messages=True)
-    @commands.guild_only()
+    @commands.bot_has_guild_permissions(manage_messages=True)
     async def wish(self, ctx, *message):
         try:
             studentID = int(message[-1])
@@ -320,7 +328,7 @@ class bdaybot_commands(commands.Cog):
             ID = self.get_ID(ctx.author, pop=False)
         except KeyError:
             # Might want to edit this so that it does not tell ppl to use setID if it does not have the required permission
-            await ctx.send(f"{ctx.author.mention} You do not currently have a registered ID. Use `{ctx.prefix}setID` to set your ID")
+            await ctx.send(f"{self.maybe_mention(ctx)}You do not currently have a registered ID. Use `{ctx.prefix}setID` to set your ID")
             return
         await ctx.author.send(f"Your ID is **{ID}**.  If this is a mistake use `{ctx.prefix}setID` to change it.")
 
@@ -374,6 +382,7 @@ class bdaybot_commands(commands.Cog):
 
     @setID.error
     async def handle_setID_error(self, ctx, error):
+        # TODO: Take another look at this hasattr stuff, use handle_upcoming_error() as reference
         if hasattr(error, 'original') and isinstance(error.original, ValueError):
             await ctx.send((f"{self.maybe_mention(ctx)}"
                             f"'**{' '.join(ctx.message.content.split()[1:])}**' is not a valid number."))
@@ -488,22 +497,21 @@ class bdaybot_commands(commands.Cog):
     @commands.guild_only()
     async def upcoming(self, ctx, num=5):
         if num <= 0:
-            await ctx.send(f"{ctx.author.mention} **{num}** is less than 1. Please use a number greater than 0.")
+            await ctx.send(f"{ctx.author.mention} **{num}** is less than 1. Please use a number that is not less than 1.")
             return
-        upcoming_embed = discord.Embed(title="**Upcoming Birthdays!** 🎇 🎊", color=discord.Color.from_rgb(254, 254, 254))
+        upcoming_embed = discord.Embed(title=f"**Upcoming Birthday{'s' if num != 1 else ''}!** 🎇 🎊", color=discord.Color.from_rgb(254, 254, 254))
         upcoming_df = andres.bday_df.drop(self.today_df.index) if self.bday_today else andres.bday_df
         if num > 8:
             upcoming_embed.set_footer(text=f"The input value exceeded 8. Automatically showing the top 8 results.")
             num = 8
 
         for id, row in upcoming_df.iloc[:num].iterrows():
-            upcoming_embed.add_field(name='Name', value=f"{(row['FirstName'] + ' ' + row['LastName'])}{self.ID_to_discord(id, mention=True, default='')}")
-            upcoming_embed.add_field(name='Birthday', value=format(row['Birthdate'], '%b %d'))
-            upcoming_embed.add_field(name='Upcoming In', value=f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}")
+            upcoming_embed.add_field(name='Name', value=f"{(row['FirstName'] + ' ' + row['LastName'])}{self.ID_to_discord(id, mention=True, default='')}") \
+            .add_field(name='Birthday', value=format(row['Birthdate'], '%b %d')) \
+            .add_field(name='Upcoming In', value=f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}")
 
         # await ctx.send(f"{ctx.author.mention}", embed=upcoming_embed)
         await ctx.send(embed=upcoming_embed)
-
 
     @upcoming.error
     async def handle_upcoming_error(self, ctx, error):
@@ -515,9 +523,73 @@ class bdaybot_commands(commands.Cog):
         else:
             await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}upcoming` command. {await self.ping_devs(error, self.upcoming, ctx)}")
 
+    @commands.command(aliases=['setann'])
+    @commands.has_guild_permissions(administrator=True)
+    async def setannouncements(self, ctx, channel_str=None):
+        if channel_str is None:
+            channel = ctx.channel
+        elif channel_str.startswith('<#') and channel_str.endswith('>'):
+            try:
+                channel_ID = int(channel_str.strip('<#>'))
+            except ValueError:
+                await ctx.send(f"{ctx.author.mention} Are you trying to screw with me? You must have really studied the source code. Good job! 👍🏽")
+                return
+            channel = ctx.guild.get_channel(channel_ID)
+            if not isinstance(channel, discord.TextChannel):
+                await ctx.send((f"{ctx.author.mention} Holy cow, you must know how to read Python 🐍 code really, really well. "
+                                "You are really trying to screw with me, huh? Well done! 👍🏽"))
+                return
+        else:
+            for text_channel in ctx.guild.text_channels:
+                if text_channel.name == channel_str:
+                    channel = text_channel
+                    break
+            if 'channel' not in locals():
+                try:
+                    channel_ID = int(channel_str)
+                    channel = ctx.guild.get_channel(channel_ID)
+                except ValueError:
+                    await ctx.send(f"{ctx.author.mention} **{channel_str}** is not a valid channel name or channel ID. Please use a valid channel ID or channel name.")
+                    return
+
+        self.bot.announcements[ctx.guild.id] = channel.id
+        self.update_pickle('announcements', source='setannouncements()')
+        await ctx.send(f"{ctx.author.mention} The new announcements channel is now {channel.mention}!")
+
+    @setannouncements.error
+    async def handle_setannouncements_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send((f"{ctx.author.mention} You do not have the required permissions to set the announcements channel. "
+                            "You must have a role that has the 'admin' permission."))
+        elif isinstance(error, commands.NoPrivateMessage):
+            await ctx.send(f"The `{ctx.prefix}setannouncements` command is unavailable in DMs. Please try using it in a server with me.")
+        else:
+            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}setannouncements` command! {await self.ping_devs(error, self.setannouncements, ctx=ctx)}")
+
+    @commands.command(aliases=['getann'])
+    @commands.guild_only()
+    async def getannouncements(self, ctx):
+        try:
+            ann_channel_id = self.bot.announcements[ctx.guild.id]
+            await ctx.send((f"{ctx.author.mention} The current announcements channel is {ctx.guild.get_channel(ann_channel_id).mention}. "
+                            f"If you like to change the announcements channel use `{ctx.prefix}setannouncements`."))
+        except KeyError:
+            await ctx.send(f"{ctx.author.mention} There is currently not an announcements channel registered. Use `{ctx.prefix}setannouncements` to register an announcements channel.")
+
+    @getannouncements.error
+    async def handle_getannouncements_error(self, ctx, error):
+        if isinstance(error, commands.NoPrivateMessage):
+            await ctx.send(f"The `{ctx.prefix}getannouncements` command is unavailable in DMs. Please try using it in server with me.")
+        else:
+            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}getannouncements` command! {await self.ping_devs(error, self.getannouncements, ctx=ctx)}")
+
     # @commands.command(hidden=True)
     # async def check(self, ctx):
     #     print(self.bot.check_other_tasks.get_task())
+
+class bdaybot_helpcommand(commands.HelpCommand):
+    async def send_bot_help(self, mapping):
+        pass
 
 class bdaybot(commands.Bot):
     TOKEN = os.environ['Bday_Token']
@@ -540,8 +612,39 @@ class bdaybot(commands.Bot):
 
     async def on_ready(self):
         if not self.init_connection:
-            self.announcements = [channel for guild in self.guilds for channel in guild.text_channels if "announcements" in channel.name.lower()]
             self.add_cog(bdaybot_commands(self))
+            try:
+                with open('announcements.pickle', mode='rb') as file:
+                    self.announcements = pickle.load(file)
+                    print(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, 'announcements.pickle' was sucessfully accessed.")
+            except (FileNotFoundError, EOFError):
+                self.announcements = dict()
+                print((f"Unsucessfully accessed 'announcements.pickle' at {format(datetime.datetime.today(), '%I:%M %p (%x)')}.\n"
+                        "Created a new empty instance.\n"))
+
+            for guild in self.guilds:
+                if guild.id in self.announcements:
+                    continue
+                found = False
+                for channel in guild.text_channels:
+                    if "announcement" in channel.name.lower():
+                        self.announcements[guild.id] = channel.id
+                        found = True
+                        print(f"The bot detected '{channel}' as the announcements channel in {guild}.")
+                        # TODO: Keep an eye on Discord mobile because they might change it so it does not always say '#invalid-channel' and actually shows the channel
+                        channel_mention = f'**{channel}**' if guild.owner.is_on_mobile() else channel.mention
+
+                        await guild.owner.send((f"In **{guild}**, the announcement channel was automatically set to {channel_mention}! "
+                                                f"If you think this is a mistake use `{self.parsed_command_prefix}setannouncements` to change it."))
+                        break
+                if not found:
+                    print(f"The bot was unable to find the announcements channel in {guild}.")
+                    await guild.owner.send((f"While looking through the text channels in **{guild}** "
+                                            f"I was unable to find your announcements channel. Please use `{self.parsed_command_prefix}setannouncements` "
+                                            "to set the announcements channel."))
+                self.cogs['bdaybot_commands'].update_pickle('announcements', source='on_ready()')
+            print()
+
             self.tasks_running = {'send_bdays':True, 'change_nicknames':True, 'change_roles':True}
             # ALWAYS start send_bdays before any other coroutine!
             self.send_bdays.before_loop(self.send_bdays_wait_to_run)
@@ -559,11 +662,10 @@ class bdaybot(commands.Bot):
             print("Sucessfully started the 'check_other_tasks()' task\n")
 
             # Add some type of checking to ensure that self.announcements equals self.guilds
-            for index, (channel, guild) in enumerate(zip(self.announcements, self.guilds)):
-                new_line = '\n' if index == len(self.guilds) - 1 else ''
-                print(f"Sending announcement in the '{channel}' channel in {guild}!{new_line}")
+            # for index, (channel, guild) in enumerate(zip(self.announcements, self.guilds)):
+            #     new_line = '\n' if index == len(self.guilds) - 1 else ''
+            #     print(f"Sending announcement in the '{channel}' channel in {guild}!{new_line}")
             self.init_connection = True
-
         else:
             print(f"{self.user} has succesfully reconnected to Discord on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}")
 
@@ -745,8 +847,6 @@ bot.run()
 print("Ended program!")
 
 # TODO: Redo introduction, it's kidna ugly imo use Embeds instead
-# TODO: Add a task that constantly checks other tasks to see if they are still running and shows any errors they may have raised
-# TODO: Make a custom run function that ends all the loops before it shutsdown
 
 # introduction = """@everyone
 introduction = """
