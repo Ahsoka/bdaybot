@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import os
 import datetime
+import itertools
 
 # ryanid
 id = 262676325846876161
@@ -49,10 +50,11 @@ def helpembed():
 
     aintroembed.set_author(name="Bdaybot's commands:", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/partying-face_1f973.png")
 
-def wishembed(bdaykid):
+def wishembed(bdaykid, wisher):
     global awishembed
     body = f"""
-    ***Congratulations! You wished __{bdaykid}__ a happy birthday!***
+    {wisher.mention} Congrats! 🎈🌟🎉
+    You wished __{bdaykid}__ a happy birthday!
     """
     awishembed = discord.Embed(title="",
         colour=discord.Color.from_rgb(254, 254, 254), url="https://discordapp.com",
@@ -82,7 +84,7 @@ def helpwish():
 def birthdayembed(discorduser, irlname, age):
     global abirthday
     body = f"""
-    Congratulations to ***__{irlname}__*** ({discorduser.mention}) on turning ***__{age}__*** !
+    Congratulations to ***__{irlname}__*** ({discorduser.mention}) on turning ***__{age}__*** !!!🎈🌟🎉
     """
     abirthday = discord.Embed(title="",
     colour=discord.Colour(0xe86eff), url="https://discordapp.com",
@@ -110,9 +112,24 @@ def helpsetidembed():
     colour=discord.Color.from_rgb(254, 254, 254), url="https://discordapp.com",
     description=body)
 
-def helpshowwish(listofwishers):
+def helpshowwish(listofwishers, listofwishersdisc, bdaykiddisc, bdaykidname):
+    # list of wishersdisc is a list of the disc names of the peopel that wished bdaydisc
+    # listofwishers is a list of the fullanmes of the poeple that wished bdaykiddisc
+    # bdaykidname is the full name of the person who is getting wished
     global ashowwish
-    
+    ashowwish = discord.Embed(title="",
+    colour=discord.Colour(0xe86eff), url="https://discordapp.com",
+    description="")
+    abirthday.set_thumbnail(url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/partying-face_1f973.png")
+    ashowwish.set_author(name=f"{bdaykidname}'s Birthday Wishers'", icon_url=bdaykiddisc.avatar_url_as(format=None, static_format='webp', size=1024))
+    for wishers, discwishers in zip(listofwishers, listofwishersdisc):
+        ashowwish.add_field(name=wishers, value=discwishers)
+
+def helpsetannouncements():
+    global ashowsetannouncements
+    ashowwish = discord.Embed(title="",
+    colour=discord.Colour(0xe86eff), url="https://discordapp.com",
+    description="")
 
 @bot.command()
 async def showintro(ctx):
