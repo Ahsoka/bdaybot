@@ -15,13 +15,13 @@ bot = commands.Bot(command_prefix='!')
 
 def introembed():
     introduction = """
-    ```The Bday bot has been been revamped!
+    ```The Bday bot has been been revamped again!
 
 With the help of a couple reaaaally awesome people (including me), we got rid of most of the old code and created the
 new bdaybot on one language (Python!), and we moved the location of the Bday bot server onto a small, yet powerful, raspberry pi.
 
 But that's not it! The Bday bot not only prints birthday statements every 24 hours, but it also
-has a bunch of other methods (!wish, !showwish, ...)```
+has a bunch of other methods (use ```!help``` to see all the commands)```
     """
     global aintroembed
     aintroembed = discord.Embed(title="",
@@ -36,10 +36,10 @@ def helpembed():
     body = """
     All commands:
     ```!wish
+    !upcoming
     !showwish
     !getID
     !setID
-    !upcoming
     !getannouncements
     !setannouncements```
 
@@ -148,12 +148,21 @@ def helpgetannouncements():
     ashowgetannouncements = discord.Embed(title="",
     colour=discord.Colour(0xe86eff), url="https://discordapp.com",
     description=body)
+    ahshowgetannouncements.set_author(name="!getannouncements command📢", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/public-address-loudspeaker_1f4e2.png")
+
 
 def helpupcoming():
     global ashowupcoming
+    body = """
+    This function returns the upcoming birthdays
+    ```!upcoming``` and ```!up``` returns the next 5 birthdays
+    If you want a certain amount of birthdays, then use ```!upcoming 69``` or ```!up 69``` to get 69 birthdays
+    e.g ```!up 3``` or ```!upcoming 3```
+    """
     ashowupcoming = discord.Embed(title="",
     colour=discord.Colour(0xe86eff), url="https://discordapp.com",
     description="")
+    ashowupcoming.set_author(name="!upcoming command📅", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png")
 
 @bot.command()
 async def showintro(ctx):
@@ -194,5 +203,3 @@ async def showhelpgetid(ctx):
 async def showhelpsetid(ctx):
     helpsetidembed()
     await bot.get_user(id).send(embed=ahelpsetid)
-
-|
