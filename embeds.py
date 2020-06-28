@@ -39,7 +39,9 @@ def helpembed():
     !showwish
     !getID
     !setID
-    !upcoming```
+    !upcoming
+    !getannouncements
+    !setannouncements```
 
     For help on how to use a command use ```!help !{nameofcommand}```
     e.g : ```!help wish```
@@ -127,7 +129,29 @@ def helpshowwish(listofwishers, listofwishersdisc, bdaykiddisc, bdaykidname):
 
 def helpsetannouncements():
     global ashowsetannouncements
-    ashowwish = discord.Embed(title="",
+    body = """
+    This function sets the channel where the bot should send its announcements.
+
+    To use this function, go to the desired channel and type ```!setannouncements```
+    """
+    ashowsetannouncements = discord.Embed(title="",
+    colour=discord.Colour(0xe86eff), url="https://discordapp.com",
+    description=body)
+    ahshowsetannouncements.set_author(name="!setannouncements command📢", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/public-address-loudspeaker_1f4e2.png")
+
+def helpgetannouncements():
+    global ashowgetannouncements
+    body = """
+    This function returns the channel where the bot sends the announcements.
+    To use the function, do ```!getannouncements``` in any channel.
+    """
+    ashowgetannouncements = discord.Embed(title="",
+    colour=discord.Colour(0xe86eff), url="https://discordapp.com",
+    description=body)
+
+def helpupcoming():
+    global ashowupcoming
+    ashowupcoming = discord.Embed(title="",
     colour=discord.Colour(0xe86eff), url="https://discordapp.com",
     description="")
 
