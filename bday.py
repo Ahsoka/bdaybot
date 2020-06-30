@@ -8,7 +8,7 @@ import pickle
 import warnings
 import itertools
 import asyncio
-import time
+from embeds import emoji_urls, bdaybot_embeds
 
 # Check here for any issues relating to the API ➡ https://status.discord.com/
 
@@ -189,34 +189,30 @@ class bdaybot_commands(commands.Cog):
             self.update_pickle('guilds_info', source=source)
 
     async def ping_devs(self, error, command, ctx=None):
-        # TODO: Edit this so it can be more informative when something goes wrong
-        # When someone breaks something in a DM message, have the bot send us the exact
-        # message that caused the bot to break.
-        # Also when something goes wrong in a server have the bot DM us the error just like
-        # when something breaks in DM message.
         if ctx is not None:
             parsed_ctx_guild = ctx.guild if ctx.guild else 'a DM message'
             if hasattr(ctx, 'author'):
-                print(f"[{command.name}()] {ctx.author} caused the following error in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n{repr(error)}\n")
+                print(f"[{command.name}] {ctx.author} caused the following error in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n{repr(error)}\n")
             elif not isinstance(error, commands.CommandInvokeError):
                 print(f"The following error occured with the {command.name} command in {parsed_ctx_guild} at {format(datetime.datetime.today(), '%I:%M %p (%x)')}\n{repr(error)}\n")
-            if ctx.guild and hasattr(ctx, 'author'):
-                return (f" {self.bot.get_user(dev_discord_ping['Andres']).mention}, "
-                        f"{self.bot.get_user(dev_discord_ping['Elliot']).mention},"
-                        f" or {self.bot.get_user(dev_discord_ping['Ryan']).mention} fix this!")
         for dev_name in dev_discord_ping:
             dev = self.bot.get_user(dev_discord_ping[dev_name])
             try:
                 if hasattr(ctx, 'author'):
-                    await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}()` in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
+                    await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
+                    await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
                 elif ctx is None:
-                    await dev.send(f"The following error occured with the `{command}()` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
+                    await dev.send(f"The following error occured with the `{command}` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
                 else:
-                    await dev.send(f"The following error occured with `{command.name}()` in {parsed_ctx_guild}, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
+                    await dev.send(f"The following error occured with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
             except RuntimeError as error:
                 if str(error).lower() == 'session is closed':
                     break
                 print(f"ping_devs() The following error occurred unexpectedly while trying to ping {dev_name} on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}.\n{repr(error)}\n")
+        if ctx.guild and hasattr(ctx, 'author'):
+            return (f" {self.bot.get_user(dev_discord_ping['Andres']).mention}, "
+                    f"{self.bot.get_user(dev_discord_ping['Elliot']).mention},"
+                    f" or {self.bot.get_user(dev_discord_ping['Ryan']).mention} fix this!")
         return ''
 
     @commands.command()
@@ -499,7 +495,7 @@ class bdaybot_commands(commands.Cog):
         if num <= 0:
             await ctx.send(f"{ctx.author.mention} **{num}** is less than 1. Please use a number that is not less than 1.")
             return
-        upcoming_embed = discord.Embed(title=f"**Upcoming Birthday{'s' if num != 1 else ''}!** 🎇 🎊", color=discord.Color.from_rgb(254, 254, 254))
+        upcoming_embed = discord.Embed().set_author(name=f"Upcoming Birthday{'s' if num != 1 else ''}", icon_url=emoji_urls.calendar)
         upcoming_df = andres.bday_df.drop(self.today_df.index) if self.bday_today else andres.bday_df
         if num > 8:
             upcoming_embed.set_footer(text=f"The input value exceeded 8. Automatically showing the top 8 results.")
@@ -537,6 +533,7 @@ class bdaybot_commands(commands.Cog):
             channel = ctx.guild.get_channel(channel_ID)
             if not isinstance(channel, discord.TextChannel):
                 await ctx.send((f"{ctx.author.mention} Holy cow, you must know how to read Python 🐍 code really, really well. "
+                                "And you know how Discord works in-depth too! "
                                 "You are really trying to screw with me, huh? Well done! 👍🏽"))
                 return
         else:
@@ -572,7 +569,7 @@ class bdaybot_commands(commands.Cog):
         try:
             ann_channel_id = self.bot.announcements[ctx.guild.id]
             await ctx.send((f"{ctx.author.mention} The current announcements channel is {ctx.guild.get_channel(ann_channel_id).mention}. "
-                            f"If you like to change the announcements channel use `{ctx.prefix}setannouncements`."))
+                            f"If you like to change the announcements channel use `{ctx.prefix}setannouncements`"))
         except KeyError:
             await ctx.send(f"{ctx.author.mention} There is currently not an announcements channel registered. Use `{ctx.prefix}setannouncements` to register an announcements channel.")
 
@@ -589,7 +586,125 @@ class bdaybot_commands(commands.Cog):
 
 class bdaybot_helpcommand(commands.HelpCommand):
     async def send_bot_help(self, mapping):
-        pass
+        # TODO: Let ppl accessing the help command know that certain command are unavailable due to certain permissions be unavailable
+        ctx = self.context
+        self.bday_today, self.today_df = ctx.bot.bday_today, ctx.bot.today_df
+        filtered_commands = await self.filter_commands(
+                            [command for key, commands in mapping.items() for command in commands])
+        description = ("All" if ctx.guild else "Available") + " Commands:\n```\n"
+
+        for loc, command in enumerate(filtered_commands):
+            end = '\n' if loc != len(filtered_commands) - 1 else '```'
+            description += f"{ctx.prefix}{command.name}{end}"
+        description += "\n" + f"For help on how to use a command use `{ctx.prefix}help " + "{nameofcommand}`\ne.g. " + f"`{ctx.prefix}help getID`"
+        help_embed = discord.Embed(description=description).set_author(name="Bdaybot's commands:", icon_url=emoji_urls.partying_face)
+        if not ctx.guild:
+            help_embed.set_footer(text=f"Not all available commands are shown above.\nUse {ctx.prefix}help in server with me to see all the available commands!")
+        await ctx.send(embed=help_embed)
+
+    async def send_command_help(self, command):
+        ctx = self.context
+        self.bday_today, self.today_df = ctx.bot.bday_today, ctx.bot.today_df
+        if command.name == 'wish':
+            description = ''
+            try:
+                await command.can_run(ctx)
+            except commands.BotMissingPermissions:
+                description = "**CURRENTLY UNAVAILABLE BECAUSE I DO NOT HAVE THE MANAGE MESSAGES PERMISSION**\n\n"
+            except commands.NoPrivateMessage:
+                description = '**UNAVAILABLE IN DM MESSAGES**\n\n'
+            description += ("The wish command allows you to wish someone a happy birthday!\n\n"
+                            f"There are several ways to use the `{ctx.prefix}wish` command:\n"
+                            f"▶ If you are using the `{ctx.prefix}wish` command for the first time you must include your\n"
+                            "6-digit ID number as the last argument of the command.\n"
+                            f"▶ If you are using the `{ctx.prefix}wish` command again you do not need to submit your ID number again.\n"
+                            "▶ If there are multiple people's birthday today you must specify who you want to wish a happy birthday.\n"\
+                            f"\ne.g. If you want wish Jaiden a happy birthday, use `{ctx.prefix}wish Jaiden 694208`"
+                            "\nThe ID you submit is checked against a list of valid IDs so use your real ID.\n"
+                            "\nYour message containing your ID is deleted to keep your ID confidental.\n\n"
+                            f"The `{ctx.prefix}wish` command is not available on days when it is no one's birthday")
+
+            description += "." if self.bday_today else " (like today)."
+
+            command_embed = discord.Embed(description=description).set_author(name="Wish Command", icon_url=emoji_urls.wrapped_gift) \
+                            .set_footer(text="Names are not case sensitive and full names are also acceptable.")
+        elif command.name == 'getID':
+            description =  ("The getID command allows you to determine the ID that corresponds with your Discord account. "
+                            "An ID is useful because it allows you to use other commands.\n\n"
+                            f"To use the getID command use `{ctx.prefix}getID`"
+                            "\n\nWhen you activate the getID command I will DM you your currently registered ID.\n\n"
+                            "If you do not currently have an ID registered I will let you know in the DM message.\n\n"
+                            f"You can use the `{ctx.prefix}setID` command to register your ID.")
+            command_embed = discord.Embed(description=description).set_author(name="getID Command", icon_url=emoji_urls.numbers)
+        elif command.name == 'setID':
+            description = ''
+            try:
+                await command.can_run(ctx)
+            except commands.BotMissingPermissions:
+                description = "**CURRENTLY UNAVAILABLE BECAUSE I DO NOT HAVE THE MANAGE MESSAGES PERMISSION**\n\n"
+            description += ("The setID command allows you to set the ID that corresponds with your Discord account. "
+                            "And ID is useful because it allows you to use other commands.\n\n"
+                            f"To use the setID command use `{ctx.prefix}setID " "{6-digit student ID}`\n"
+                            "\nThe student ID you input is validated against a database of legitimate student IDs, "
+                            "so make sure you use your real one.\n"
+                            "\nIf you are using this command in a server, your message will be deleted to keep your ID confidental.")
+            command_embed = discord.Embed(description=description).set_author(name="setID Command", icon_url=emoji_urls.numbers)
+        elif command.name == 'setannouncements':
+            description = ''
+            try:
+                await command.can_run(ctx)
+            except commands.MissingPermissions:
+                description = "**YOU DO NOT HAVE THE REQUIRED PERMISSIONS TO USE THIS COMMAND**\n\n"
+            except commands.NoPrivateMessage:
+                description = "**UNAVAILABLE IN DM MESSAGES**\n\n"
+            description += ("The setannouncements command allows you to set the text channel which I will announce the birthdays in.\n\n"
+                            f"There are two ways to use the `{ctx.prefix}setannouncements` command:\n"
+                            f"▶ Type `{ctx.prefix}setannouncements` in the text channel you want to be the announcements channel\n"
+                            f"▶ Type `{ctx.prefix}setannouncements " "{text channel}` to set a certain channel to the announcements channel. ") \
+                            + (f"e.g. `{ctx.prefix}setannouncements` {ctx.channel.mention}" if ctx.guild else '') \
+                            + ("\n\nYou must have the administrator permission in order to use " f"`{ctx.prefix}setannouncements`")
+            command_embed = discord.Embed(description=description).set_author(name="Setannouncements Command", icon_url=emoji_urls.loudspeaker) \
+                            .set_footer(text=f"{ctx.prefix}setann is an alias")
+        elif command.name == 'getannouncements':
+            description = ''
+            try:
+                await command.can_run(ctx)
+            except commands.NoPrivateMessage:
+                description = '**UNAVAILABLE IN DM MESSAGES**\n\n'
+            description += ("The getannouncements command shows you the current channel I use to announce whose birthday it is.\n\n"
+                            "By default the announcements channel is the text channel titled 'announcements'.\n\n"
+                            f"If you would to change the announcements channel use `{ctx.prefix}setannouncements`")
+            command_embed = discord.Embed(description=description).set_author(name="Getannouncements Command", icon_url=emoji_urls.loudspeaker) \
+                            .set_footer(text=f"{ctx.prefix}getann is an alias")
+        elif command.name == 'upcoming':
+            description = ''
+            try:
+                await command.can_run(ctx)
+            except commands.NoPrivateMessage:
+                description = '**UNAVAILABLE IN DM MESSAGES**\n\n'
+            description += ("The upcoming command shows you the upcoming birthdays.\n\n"
+                            "By default it will show you the next 5 upcoming birthdays. "
+                            "However, you can choose the number of birthday you would like, by using this format "
+                            f"`{ctx.prefix}upcoming " "{number}`" f" e.g. To see the next 3 birthdays use `{ctx.prefix}upcoming 3`\n"
+                            "\nValid numbers are between 1 and 8.  If you use a number larger than 8 only the first 8 upcoming birthdays will be shown.")
+            command_embed = discord.Embed(description=description).set_author(name="Upcoming Command", icon_url=emoji_urls.calendar) \
+                            .set_footer(text=f"{ctx.prefix}up is an alias")
+        elif command.name == 'help':
+            await ctx.send(("It sounds like your having a personal problem there, seek a therapist for real help.\n"
+                            "I'd recommend https://www.youtube.com/c/HealthyGamerGG/"))
+            return
+        await ctx.send(embed=command_embed)
+
+    async def command_not_found(self, invalid_command):
+        ctx = self.context
+        if invalid_command == '@invalid' and ctx.guild:
+            return f"{ctx.author.mention} I know your tricks. Stop trying to abuse me!"
+        return f"{ctx.bot.cogs['bdaybot_commands'].maybe_mention(ctx)}{super().command_not_found(invalid_command)}"
+
+    async def on_help_command_error(self, ctx, error):
+        self.name = 'help'
+        bdaybot_cog = ctx.bot.cogs['bdaybot_commands']
+        await ctx.send(f"{bdaybot_cog.maybe_mention(ctx)}Congrats you broken the help command!{await bdaybot_cog.ping_devs(error, self, ctx)}")
 
 class bdaybot(commands.Bot):
     TOKEN = os.environ['Bday_Token']
@@ -613,6 +728,7 @@ class bdaybot(commands.Bot):
     async def on_ready(self):
         if not self.init_connection:
             self.add_cog(bdaybot_commands(self))
+            self.help_command = bdaybot_helpcommand()
             try:
                 with open('announcements.pickle', mode='rb') as file:
                     self.announcements = pickle.load(file)
@@ -723,6 +839,7 @@ class bdaybot(commands.Bot):
             message = discord.message.Message(state='lol', channel=guild.text_channels[0], data=message_dict)
             await self.invoke(commands.Context(message=message, bot=self, prefix=self.parsed_command_prefix,
                                                invoked_with='update_nickname', view=stringview, command=update_nickname))
+        # import time
         # if not hasattr(self, 'time1'):
         #     self.time1 = time.time()
         # else:
