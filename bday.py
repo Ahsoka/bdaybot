@@ -8,7 +8,6 @@ import pickle
 import warnings
 import itertools
 import asyncio
-from embeds import emoji_urls, bdaybot_embeds
 
 # Check here for any issues relating to the API ➡ https://status.discord.com/
 
@@ -20,6 +19,15 @@ if not hasattr(tasks.Loop, 'is_running'):
 
 
 dev_discord_ping = {'Andres':388899325885022211, 'Elliot':349319578419068940, 'Ryan':262676325846876161}
+
+class emoji_urls:
+    # TODO: Add some kinda of check to ensure that all the links are working
+    confetti_ball = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/confetti-ball_1f38a.png"
+    partying_face = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/partying-face_1f973.png"
+    wrapped_gift = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/wrapped-gift_1f381.png"
+    numbers = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/248/input-numbers_1f522.png"
+    loudspeaker = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/public-address-loudspeaker_1f4e2.png"
+    calendar = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png"
 
 class bdaybot_commands(commands.Cog):
     # Data Organization for the bday_dict:
