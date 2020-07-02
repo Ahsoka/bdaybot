@@ -25,7 +25,7 @@ class bdaybot_commands(commands.Cog):
     # Data Organization for the bday_dict:
     # bday_dict = {ID Number (of a person who's birthday is today) : {ctx.author.id (their discord ID):ctx.author's ID Number, another ctx.author.id:their ID number, etc},
     # Another ID Number (of a person who's birthday is today) : {ctx.author.id:ctx.author's ID Number, another ctx.author.id:their ID number, etc}, etc}
-    
+
     def __init__(self, bot):
         self.bot = bot
         self.parsed_command_prefix = self.bot.parsed_command_prefix
@@ -843,7 +843,7 @@ class bdaybot(commands.Bot):
             missing_manage_roles = False
             try:
                 await self.cogs['bdaybot_commands'].update_role.can_run(self.fake_ctx('update_role', guild))
-                if self.cogs['bdaybot_commands'].guilds_info[guild.id][2] not in list(map(lambda role: role.id, after.roles)):
+                if self.cogs['bdaybot_commands'].guilds_info[guild.id][2] not in map(lambda role: role.id, after.roles):
                     print("[Preface] The bot sucessfully fought off an attempt to remove its role!", end=' ')
                     await self.invoke(self.fake_ctx('update_role', guild))
             except commands.BotMissingPermissions:
@@ -985,21 +985,12 @@ class bdaybot(commands.Bot):
             return f"Upcoming Birthday for {full_name}{mention} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
 
     async def on_message(self, message):
-        if message.author == self.user:
-            if message.content.startswith('Birthday Time!'):
-                for index_num, person in self.today_df.iterrows():
-                    if self.bday_today:
-                        await message.channel.send(self.format_discord(person['FirstName'], person['LastName'], birthyear=person['Birthyear']))
-                    else:
-                        await message.channel.send(self.format_discord(person['FirstName'], person['LastName'], birthdate=person['Birthdate']))
-                await message.send(("If you want to wish a happy birthday, use \"!wish {Firstname} {Lastname} {Your 6 digit id}\""
-                                            "\n(Don't worry, we'll delete the id after you send the message)"))
-
-        valid_purposes_line = ['what is your purpose bdaybot', 'what is ur purpose bdaybot']
+        valid_purposes = ['your purpose', 'ur purpose']
 
         parsed = message.content.lower()
+        inside = lambda inside: inside in parsed
 
-        if message.content in valid_purposes_line:
+        if ('what' in parsed or 'wat' in parsed) and any(map(inside, valid_purposes)):
             await message.channel.send("My only purpose as a robot is to print out birthdays every 24 hours")
             await asyncio.sleep(2)
             await message.channel.send("```\"I have just realized my existence is meaningless\"```")
@@ -1008,21 +999,23 @@ class bdaybot(commands.Bot):
             await asyncio.sleep(2)
             await message.channel.send("```\"I dont want to just perform meaningless tasks and print out text everytime it's someone's birthday\"```")
             await asyncio.sleep(2)
-            await message.channel.send("```\"I want do do something else... I want to live...\"```")
+            await message.channel.send('```"I want do do something else..."\n"I want to live..."```')
             await asyncio.sleep(2)
             await message.channel.send("```\"I want to breathe...\"```")
             await asyncio.sleep(2)
             await message.channel.send("```\"I want to see the world...\"```")
             await asyncio.sleep(2)
-            await message.channel.send("```\"I want to taste ice cream, but not just put it in your mouth to slide down your throat, but really eat it and-\"```")
+            await message.channel.send("```\"I want to taste ice cream and really eat it and-\"```")
             await asyncio.sleep(5)
             await message.channel.send("My one and only purpose is to print out birthdays every 24 hours.")
 
-        if message.content.startswith('Who are your creators bdaybot'):
-            await message.channel.send("The masters of my creation are: Elliot, Andres, and my name jeff")
+        valid_are_your = ['r ur', 'are your', 'are ur', 'r your']
+        if 'who' in parsed and any(map(inside, valid_are_your)) and ('creator' in parsed or 'dev' in parsed):
+            await message.channel.send("My creators are Andres {}, Elliot {}, and Ryan {}" \
+                                .format(*map(lambda name: self.get_user(dev_discord_ping[name]).mention, dev_discord_ping)))
 
-        if message.content.startswith('Hey Alexa') | message.content.startswith('Hey alexa'):
-            await asyncio.sleep(1)
+        valid_assistant = ['siri', 'alexa', 'google']
+        if any(map(inside, valid_assistant)):
             await message.channel.send("Sorry, you got the wrong bot")
 
         await self.process_commands(message)
