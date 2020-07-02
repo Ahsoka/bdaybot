@@ -990,6 +990,8 @@ class bdaybot(commands.Bot):
         parsed = message.content.lower()
         inside = lambda inside: inside in parsed
 
+        # TODO: Add protections for the unlikely event that some trys to break the bot
+        # by activating the secret messages in a channel that the bot cannot send messages in.
         if ('what' in parsed or 'wat' in parsed) and any(map(inside, valid_purposes)):
             await message.channel.send("My only purpose as a robot is to print out birthdays every 24 hours")
             await asyncio.sleep(2)
