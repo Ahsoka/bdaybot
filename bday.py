@@ -838,14 +838,14 @@ class bdaybot(commands.Bot):
                 break
         if relevant_channel and not self.permissions(after, after.guild.get_member(self.bot.id), 'send_messages'):
             channel_mention = f'**#{after}**' if after.guild.owner.is_on_mobile() else after.mention
-            # await after.guild.owner.send((f"While changing {channel_mention} you or someone in **{guild}** accidently made it so I can no longer send messages in {channel_mention}. "
-            #                                 f"If you want to change the channel I send the birthdays in please use `{self.parsed_command_prefix}setannouncements`. "
-            #                                 f"Or give me the `send messages` permission in {channel_mention} so I can send the birthdays!"))
-            await self.get_user(388899325885022211).send((f"While changing {channel_mention} you or someone in **{guild}** accidently made it so I can no longer send messages in {channel_mention}. "
+            await after.guild.owner.send((f"While changing {channel_mention} you or someone in **{guild}** accidently made it so I can no longer send messages in {channel_mention}. "
                                             f"If you want to change the channel I send the birthdays in please use `{self.parsed_command_prefix}setannouncements`. "
                                             f"Or give me the `send messages` permission in {channel_mention} so I can send the birthdays!"))
 
     async def on_member_update(self, before, after):
+        # TODO: Even though the bot detects it cannot send messages in the announcements channel
+        # it does not actually do anything about it other than sending some messages to the server owner.
+        # You might want to stash away the channel they set as the announcements channel and
         if after == self.user and before.roles != after.roles:
             guild = after.guild
             missing_manage_roles = False
