@@ -8,6 +8,8 @@ import pickle
 import warnings
 import itertools
 import asyncio
+import requests
+import sys
 
 # Check here for any issues relating to the API ➡ https://status.discord.com/
 
@@ -20,14 +22,32 @@ if not hasattr(tasks.Loop, 'is_running'):
 
 dev_discord_ping = {'Andres':388899325885022211, 'Elliot':349319578419068940, 'Ryan':262676325846876161}
 
-class emoji_urls:
-    # TODO: Add some kinda of check to ensure that all the links are working
-    confetti_ball = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/confetti-ball_1f38a.png"
-    partying_face = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/partying-face_1f973.png"
-    wrapped_gift = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/wrapped-gift_1f381.png"
-    numbers = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/248/input-numbers_1f522.png"
-    loudspeaker = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/public-address-loudspeaker_1f4e2.png"
-    calendar = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png"
+    # pip3 install requests
+    # confetti_ball = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/confetti-ball_1f38a.png"
+    # partying_face = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/partying-face_1f973.png"
+    # wrapped_gift = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/wrapped-gift_1f381.png"
+    # numbers = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/248/input-numbers_1f522.png"
+    # loudspeaker = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/public-address-loudspeaker_1f4e2.png"
+    # calendar = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png"
+    #
+    # links = [confetti_ball, partying_face, wrapped_gift, numbers, loudspeaker, calendar]
+    #
+    # broken_links = []
+    # for website in links:
+    #     try:
+    #         requestObj = requests.get(website);
+    #         if(requestObj.status_code == 404):
+    #             broken_links.append(website)
+    #         else:
+    #             pass
+    #     except Exception as e:
+    #         broken_links.append(website)
+    #
+    # if len(broken_links) == 0:
+    #     print('No broken emoji links!')
+    # else:
+    #     print(f'Broken Links: {broken_links}')
+    #     sys.exit(1)
 
 class bdaybot_commands(commands.Cog):
     # Data Organization for the bday_dict:
@@ -761,6 +781,32 @@ class bdaybot(commands.Bot):
         self.init_connection = False
 
     async def on_ready(self):
+        confetti_ball = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/confetti-ball_1f38a.png"
+        partying_face = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/partying-face_1f973.png"
+        wrapped_gift = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/wrapped-gift_1f381.png"
+        numbers = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/248/input-numbers_1f522.png"
+        loudspeaker = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/public-address-loudspeaker_1f4e2.png"
+        calendar = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png"
+
+        links = [confetti_ball, partying_face, wrapped_gift, numbers, loudspeaker, calendar]
+
+        broken_links = []
+        for website in links:
+            try:
+                requestObj = requests.get(website);
+                if(requestObj.status_code == 404):
+                    broken_links.append(website)
+                else:
+                    pass
+            except Exception as e:
+                broken_links.append(website)
+
+        if len(broken_links) == 0:
+            print('No broken emoji links!')
+        else:
+            print(f'Failed to run bot because there are broken links: {broken_links}')
+            sys.exit(1)
+
         if not self.init_connection:
             self.add_cog(bdaybot_commands(self))
             self.help_command = bdaybot_helpcommand()
@@ -1087,5 +1133,6 @@ class bdaybot(commands.Bot):
 
 # TODO: Change the command_prefix from `!` to something that does not trigger other bots.
 bot = bdaybot(testing=True, command_prefix=['!', '.'], description='A bot used for bdays', case_insensitive=True)
+# bot.run(os.environ.get('Bday_Token'))
 bot.run()
 print("Ended program!")
