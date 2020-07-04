@@ -35,8 +35,8 @@ class emoji_urls():
     broken_links = []
     for website in links:
         try:
-            requestObj = requests.get(website);
-            if(requestObj.status_code == 404):
+            requeststat = requests.get(website).status_code
+            if(requeststat == 404) or (requeststat == 403):
                 broken_links.append(website)
             else:
                 pass
