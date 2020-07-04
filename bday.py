@@ -22,7 +22,7 @@ if not hasattr(tasks.Loop, 'is_running'):
 
 dev_discord_ping = {'Andres':388899325885022211, 'Elliot':349319578419068940, 'Ryan':262676325846876161}
 
-class linkcheck():
+class emoji_urls():
     confetti_ball = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/confetti-ball_1f38a.png"
     partying_face = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/partying-face_1f973.png"
     wrapped_gift = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/wrapped-gift_1f381.png"
@@ -41,13 +41,14 @@ class linkcheck():
             else:
                 pass
         except Exception as e:
+            print(e)
             broken_links.append(website)
 
     if len(broken_links) == 0:
         print('No broken emoji links!')
     else:
         print(f'Failed to run bot because there are broken links: {broken_links}')
-        sys.exit(1)
+        raise ConnectionRefusedError
 
 class bdaybot_commands(commands.Cog):
     # Data Organization for the bday_dict:
