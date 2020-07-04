@@ -47,8 +47,7 @@ class emoji_urls():
     if len(broken_links) == 0:
         print('No broken emoji links!')
     else:
-        print(f'Failed to run bot because there are broken links: {broken_links}')
-        raise ConnectionRefusedError
+        raise ConnectionRefusedError(f'Failed to run bot because there are broken links: {broken_links}')
 
 class bdaybot_commands(commands.Cog):
     # Data Organization for the bday_dict:
