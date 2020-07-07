@@ -766,9 +766,8 @@ class bdaybot_helpcommand(commands.HelpCommand):
             command_embed = discord.Embed(description=description).set_author(name="Upcoming Command", icon_url=emoji_urls.calendar) \
                             .set_footer(text=f"{ctx.prefix}up is an alias")
         elif command.name == 'help':
-            await ctx.send(("It sounds like your having a personal problem there, seek a therapist for real help.\n"
-                            "I'd recommend https://www.youtube.com/c/HealthyGamerGG/"))
-            logger.info(f"{ctx.author} discovered the Dr. K easter egg!")
+            await ctx.send("It sounds like your having a personal problem there, please seek a therapist for real help.")
+            logger.info(f"{ctx.author} discovered the Mental Illness easter egg!")
             return
         logger.info(f"{ctx.author} accessed the help command for the {command.name} command.")
         await ctx.send(embed=command_embed)
@@ -1141,6 +1140,6 @@ class bdaybot(commands.Bot):
             # TODO maybe: Add a did you mean 'X' command, if u want.
 
 # TODO: Change the command_prefix from `!` to something that does not trigger other bots.
-bot = bdaybot(testing=True, command_prefix=['!', '.'], description='A bot used for bdays', case_insensitive=True)
+bot = bdaybot(testing=True, command_prefix=['`', 'b.'], description='A bot used for bdays', case_insensitive=True)
 # bot.run(os.environ.get('Bday_Token'))
 bot.run()
