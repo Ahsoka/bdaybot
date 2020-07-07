@@ -676,6 +676,7 @@ class bdaybot_helpcommand(commands.HelpCommand):
             help_embed.set_footer(text=f"Not all available commands are shown above because I do not have certain permissions.\nPlease give me all the required permissions so you can use all my commands!")
 
         await ctx.send(embed=help_embed)
+        logger.info(f"{ctx.author} accessed the help command.")
 
     async def send_command_help(self, command):
         ctx = self.context
@@ -767,7 +768,9 @@ class bdaybot_helpcommand(commands.HelpCommand):
         elif command.name == 'help':
             await ctx.send(("It sounds like your having a personal problem there, seek a therapist for real help.\n"
                             "I'd recommend https://www.youtube.com/c/HealthyGamerGG/"))
+            logger.info(f"{ctx.author} discovered the Dr. K easter egg!")
             return
+        logger.info(f"{ctx.author} accessed the help command for the {command.name} command.")
         await ctx.send(embed=command_embed)
 
     async def command_not_found(self, invalid_command):
