@@ -59,8 +59,8 @@ def timedelta_today(date):
         date = date.to_pydatetime()
     if hasattr(date, 'date'):
         date = date.date()
-    # delta = date - datetime.date.today()
-    delta = date - datetime.date.today().replace(day=20)
+    delta = date - datetime.date.today()
+    # delta = date - datetime.date.today().replace(day=20)
     return delta if delta >= datetime.timedelta() else delta + datetime.timedelta(days=365)
 
 bday_df = pandas.DataFrame(data_dict)
