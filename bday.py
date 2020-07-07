@@ -801,7 +801,7 @@ class bdaybot(commands.Bot):
         if testing:
             try:
                 self.TOKEN = os.environ['testing_token']
-                logger.info("Succesfully accessed the enviroment variable 'testing_token'\n")
+                logger.info("Succesfully accessed the enviroment variable 'testing_token'")
             except KeyError:
                 logger.warning("Could not find 'testing_token' in enviroment variables using 'Bday_Token' as backup.")
         self.bday_today, self.today_df = andres.get_latest(to_csv=True)
@@ -816,10 +816,10 @@ class bdaybot(commands.Bot):
             try:
                 with open('announcements.pickle', mode='rb') as file:
                     self.announcements = pickle.load(file)
-                    logger.info(f"At {format(datetime.datetime.today(), '%I:%M %p (%x)')}, 'announcements.pickle' was sucessfully accessed.\n")
+                    logger.info(f"'announcements.pickle' was sucessfully accessed.")
             except (FileNotFoundError, EOFError):
                 self.announcements = dict()
-                logger.warning((f"Unsucessfully accessed 'announcements.pickle'. Created a new empty instance.\n"))
+                logger.warning(f"Unsucessfully accessed 'announcements.pickle'. Created a new empty instance.")
 
             for guild in self.guilds:
                 found = False

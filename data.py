@@ -80,7 +80,7 @@ logger.info("Sucessfully created and modified the 'bday_df' DataFrame")
 def update_data(inplace=True, supress=False):
     bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
     if not supress:
-        logger.info(f"Sucessfully updated 'bday_df'\n")
+        logger.info(f"Sucessfully updated 'bday_df'")
     return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'], inplace=inplace)
 
 def get_latest(to_csv=False, supress=False):
