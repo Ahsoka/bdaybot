@@ -1139,7 +1139,7 @@ class bdaybot(commands.Bot):
             logger.debug(f"{ctx.author} tried to invoke the invalid command '{ctx.message.content}'.")
             # TODO maybe: Add a did you mean 'X' command, if u want.
 
-# TODO: Change the command_prefix from `!` to something that does not trigger other bots.
 bot = bdaybot(testing=False, command_prefix=['+', 'b.'], description='A bot used for bdays', case_insensitive=True)
 # bot.run(os.environ.get('Bday_Token'))
 bot.run()
+# TODO: Add a logging for when the bdaybot program stops
