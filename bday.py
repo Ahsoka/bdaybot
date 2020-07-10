@@ -232,10 +232,12 @@ class bdaybot_commands(commands.Cog):
                 if hasattr(ctx, 'author'):
                     await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
                     await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
+                    logger.error(f"{ctx.author.mention} said {ctx.message.content} which caused the following error with {command.name} in {parsed_ctx_guild}. Error message: {repr(error)}")
                 elif ctx is None:
                     await dev.send(f"The following error occured with the `{command}` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
                 else:
                     await dev.send(f"The following error occured with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
+                    logger.error(f"The following error occured with {command.name} in {parsed_ctx_guild}. Error message: {repr(error)}")
             except RuntimeError as error:
                 if str(error).lower() == 'session is closed':
                     break
