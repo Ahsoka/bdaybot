@@ -1,6 +1,6 @@
 # Bdaybot Overview
 ### Background
-The bdaybot was commissioned by Dr. Neat in an effort to mimic the feel of the in-person classroom.  One of aspect of the in-person classroom 
+The bdaybot was commissioned by Dr. Neat in an effort to mimic the feel of the in-person classroom.  One of aspect of the in-person classroom
 Dr. Neat really cares about is who's birthday it was. Originally, he commissioned [Elliot] to work on the project.  Later on however, [Ryan] and [Andres] were also added to the project.  The three of us would ultimately be responsible for creating the bot and making the bot what it is today.
 ### What Does the Bdaybot Actually Do?
 The bdaybot has two main functions, showing whose birthday it is and increasing interaction in the servers it is in.  
@@ -10,7 +10,7 @@ The bdaybot has two main functions, showing whose birthday it is and increasing 
     * The bot changes its name to whoever's birthday is today. If there's no one's birthday today then it will change its name to person with the closest birthday.
     * If there are multiple people's birthday today it will cycle through everyone's birthday. Same applies if there are multiple people's birthday upcoming.
 * Roles:
-    * The bot's role is a crucial part of it's ability to make the birthday person visible to people in the server. 
+    * The bot's role is a crucial part of it's ability to make the birthday person visible to people in the server.
     * The bot's role will either be the "Upcoming" role which indicates that someone's birthday is upcoming or the "Happy Birthday" role.
     * The "Upcoming" role also includes information about when the upcoming person's birthday is.
 
@@ -20,7 +20,7 @@ Might want to look at this section again -->
 * Commands:
     * `+upcoming`: Used for checking whose birthday are upcoming
     * `+wish`: Used for wishing people a happy birthday
- * Easters Eggs:
+* Easters Eggs:
     * There are various words or phrases that can be said to the bot to triggered some type of funny or silly response from the bot
 
 ### Programmatic Design Overview:
