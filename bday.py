@@ -925,16 +925,13 @@ class bdaybot(commands.Bot):
             channel = guild.get_channel(self.announcements[guild.id]) if guild.id in self.announcements else None
             if channel is not None and not self.permissions(channel, after, 'send_messages'):
                 channel_mention = f'**#{channel}**' if after.guild.owner.is_on_mobile() else channel.mention
-                if missing_manage_roles:
-                    beginning = "Additionally,"
-                    logger.warning(f"Someone also accidently inhibited the bot's ability to send messages in the announcements channel. A message was sent to {guild.owner}.")
-                else:
-                    logger.warning(f"Someone in {guild} accidently made it that the bot can no longer send messsages in the announcements channel. A message was sent to {guild.owner}.")
-                    beginning = f"While changing my roles you or someone in **{guild}** made it so"
+                beginning = "Additionally," if missing_manage_roles else f"While changing my roles you or someone in **{guild}** made it so"
                 del self.announcements[guild.id]
                 await guild.owner.send((f"{beginning} I can no longer send messages in {channel_mention}. "
                                         f"Therefore, {channel_mention} is no longer the announcements channel. "
                                         f"If you want to set a new announcements channel please use `{self.parsed_command_prefix}setannouncements`."))
+                logger.warning(f"Someone in {guild} accidently made it that the bot can no longer send messsages in the announcements channel. A message was sent to {guild.owner}.")
+
 
     async def send_bdays_wait_to_run(self, *args):
         time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.datetime.today()
