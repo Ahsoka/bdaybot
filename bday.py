@@ -670,6 +670,7 @@ class bdaybot_commands(commands.Cog):
     #     print(self.bot.check_other_tasks.get_task())
 
 class bdaybot_helpcommand(commands.HelpCommand):
+    # TODO: Add error handling to the help command
     num_of_commands = 7
     async def send_bot_help(self, mapping):
         # TODO: Let ppl accessing the help command know that certain command are unavailable due to certain permissions be unavailable
@@ -931,7 +932,6 @@ class bdaybot(commands.Bot):
                                         f"Therefore, {channel_mention} is no longer the announcements channel. "
                                         f"If you want to set a new announcements channel please use `{self.parsed_command_prefix}setannouncements`."))
                 logger.warning(f"Someone in {guild} accidently made it that the bot can no longer send messsages in the announcements channel. A message was sent to {guild.owner}.")
-
 
     async def send_bdays_wait_to_run(self, *args):
         time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.datetime.today()
