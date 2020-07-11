@@ -1,7 +1,7 @@
 # Bdaybot Overview
 ## Background
 The bdaybot was commissioned by Dr. Neat in an effort to mimic the feel of the in-person classroom.  One of aspect of the in-person classroom
-Dr. Neat really cares about is who's birthday it was. Originally, he commissioned [Elliot] to work on the project.  Later on however, [Ryan] and [Andres] were also added to the project.  The three of us would ultimately be responsible for creating the bot and making the bot what it is today.
+Dr. Neat really cares about is who's birthday it is. Originally, he commissioned [Elliot] to work on the project.  Later on however, [Ryan] and [Andres] were also added to the project.  The three of us would ultimately be responsible for creating the bot and making the bot what it is today.
 ## What Does the Bdaybot Actually Do?
 The bdaybot has two main functions, showing whose birthday it is and increasing interaction in the servers it is in.  
 
@@ -42,7 +42,7 @@ Pickle is used to store Python objects as files.  Pickle is used in the bdaybot 
 ### [Discord.py](https://discordpy.readthedocs.io/en/latest/)
 Discord.py allows the bdaybot to actually communicate with the Discord servers.  It allows the bdaybot to do all the discord related operations it does.
 ### [Logging](https://docs.python.org/3/library/logging.html)
-The logging package allows the bdaybot to have an extremely comprehensive logging system where all the activities of the bdaybot are record both on the command line and in files.  This extremely useful for debugging purposes.
+The logging package allows the bdaybot to have an extremely comprehensive logging system where all the activities of the bdaybot are recorded both on the command line and in files.  This extremely useful for debugging purposes.
 ### [OS](https://docs.python.org/3/library/os.html)
 This is the module that allows the bdaybot to access the environment variables mentioned above.
 
