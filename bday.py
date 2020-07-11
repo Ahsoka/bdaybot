@@ -226,22 +226,25 @@ class bdaybot_commands(commands.Cog):
                 logger.error(f"[{command.name}] {ctx.author} caused the following error in {parsed_ctx_guild}:\n{repr(error)}")
             elif not isinstance(error, commands.CommandInvokeError):
                 logger.error(f"The following error occured with the {command.name} command in {parsed_ctx_guild}\n{repr(error)}")
-        for dev_name in dev_discord_ping:
+        for iteration, dev_name in enumerate(dev_discord_ping):
             dev = self.bot.get_user(dev_discord_ping[dev_name])
+            ok_log = (iteration == len(dev_discord_ping) - 1)
             try:
                 if hasattr(ctx, 'author'):
                     await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
                     await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
-                    logger.error(f"{ctx.author.mention} said {ctx.message.content} which caused the following error with {command.name} in {parsed_ctx_guild}. Error message: {repr(error)}")
+                    if ok_log:
+                        logger.error(f"{ctx.author.mention} said {ctx.message.content} which caused the following error with {command.name} in {parsed_ctx_guild}. Error message: {repr(error)}")
                 elif ctx is None:
                     await dev.send(f"The following error occured with the `{command}` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
                 else:
                     await dev.send(f"The following error occured with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
-                    logger.error(f"The following error occured with {command.name} in {parsed_ctx_guild}. Error message: {repr(error)}")
+                    if ok_log:
+                        logger.error(f"The following error occured with {command.name} in {parsed_ctx_guild}. Error message: {repr(error)}")
             except RuntimeError as error:
+                logger.critical(f"The following error occurred unexpectedly while trying to ping {dev_name}\n{repr(error)}")
                 if str(error).lower() == 'session is closed':
                     break
-                logger.critical(f"The following error occurred unexpectedly while trying to ping {dev_name}\n{repr(error)}")
         if ctx.guild and hasattr(ctx, 'author'):
             return (f" {self.bot.get_user(dev_discord_ping['Andres']).mention}, "
                     f"{self.bot.get_user(dev_discord_ping['Elliot']).mention},"
@@ -527,10 +530,19 @@ class bdaybot_commands(commands.Cog):
         if not await self.valid_author(ctx, self.update_role):
             return
         if isinstance(error, commands.BotMissingPermissions):
-            await ctx.guild.owner.send(f"I cannot currently change my role in {ctx.guild}. Please give me the `manage roles` permission so I can work properly")
-            # await ctx.send(f"I cannot currently change my role in {ctx.guild}. Please give me the `manage roles` permission so I can work properly")
-            self.update_pickle('guilds_info', source='handle_update_role_error()')
-            logger.warning(f"The bot unsucessfully changed its role in '{ctx.guild}'. A DM message requesting to change it's permissions was sent to {ctx.guild.owner}.")
+            await ctx.guild.owner.send(f"I cannot currently edit my role in **{ctx.guild}**. Please give me the `manage roles` permission so I can work properly")
+            logger.warning(f"The bot unsucessfully edited its role in '{ctx.guild}' due the the fact the bot was the required missing permissions. "
+                            f"A DM message requesting to change its permissions was sent to {ctx.guild.owner}.")
+        elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden):
+            # TODO: Have the bot fix this problem on its own if possible
+            most_likely = [role for role in ctx.guild.me.roles
+                            if role.id not in map(lambda tup: tup[1][2], self.guilds_info.items()) and
+                            "Upcoming Bday-" not in role.name and
+                            "🎉 Happy Birthday" != role.name]
+            await ctx.guild.owner.send(f"I cannot currently edit my role in **{ctx.guild}**. "
+                                        f"Please move the **{most_likely[-1]}** role to above the **{ctx.guild.get_role(self.guilds_info[ctx.guild.id][2])}** role.")
+            logger.warning(f"The bot unsucessfully edited its role in '{ctx.guild}' due to the fact the bot's highest role was not above the '{ctx.guild.get_role(self.guilds_info[ctx.guild.id][2])}' role. "
+                            f"A DM message requesting to change its permissions was sent to {ctx.guild.owner}.")
         else:
             await self.ping_devs(error, self.update_role, ctx=ctx)
 
@@ -696,7 +708,7 @@ class bdaybot_helpcommand(commands.HelpCommand):
                             f"▶ If you are using the `{ctx.prefix}wish` command for the first time you must include your\n"
                             "6-digit ID number as the last argument of the command.\n"
                             f"▶ If you are using the `{ctx.prefix}wish` command again you do not need to submit your ID number again.\n"
-                            "▶ If there are multiple people's birthday today you must specify who you want to wish a happy birthday.\n"\
+                            "▶ If there are multiple people's birthday today you must specify who you want to wish a happy birthday.\n"
                             f"\ne.g. If you want wish Jaiden a happy birthday, use `{ctx.prefix}wish Jaiden 694208`"
                             "\nThe ID you submit is checked against a list of valid IDs so use your real ID.\n"
                             "\nYour message containing your ID is deleted to keep your ID confidental.\n\n"
@@ -888,7 +900,7 @@ class bdaybot(commands.Bot):
             if after.id == channel_id:
                 relevant_channel = True
                 break
-        if relevant_channel and not self.permissions(after, after.guild.get_member(self.bot.id), 'send_messages'):
+        if relevant_channel and not self.permissions(after, after.guild.get_member(self.user.id), 'send_messages'):
             channel_mention = f'**#{after}**' if after.guild.owner.is_on_mobile() else after.mention
             await after.guild.owner.send((f"While changing {channel_mention} you or someone in **{after.guild}** accidently made it so I can no longer send messages in {channel_mention}. "
                                             f"If you want to change the channel I send the birthdays in please use `{self.parsed_command_prefix}setannouncements`. "
@@ -896,16 +908,13 @@ class bdaybot(commands.Bot):
             logger.warning(f"In {after.guild} someone made it so that the bot can no longer send messages in {after}.")
 
     async def on_member_update(self, before, after):
-        # TODO: Even though the bot detects it cannot send messages in the announcements channel
-        # it does not actually do anything about it other than sending some messages to the server owner.
-        # You might want to stash away the channel they set as the announcements channel and
+        # TODO: Add some way to stash the announcements.id if they screw up the channel
         if after == self.user and before.roles != after.roles:
             guild = after.guild
             missing_manage_roles = False
             try:
                 await self.cogs['bdaybot_commands'].update_role.can_run(self.fake_ctx('update_role', guild))
                 if self.cogs['bdaybot_commands'].guilds_info[guild.id][2] not in map(lambda role: role.id, after.roles):
-                    logger.debug("The bot sucessfully fought off an attempt to remove its role!")
                     await self.invoke(self.fake_ctx('update_role', guild))
             except commands.BotMissingPermissions:
                 logger.warning(f"Someone in {guild} accidently made it so that the bot can no longer change roles.")
@@ -922,9 +931,10 @@ class bdaybot(commands.Bot):
                 else:
                     logger.warning(f"Someone in {guild} accidently made it that the bot can no longer send messsages in the announcements channel. A message was sent to {guild.owner}.")
                     beginning = f"While changing my roles you or someone in **{guild}** made it so"
+                del self.announcements[guild.id]
                 await guild.owner.send((f"{beginning} I can no longer send messages in {channel_mention}. "
-                                        f"If you want to change the channel I send the birthdays in please use `{self.parsed_command_prefix}setannouncements`. "
-                                        f"Or give me the `send messages` permission in {channel_mention} so I can send the birthdays!"))
+                                        f"Therefore, {channel_mention} is no longer the announcements channel. "
+                                        f"If you want to set a new announcements channel please use `{self.parsed_command_prefix}setannouncements`."))
 
     async def send_bdays_wait_to_run(self, *args):
         time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.datetime.today()
@@ -947,7 +957,7 @@ class bdaybot(commands.Bot):
                 self.cogs['bdaybot_commands'].guilds_info[guild.id][1] = False
                 if channel is None:
                     await guild.owner.send((f"While trying to send the birthday message, I failed to find the announcements channel in **{guild}**. "
-                                            "Please use `!setannouncements` to set the announcements channel so I can send a birthday message!"))
+                                            f"Please use `{self.parsed_command_prefix}setannouncements` to set the announcements channel so I can send a birthday message!"))
                     logger.warning(f"The bot failed to find the announcements channel in {guild}. A message has been sent to {guild.owner}.")
                 else:
                     for id, series in self.today_df.iterrows():
@@ -955,7 +965,7 @@ class bdaybot(commands.Bot):
                         if user is not None and iteration == 0:
                             await user.send(f"Happy birthday from me {self.user.mention} and all the developers of the bdaybot! Hope you have an awesome birthday!")
                         description = self.format_bday(series['FirstName'], series['LastName'], user, birthyear=series['Birthyear'])
-                        embed = discord.Embed(description=description).set_author(name=f"Happy Birthday! 🎉", icon_url=emoji_urls.partying_face)
+                        embed = discord.Embed(description=description).set_author(name="Happy Birthday! 🎉", icon_url=emoji_urls.partying_face)
                         await channel.send(embed=embed)
 
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
@@ -1003,7 +1013,8 @@ class bdaybot(commands.Bot):
             for guild in self.guilds:
                 await self.invoke(self.fake_ctx('update_nickname', guild))
         except KeyError:
-            logger.warning(f"On iteration {self.send_bdays.current_loop} 'change_nicknames' failed to run.")
+            pass
+            # logger.warning(f"On iteration {self.send_bdays.current_loop} 'change_nicknames' failed to run.")
         # import time
         # if not hasattr(self, 'time1'):
         #     self.time1 = time.time()
@@ -1050,7 +1061,7 @@ class bdaybot(commands.Bot):
         parsed = message.content.lower()
         inside = lambda inside: inside in parsed
 
-        # TODO: Add protections for the unlikely event that some tries to break the bot
+        # TODO: Add protections for the unlikely event that someone tries to break the bot
         # by activating the secret messages in a channel that the bot cannot send messages in.
         if ('what' in parsed or 'wat' in parsed) and any(map(inside, valid_purposes)):
             await message.channel.send("My only purpose as a robot is to print out birthdays every 24 hours")
@@ -1141,7 +1152,5 @@ class bdaybot(commands.Bot):
             logger.debug(f"{ctx.author} tried to invoke the invalid command '{ctx.message.content}'.")
             # TODO maybe: Add a did you mean 'X' command, if u want.
 
-bot = bdaybot(testing=False, command_prefix=['+', 'b.'], description='A bot used for bdays', case_insensitive=True)
-# bot.run(os.environ.get('Bday_Token'))
+bot = bdaybot(testing=True, command_prefix=('+', 'b.'), case_insensitive=True)
 bot.run()
-# TODO: Add a logging for when the bdaybot program stops
