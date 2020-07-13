@@ -1152,5 +1152,5 @@ class bdaybot(commands.Bot):
             logger.debug(f"{ctx.author} tried to invoke the invalid command '{ctx.message.content}'.")
             # TODO maybe: Add a did you mean 'X' command, if u want.
 
-bot = bdaybot(testing=True, command_prefix=('+', 'b.'), case_insensitive=True)
+bot = bdaybot(testing=False, command_prefix=('+', 'b.'), case_insensitive=True)
 bot.run()
