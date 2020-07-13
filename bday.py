@@ -1063,7 +1063,7 @@ class bdaybot(commands.Bot):
 
         # TODO: Add protections for the unlikely event that someone tries to break the bot
         # by activating the secret messages in a channel that the bot cannot send messages in.
-        if ('what' in parsed or 'wat' in parsed) and any(map(inside, valid_purposes)):
+        if (inside('what') or inside('wat')) and any(map(inside, valid_purposes)):
             await message.channel.send("My only purpose as a robot is to print out birthdays every 24 hours")
             await asyncio.sleep(2)
             await message.channel.send("```\"I have just realized my existence is meaningless\"```")
@@ -1084,7 +1084,7 @@ class bdaybot(commands.Bot):
             logger.info(f"{message.author} discovered the 'my purpose' easter egg!")
 
         valid_are_your = ['r ur', 'are your', 'are ur', 'r your']
-        if 'who' in parsed and any(map(inside, valid_are_your)) and ('creator' in parsed or 'dev' in parsed):
+        if inside('who') and any(map(inside, valid_are_your)) and (inside('creator') or inside('dev')):
             await message.channel.send("My creators are Andres {}, Elliot {}, and Ryan {}" \
                                 .format(*map(lambda name: self.get_user(dev_discord_ping[name]).mention, dev_discord_ping)))
             logger.info(f"{mesage.author} discovered the 'who are ur devs' easter egg!")
