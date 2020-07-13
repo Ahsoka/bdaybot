@@ -446,7 +446,7 @@ class bdaybot_commands(commands.Cog):
         # TODO: Take another look at this hasattr stuff, use handle_upcoming_error() as reference
         if hasattr(error, 'original') and isinstance(error.original, ValueError):
             await ctx.send((f"{self.maybe_mention(ctx)}"
-                            f"'**{' '.join(ctx.message.content.split()[1:])}**' is not a valid number."))
+                            f"**{' '.join(ctx.message.content.split()[1:])}** is not a valid number."))
             logger.debug(f"{ctx.author} tried to set their ID to a non-numeric value.")
         elif isinstance(error, commands.BotMissingPermissions):
             await ctx.send((f"The `{ctx.prefix}setID` command is currently unavailable because I do not have the `manage messages` permission.\n"
