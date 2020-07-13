@@ -1,4 +1,3 @@
-# Bdaybot Overview
 ## Background
 The bdaybot was commissioned by Dr. Neat in an effort to mimic the feel of the in-person classroom.  One of aspect of the in-person classroom
 Dr. Neat really cares about is who's birthday it is. Originally, he commissioned [Elliot] to work on the project.  Later on however, [Ryan] and [Andres] were also added to the project.  The three of us would ultimately be responsible for creating the bot and making the bot what it is today.
