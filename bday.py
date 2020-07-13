@@ -949,6 +949,9 @@ class bdaybot(commands.Bot):
             for iteration, (guild_id, channel_id) in enumerate(self.announcements.items()):
                 guild = self.get_guild(guild_id)
                 channel = self.get_channel(channel_id)
+                # TODO: Add a check to see if channel or guild is a NoneType
+                # Should not be necessary if self.announcements is scrubbed sufficently well
+
                 # Changes nickname dm blocker to False so that if they accidently disable name changing
                 # owner will get a message
                 self.cogs['bdaybot_commands'].guilds_info[guild.id][1] = False
