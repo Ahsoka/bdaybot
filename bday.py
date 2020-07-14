@@ -971,7 +971,7 @@ class bdaybot(commands.Bot):
 
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
-        logger.info(f"The next iteration is scheduled for {format(self.send_bdays.next_iteration.astimezone(), '%I:%M %p on %x')}.")
+        logger.info(f"The next iteration is scheduled for {format(self.send_bdays.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
 
     # Might want to change interval, cause checking every second is kinda of a lot
     @tasks.loop(seconds=1)
@@ -1042,7 +1042,7 @@ class bdaybot(commands.Bot):
         logger.info(f"The 'change_roles()' coroutine was run.")
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
-        logger.info(f"The next iteration is scheduled for {format(self.change_roles.next_iteration.astimezone(), '%I:%M %p on %x')}.")
+        logger.info(f"The next iteration is scheduled for {format(self.change_roles.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
 
     def format_bday(self, first_name, last_name, user=None, *, birthyear=None, birthdate=None):
         full_name = f"***__{first_name} {last_name}__*** "
