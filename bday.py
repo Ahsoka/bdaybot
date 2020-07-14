@@ -1034,7 +1034,7 @@ class bdaybot(commands.Bot):
         time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.datetime.today()
         # time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=0)).replace(hour=0, minute=36, second=0, microsecond=0) - datetime.datetime.today()
         logger.info(f"The change_roles coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.")
-        await asyncio.sleep(time_until_midnight.total_seconds() + self.cushion_delay)
+        await asyncio.sleep(time_until_midnight.total_seconds() + self.cushion_delay + 1.5)
 
     @tasks.loop(hours=24)
     async def change_roles(self):
