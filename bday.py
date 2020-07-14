@@ -254,6 +254,7 @@ class bdaybot_commands(commands.Cog):
     @commands.command()
     @commands.bot_has_guild_permissions(manage_messages=True)
     async def wish(self, ctx, *message):
+        # TODO: Make it so you cannot wish yourself a happy birthday
         try:
             studentID = int(message[-1])
         except (IndexError, ValueError):
