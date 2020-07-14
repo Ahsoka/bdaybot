@@ -33,7 +33,7 @@ The bdaybot uses environment variables which are special variables stored in the
 ## Technical Overview:
 This section will be an overview of what each package/library is used for the in the bdaybot code
 ### [Datetime](https://docs.python.org/3/library/datetime.html)
-The datetime package allows us to give the bdaybot the ability to know what time and date are.  As outlined above, the core functionality of the bdaybot is to display birthdays which is inherently linked to the date and time.
+The datetime package allows us to give the bdaybot the ability to know what the time and date are.  As outlined above, the core functionality of the bdaybot is to display birthdays which is inherently linked to the date and time.
 ### [Pandas](https://pandas.pydata.org/)
 Pandas is used as an easy way to manipulated the birthday data.  Pandas has all sort of useful features, one of which allows us to sort the birthday database by whose's birthday is closest to the day today.
 ### [Pickle](https://docs.python.org/3/library/pickle.html)
