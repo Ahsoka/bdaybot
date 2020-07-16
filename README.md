@@ -39,7 +39,7 @@ Pandas is used as an easy way to manipulated the birthday data.  Pandas has all 
 ### [Pickle](https://docs.python.org/3/library/pickle.html)
 Pickle is used to store Python objects as files.  Pickle is used in the bdaybot to store critical data so that even if the bdaybot shuts off expectedly or unexpectedly the critical data will be saved as a file no matter what.
 ### [Discord.py](https://discordpy.readthedocs.io/en/latest/)
-Discord.py allows the bdaybot to actually communicate with the Discord servers.  It allows the bdaybot to do all the discord related operations it does.
+Discord.py allows the bdaybot to actually communicate with the Discord servers.  It allows the bdaybot to do all the discord related operations.
 ### [Logging](https://docs.python.org/3/library/logging.html)
 The logging package allows the bdaybot to have an extremely comprehensive logging system where all the activities of the bdaybot are recorded both on the command line and in files.  This extremely useful for debugging purposes.
 ### [OS](https://docs.python.org/3/library/os.html)
