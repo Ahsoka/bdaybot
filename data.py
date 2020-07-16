@@ -1,5 +1,5 @@
 import pandas
-import urllib.request
+import urllib.request, urllib.error
 import os
 import datetime
 import logs
@@ -31,8 +31,7 @@ data_dict = dict(((column_name, []) for column_name in ['PeriodNumber', 'Birthda
 
 # Eight rows before it's someone elses data
 keys = list(data_dict.keys())
-raw_data_list = raw_data.splitlines()
-for index, attr in enumerate(raw_data_list):
+for index, attr in enumerate(raw_data.splitlines()):
     index %= 8
     if index == 0:
         continue
