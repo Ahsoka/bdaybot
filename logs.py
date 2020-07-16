@@ -4,7 +4,7 @@ import datetime
 class PrettyFormatter(logging.Formatter):
     def __init__(self, *args, style='%', **kwargs):
         if style != '%':
-            raise ValueError(f"__init__ does not currently accept {style} as valid style, please use %")
+            raise ValueError(f"__init__() does not currently accept {style} as valid style, please use %")
         super().__init__(*args, style=style, **kwargs)
 
     def levelname_in_front(self):
