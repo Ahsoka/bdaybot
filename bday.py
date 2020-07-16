@@ -980,6 +980,7 @@ class bdaybot(commands.Bot):
         # because this is the only way to determine whether or not the other tasks have failed
         # or are still running. If this task fails we will have no way of knowing whether or not
         # the other tasks have failed.
+        # TODO: Add the ability for tasks to restart themselves
         script = f"unexpectedly ended at {format(datetime.datetime.today(), '%I:%M %p on %x')} due to following error:\n"
         if not self.send_bdays.is_running() and self.tasks_running['send_bdays']:
             error = self.send_bdays.get_task().exception()
