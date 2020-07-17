@@ -803,13 +803,7 @@ class bdaybot_helpcommand(commands.HelpCommand):
 # Probably need to update the self.announcements so things do not completely break
 # Not really that important because it is extremely unlikely that someone will ban the bot
 class bdaybot(commands.Bot):
-    # TODO: Ensure that when bdaybot_commands is updated those changes
-    # are also visible to the bdaybot instance
-    try:
-        TOKEN = os.environ['Bday_Token']
-    except KeyError as error:
-        logger.critical("Failed to access the environment variable 'Bday_Token'.")
-        raise error
+
     logger.info("Succesfully accessed the enviroment variable 'Bday_Token'")
     message_dict = {'id':0, 'attachments':[], 'embeds':[], 'edited_timestamp':None, 'type':None, 'pinned':False,
                     'mention_everyone':False, 'tts':False}
@@ -820,8 +814,16 @@ class bdaybot(commands.Bot):
             try:
                 self.TOKEN = os.environ['testing_token']
                 logger.info("Succesfully accessed the enviroment variable 'testing_token'")
-            except KeyError:
-                logger.warning("Could not find 'testing_token' in enviroment variables using 'Bday_Token' as backup.")
+            except KeyError as error:
+                logger.critical("Failed to access the environment variable 'testing_token'.")
+                raise error
+        else:
+            try:
+                TOKEN = os.environ['Bday_Token']
+                logger.info("Succesfully accessed the enviroment variable 'Bday_Token'.")
+            except KeyError as error:
+                logger.critical("Failed to access the environment variable 'Bday_Token'.")
+                raise error
         self.bday_today, self.today_df = andres.get_latest(to_csv=True)
         super().__init__(*args, **kwargs)
         self.parsed_command_prefix = self.command_prefix[0] if isinstance(self.command_prefix, (list, tuple)) else self.command_prefix
