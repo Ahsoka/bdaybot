@@ -54,9 +54,9 @@ This is the module that allows the bdaybot to access the environment variables m
 Although the Bday bot may be the single most greatest, robust, and perfect bot to ever exist in all the multiverses in all past, present, and future spacetime, there are still some tweaks and other important methods we have yet to do.
 
 * Some of the methods can be implemented more efficiently, the functions that need more efficient code are commented in the code itself ctrl + f and search for ```TODO```
-* New event named showwish that returns all the wishers for the input e.g ```python +showwish Firstname Lastname```
-* New event named age that returns the input's age e.g ```python +age Firstname Lastname```
-* New event named birthday that returns the input's birthday e.g ```python +birthday Firstname Lastname```
+* New event named showwish that returns all the wishers for the input e.g ```+showwish Firstname Lastname```
+* New event named age that returns the input's age e.g ```+age Firstname Lastname```
+* New event named birthday that returns the input's birthday e.g ```+birthday Firstname Lastname```
 
 ## The Future of the Birthday Robot
 In order to implement these features listed below, we need your help to help progress the bdaybot become better in the future. Us three normies cannot implement these features below by themselves, so if you attend CVHS we ask those who are interested in the future of bdaybot to help us implement even just a small part of the features listed below
@@ -65,3 +65,4 @@ In order to implement these features listed below, we need your help to help pro
 * Turn the bdaybot into a robust teacherbot that takes attendance, and maybe create a system that replaces google classroom (ambitious)
 * Create more incentives to use the bdaybot e.g: candy every month to the person who wished the most people, etc..
 * Instead of renaming the bdaybot to the student's name on his/her birthday, make the bday student's discord user itself show all the way at the top of the server even if he/she is offline on discord
+* If you have more ideas for the bdaybot message 'nayr#2153' on discord
