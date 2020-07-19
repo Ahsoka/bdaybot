@@ -64,7 +64,6 @@ def timedelta_today(date):
 
 bday_df = pandas.DataFrame(data_dict)
 bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
-
 official_student_df = pandas.concat([pandas.read_csv('Student Locator Spring 2020.csv', usecols=['StuID', 'LastName', 'FirstName', 'Grd']), pandas.DataFrame({'StuID': [123456], 'LastName': ['Neat'], 'FirstName': ['Dr.'], 'Grd': [-1]})])
 logger.info("Sucessfully accessed the 'Student Locator Spring 2020.csv' file")
 bday_df = bday_df[bday_df['StuID'].isin(official_student_df['StuID'])]
@@ -73,7 +72,6 @@ bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
 bday_df.set_index('StuID', inplace=True); official_student_df.set_index('StuID', inplace=True)
 bday_df[['FirstName', 'LastName']] = official_student_df[['FirstName', 'LastName']]
 bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
-bday_df['Birthyear'] = bday_df['Birthyear'].astype(str).astype(int)
 logger.info("Sucessfully created and modified the 'bday_df' DataFrame")
 
 def update_data(inplace=True, supress=False):
