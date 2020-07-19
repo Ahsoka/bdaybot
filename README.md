@@ -65,4 +65,4 @@ In order to implement these features listed below, we need your help to help pro
 * Turn the bdaybot into a robust teacherbot that takes attendance, and maybe create a system that replaces google classroom (ambitious)
 * Create more incentives to use the bdaybot e.g: candy every month to the person who wished the most people, etc..
 * Instead of renaming the bdaybot to the student's name on his/her birthday, make the bday student's discord user itself show all the way at the top of the server even if he/she is offline on discord
-* If you have more ideas for the bdaybot message 'nayr#2153' on discord
+* If you have more ideas for the bdaybot message nayr#2153 on discord
