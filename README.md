@@ -59,7 +59,7 @@ Although the Bday bot may be the single most greatest, robust, and perfect bot t
 * New event named birthday that returns the input's birthday e.g ```python +birthday Firstname Lastname```
 
 ## The Future of the Birthday Robot
-In order to implement these features listed below, we need your help to help progress the bdaybot become better in the future. 3 normies cannot implement these features below by themselves, so if you attend CVHS we ask those who are interested in the future of bdaybot to help us implement even just one of the features listed below
+In order to implement these features listed below, we need your help to help progress the bdaybot become better in the future. Us threee normies cannot implement these features below by themselves, so if you attend CVHS we ask those who are interested in the future of bdaybot to help us implement even just one of the features listed below
 
 * Using natural language processing(ai) to predict the discord usernames and other info from discord to accurately link the discord name with the irl name if their discord username is already not their irl name
 * Turn the bdaybot into a robust teacherbot that takes attendance, and maybe create a system that replaces google classroom (ambitious)
