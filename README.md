@@ -61,7 +61,7 @@ Although the Bday bot may be the single most greatest, robust, and perfect bot t
 ## The Future of the Birthday Robot
 In order to implement these features listed below, we need your help to help progress the bdaybot become better in the future. Us three normies cannot implement these features below by themselves, so if you attend CVHS we ask those who are interested in the future of bdaybot to help us implement even just a small part of the features listed below
 
-* Using natural language processing(ai) to predict the discord usernames and other info from discord to accurately link the discord name with the irl name if their discord username is already not their irl name
+* Using natural language processing(ai) to predict the discord username and other info from discord to accurately link the discord name with the irl name (if their discord username is already not their irl name)
 * Turn the bdaybot into a robust teacherbot that takes attendance, and maybe create a system that replaces google classroom (ambitious)
 * Create more incentives to use the bdaybot e.g: candy every month to the person who wished the most people, etc..
 * Instead of renaming the bdaybot to the student's name on his/her birthday, make the bday student's discord user itself show all the way at the top of the server even if he/she is offline on discord
