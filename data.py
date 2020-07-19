@@ -78,7 +78,7 @@ logger.info("Sucessfully created and modified the 'bday_df' DataFrame")
 
 def update_data(inplace=True, supress=False):
     # TODO: Pull from the neato website again in case someone added themselves to bdaybot database.
-    # Currently to database will never be updated until the bot is run again.
+    # Currently the database will never be updated until the bot is run again.
     # Also might want to add some type of check to see if the database has changed so
     # no computation is wasted on parsing the string if the database has not changed.
     bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
