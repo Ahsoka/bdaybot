@@ -49,3 +49,10 @@ This is the module that allows the bdaybot to access the environment variables m
 [Andres]: https://github.com/TurretAA12
 [Elliot]: https://github.com/Falcons-Royale
 [Ryan]: https://github.com/ryanlee68
+
+## TODO List:
+Although the Bday bot may be the single most greatest, robust, and perfect bot to ever exist in all the multiverses in all past, present, and future spacetime, there are still some tweaks and other important methods we have yet to do.
+
+* Some of the methods can be implemented more efficiently, e.g:
+* New event named age that returns the input's age ```python +age Firstname Lastname```
+* New event named birthday that returns the input's birthday ```python +birthday Firstname Lastname```
