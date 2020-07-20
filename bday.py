@@ -951,6 +951,14 @@ class bdaybot(commands.Bot):
         # Update the data in bdaybot_commands as well
         self.cogs['bdaybot_commands'].update_data()
         logger.info(f"The 'send_bdays()' coroutine was run.")
+
+        # This is kind of risky cause this may cause this task to end
+        # Probably should wrap this with a `try-except` but first need
+        # to know exactly what error we should be excepting
+        for guild in self.guilds:
+            self.cogs['bdaybot_commands'].guilds_info[guild.id][1] = False
+            await self.invoke(self.fake_ctx('update_nickname', guild))
+
         if self.bday_today:
             for iteration, (guild_id, channel_id) in enumerate(self.announcements.items()):
                 guild = self.get_guild(guild_id)
@@ -960,7 +968,6 @@ class bdaybot(commands.Bot):
 
                 # Changes nickname dm blocker to False so that if they accidently disable name changing
                 # owner will get a message
-                self.cogs['bdaybot_commands'].guilds_info[guild.id][1] = False
                 if channel is None:
                     await guild.owner.send((f"While trying to send the birthday message, I failed to find the announcements channel in **{guild}**. "
                                             f"Please use `{self.parsed_command_prefix}setannouncements` to set the announcements channel so I can send a birthday message!"))
@@ -1016,12 +1023,10 @@ class bdaybot(commands.Bot):
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
         # print(f"Next iteration is at {format(self.change_nicknames.next_iteration.astimezone(), '%I:%M:%S %p (%x)')}")
-        try:
+        if len(self.bday_df) > 1:
             for guild in self.guilds:
                 await self.invoke(self.fake_ctx('update_nickname', guild))
-        except KeyError:
-            pass
-            # logger.warning(f"On iteration {self.send_bdays.current_loop} 'change_nicknames' failed to run.")
+        # logger.warning(f"On iteration {self.send_bdays.current_loop} 'change_nicknames' failed to run.")
         # import time
         # if not hasattr(self, 'time1'):
         #     self.time1 = time.time()
