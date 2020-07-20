@@ -820,7 +820,7 @@ class bdaybot(commands.Bot):
                 raise error
         else:
             try:
-                TOKEN = os.environ['Bday_Token']
+                self.TOKEN = os.environ['Bday_Token']
                 logger.info("Succesfully accessed the enviroment variable 'Bday_Token'.")
             except KeyError as error:
                 logger.critical("Failed to access the environment variable 'Bday_Token'.")
