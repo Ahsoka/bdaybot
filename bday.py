@@ -806,8 +806,6 @@ class bdaybot_helpcommand(commands.HelpCommand):
 # Probably need to update the self.announcements so things do not completely break
 # Not really that important because it is extremely unlikely that someone will ban the bot
 class bdaybot(commands.Bot):
-
-    logger.info("Succesfully accessed the enviroment variable 'Bday_Token'")
     message_dict = {'id':0, 'attachments':[], 'embeds':[], 'edited_timestamp':None, 'type':None, 'pinned':False,
                     'mention_everyone':False, 'tts':False}
     cushion_delay = 5
@@ -1023,7 +1021,10 @@ class bdaybot(commands.Bot):
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
         # print(f"Next iteration is at {format(self.change_nicknames.next_iteration.astimezone(), '%I:%M:%S %p (%x)')}")
-        if len(self.bday_df) > 1:
+        if self.send_bdays.current_loop == 0:
+            for guild in self.guilds:
+                await self.invoke(self.fake_ctx('update_nickname', guild))
+        elif len(self.today_df) > 1:
             for guild in self.guilds:
                 await self.invoke(self.fake_ctx('update_nickname', guild))
         # logger.warning(f"On iteration {self.send_bdays.current_loop} 'change_nicknames' failed to run.")
@@ -1035,6 +1036,10 @@ class bdaybot(commands.Bot):
         #     print(f"Time elasped since last call of change_nicknames(): {time2 - self.time1}\n")
         #     self.time1 = time2
         # await asyncio.sleep(6)
+
+        # For some reason Discord loops are pretty broken
+        # and do not update properly
+        self.send_bdays._current_loop += 1
 
     async def run_update_role(self):
         for guild in self.guilds:
