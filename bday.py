@@ -899,7 +899,7 @@ class bdaybot(commands.Bot):
             logger.debug(f"{self.user} has succesfully reconnected to Discord.")
 
     async def on_disconnect(self):
-        logger.critical(f"{self.user} disconnected from Discord.")
+        logger.warning(f"{self.user} disconnected from Discord.")
 
     async def on_guild_channel_update(self, before, after):
         relevant_channel = False
