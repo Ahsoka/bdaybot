@@ -27,6 +27,10 @@ class emoji_urls:
     # TODO: Check the links everytime the variables are accessed or
     # even better periodically as opposed to the current implementation where
     # they are only checked once on start up
+
+    # TODO: If possible use the built-in urllib library instead of
+    # requests. Since requests is used so infrequently its probably
+    # best to just use the builtin version.
     confetti_ball = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/confetti-ball_1f38a.png"
     partying_face = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/partying-face_1f973.png"
     wrapped_gift = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/wrapped-gift_1f381.png"
@@ -952,7 +956,7 @@ class bdaybot(commands.Bot):
 
         # This is kind of risky cause this may cause this task to end
         # Probably should wrap this with a `try-except` but first need
-        # to know exactly what error we should be excepting
+        # to know exactly what error we should be excepting is
         for guild in self.guilds:
             self.cogs['bdaybot_commands'].guilds_info[guild.id][1] = False
             await self.invoke(self.fake_ctx('update_nickname', guild))
