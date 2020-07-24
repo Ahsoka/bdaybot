@@ -57,6 +57,7 @@ Although the Bday bot may be the single most greatest, robust, and perfect bot t
 * New event named showwish that returns all the wishers for the input e.g ```+showwish Firstname Lastname```
 * New event named age that returns the input's age e.g ```+age Firstname Lastname```
 * New event named birthday that returns the input's birthday e.g ```+birthday Firstname Lastname```
+* If the discord user's birthday is today's birthday and is online, then the bdaybot shouls move them all the way up to the bday rols, but if the discord user is       offline, then the bdaybot should just rename itself to the bday person 
 
 ## The Future of the Birthday Robot
 In order to implement these features listed below, we need your help to help progress the bdaybot become better in the future. Us three normies cannot implement these features below by themselves, so if you attend CVHS, we ask those who are interested in the future of bdaybot to help us implement even just a small part of the features listed below.
