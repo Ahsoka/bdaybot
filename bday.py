@@ -814,7 +814,7 @@ class bdaybot(commands.Bot):
                     'mention_everyone':False, 'tts':False}
     cushion_delay = 5
 
-    def __init__(self, *args, testing=False, **kwargs):
+    def __init__(self, *args, *, testing=False, **kwargs):
         if testing:
             try:
                 self.TOKEN = os.environ['testing_token']
@@ -1173,5 +1173,5 @@ class bdaybot(commands.Bot):
             logger.debug(f"{ctx.author} tried to invoke the invalid command '{ctx.message.content}'.")
             # TODO maybe: Add a did you mean 'X' command, if u want.
 
-bot = bdaybot(testing=False, command_prefix=('+', 'b.'), case_insensitive=True)
+bot = bdaybot(testing=True, command_prefix=('+', 'b.'), case_insensitive=True)
 bot.run()
