@@ -9,6 +9,7 @@ Objectives of the Transition to SQL:
 
 Database Structure:
 * `announcement.pickle` **/** `guilds_info.pickle` ➡ `TABLE guilds`
+
 | guild_id | announcements_id | today_names_cycle | role_id | nickname_notice |
 | -------- | ---------------- | ----------------- | ------- | --------------- |
 
@@ -20,6 +21,7 @@ Database Structure:
 * `Student Locator Spring 2020.csv` ➡ `TABLE student_data`
   * Will remain essentially the same however, it will now be stored in the SQL database.
 * `bday_dict.pickle` **/** `temp_id_storage.pickle` ➡ `TABLE discord_users`
+
 | discord_user_id | student_id |
 | --------------- | ---------- |
 
@@ -27,6 +29,7 @@ Database Structure:
    * `student_id`:  **│ FOREIGN KEY** `TABLE student_data` **│** Corresponding 6-digit student ID
 
 * `bday_dict.pickle` (storing who wished who) ➡ `TABLE ?`
+
 | discord_user_id | year |
 | --------------- | ---- |
 
