@@ -33,7 +33,7 @@ Currently the bdaybot uses a very unorganized "database" in the form of .pickle 
 | discord_user_id | year |
 | --------------- | ---- |
 
-Preface: This section of the database will work a little different than all the sections above.  The question mark denoted in `TABLE ?` indicates that the table name will be variable due to the nature of this data.  Every one in the birthday database will eventually have a table which lists all the people who have wished them a happy birthday. For example, if `Jaiden` is in the database, then she will have her own table (probably named after her student ID) dedicated to all the people who wished her a happy birthday.
+Preface: This section of the database will work a little different than all the sections above.  The question mark denoted in `TABLE ?` indicates that the table name will be variable due to the nature of this data.  Every one in the birthday database will eventually have a table which lists all the people who have wished them a happy birthday. For example, if **Jaiden** is in the database, then she will have her own table (probably named after her student ID) dedicated to storing all the people who wished her a happy birthday.
 
 * `bday_dict.pickle` (storing who wished who) ➡ `TABLE ?`
 
