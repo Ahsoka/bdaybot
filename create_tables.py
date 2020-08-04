@@ -3,6 +3,10 @@ import pickle
 import pandas
 # File used to create all the tables in `bdaybot-data.db`
 
+# Protection so that this file is not accidently run again, only exists for reference
+raise RuntimeError(("Do not run this file! This may overwrite the existing database and "
+                    "DELETE all data!"))
+
 # connection = sqlite3.connect(':memory:')
 connection = sqlite3.connect('bdaybot-data.db')
 
