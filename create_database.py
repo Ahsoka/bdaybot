@@ -1,6 +1,7 @@
 import sqlite3
 import pickle
 import pandas
+import datetime
 # File used to create all the tables in `bdaybot-data.db`
 
 # Protection so that this file is not accidently run again, only exists for reference
@@ -88,7 +89,7 @@ for wishee_id, wishers in bday_dict.items():
         except sqlite3.IntegrityError as error:
             if "UNIQUE constraint failed" not in str(error):
                 raise error
-        cursor.execute("INSERT INTO id_{} VALUES(?, ?)".format(wishee_id), (discord_id, 2020))
+        cursor.execute("INSERT INTO id_{} VALUES(?, ?)".format(wishee_id), (discord_id, datetime.date.today().year))
 
 for discord_id, student_id in temp_id_storage.items():
     cursor.execute("INSERT INTO discord_users VALUES(?, ?)", (discord_id, student_id))
