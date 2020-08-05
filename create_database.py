@@ -23,7 +23,7 @@ create_guilds_table = """CREATE TABLE guilds(
                         announcements_id INT,
                         role_id INT,
                         today_names_cycle BLOB,
-                        nickname_notice BOOLEAN
+                        nickname_notice BOOLEAN DEFAULT 1
                         )"""
 cursor.execute(create_guilds_table)
 
