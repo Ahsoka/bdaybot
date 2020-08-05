@@ -44,7 +44,7 @@ class bdaybot(commands.Bot):
             except KeyError as error:
                 logger.critical("Failed to access the environment variable 'Bday_Token'.")
                 raise error
-        self.bday_today, self.today_df = andres.get_latest(to_csv=True)
+        self.bday_today, self.today_df = andres.get_latest()
         super().__init__(*args, **kwargs)
         self.parsed_command_prefix = self.command_prefix[0] if isinstance(self.command_prefix, (list, tuple)) else self.command_prefix
         self.new_day = True
