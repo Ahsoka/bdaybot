@@ -8,7 +8,7 @@ raise RuntimeError(("Do not run this file! This may overwrite the existing datab
                     "DELETE all data!"))
 
 # connection = sqlite3.connect(':memory:')
-connection = sqlite3.connect('bdaybot-data.db')
+connection = sqlite3.connect('bdaybot.db')
 
 # DEBUG: **MUST** include this line in order to use
 # FOREIGN KEYS, by default they are **DISABLED**
