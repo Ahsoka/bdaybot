@@ -58,7 +58,7 @@ with open('guilds_info.pickle', mode='rb') as file:
 
 for (guild_id, (cycler, nickname_notice, role_id)), (_, announcements_id) in zip(guilds_info.items(), announcements.items()):
     cursor.execute("INSERT INTO guilds VALUES(?, ?, ?, ?, ?)",
-                    (guild_id, announcements_id, role_id, pickle.dumps(cycler), nickname_notice))
+                    (guild_id, announcements_id, role_id, pickle.dumps(cycler), not nickname_notice))
 
 # Writing to TABLE discord_users
 with open('bday_dict.pickle', mode='rb') as file:
