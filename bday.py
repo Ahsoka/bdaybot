@@ -56,41 +56,48 @@ class bdaybot(commands.Bot):
             self.help_command = bdaybot_helpcommand()
 
             for guild in self.guilds:
-                channel = None
                 try:
                     channel_id = SQL("SELECT announcements_id FROM guilds WHERE guild_id=?", (guild.id,), first_item=True)
                     channel = guild.get_channel(channel_id)
+                    if channel is None:
+                        logger.warning(f"The bot detect the announcements channel in {guild} was deleted. "
+                                        "The owner has been sent a message prompting them to set a new announcements channel.")
+                        guild.owner.send((f"In **{guild}**, the announcements channel appears to have been deleted. Please use "
+                                            f"`{self.parsed_command_prefix}setannouncements` to set a new announcements channel."))
+                        SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=?", (guild.id,), autocommit=True)
+                    elif not self.permissions(channel, guild.get_member(self.user.id), 'send_messages'):
+                        SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=?", (guild.id,), autocommit=True)
+                        # TODO: Keep an eye on Discord mobile because they might change it so it does not always say '#invalid-channel' and actually shows the channel
+                        channel_mention = f'**#{channel}**' if guild.owner.is_on_mobile() else channel.mention
+                        logger.warning((f"The bot detected '{channel}' as the announcements channel, however, "
+                                        "the bot did not have the required permissions to send messages in it. "
+                                        f"{guild.owner} was sent a message notifying them of the situation."))
+                        await guild.owner.send((f"In **{guild}**, I detected {channel_mention} as the announcements channel, however, "
+                                                "I don't have the required permissions to send messages in it. "
+                                                f"If you would like to me to use {channel_mention} please give me the `send messages` permission and then use "
+                                                f"the `{self.parsed_command_prefix}setannouncements` "
+                                                f"command to set {channel_mention} as the announcements channel."))
+                    else:
+                        logger.info(f"The bot detected '{channel}' as the announcements channel in {guild}.")
                 except StopIteration:
-                    for possible_channel in guild.text_channels:
+                    for iteration, channel in enumerate(guild.text_channels):
                         if "announcement" in channel.name.lower():
-                            channel = possible_channel
+                            SQL("INSERT INTO guilds(guild_id, announcements_id) VALUES(?, ?)", (guild.id, channel.id), autocommit=True)
+                            channel_mention = f'**#{channel}**' if guild.owner.is_on_mobile() else channel.mention
+                            logger.info(f"The bot sent a DM message to {guild.owner} confirming the announcements channel was correct, "
+                                        f"since it is the bot's first time in {guild}.")
+                            await guild.owner.send((f"In **{guild}**, the announcement channel was automatically set to {channel_mention}! "
+                                                    f"If you think this is a mistake use `{self.parsed_command_prefix}setannouncements` to change it."))
+                            logger.info(f"The bot detected '{channel}' as the announcements channel in {guild}.")
                             break
+                        elif iteration == len(guild.text_channels) - 1:
+                            logger.warning(f"The bot was unable to find the announcements channel in {guild}.")
+                            await guild.owner.send((f"While looking through the text channels in **{guild}** "
+                                                    f"I was unable to find your announcements channel. Please use `{self.parsed_command_prefix}setannouncements` "
+                                                    "to set the announcements channel."))
 
-                if channel is None:
-                    logger.debug(f"The bot was unable to find the announcements channel in {guild}.")
-                    await guild.owner.send((f"While looking through the text channels in **{guild}** "
-                                            f"I was unable to find your announcements channel. Please use `{self.parsed_command_prefix}setannouncements` "
-                                            "to set the announcements channel."))
-                    continue
 
-                # TODO: Keep an eye on Discord mobile because they might change it so it does not always say '#invalid-channel' and actually shows the channel
-                channel_mention = f'**#{channel}**' if guild.owner.is_on_mobile() else channel.mention
-                if not self.permissions(channel, guild.get_member(self.user.id), 'send_messages'):
-                    logger.debug((f"The bot detected '{channel}' as the announcements channel, however, the bot did not have the required permissions to send messages in it. "
-                                    f"{guild.owner} was sent a message notifying them of the situation."))
-                    await guild.owner.send((f"In **{guild}**, the announcements channel was detected as {channel_mention}, however, I don't have the required permissions to send messages in it. "
-                                            f"If you would like to me to use {channel_mention} please give me the `send messages` permission and then use the `{self.parsed_command_prefix}setannouncements` "
-                                            f"command to set {channel_mention} as the announcements channel."))
-                    SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=?", (guild.id,), autocommit=True)
-                else:
-                    logger.info(f"The bot detected '{channel}' as the announcements channel in {guild}.")
-                    if channel_id is None:
-                        logger.info(f"The bot also sent a DM message to {guild.owner} confirming the announcements channel was correct, since it was bot's first time in {guild}.")
-                        await guild.owner.send((f"In **{guild}**, the announcement channel was automatically set to {channel_mention}! "
-                                                f"If you think this is a mistake use `{self.parsed_command_prefix}setannouncements` to change it."))
-                        SQL("INSERT INTO guilds(guild_id, announcements_id) VALUES(?, ?)", (guild.id, channel.id), autocommit=True)
-
-            self.tasks_running = {'send_bdays':True, 'change_nicknames':True, 'change_roles':True}
+            self.tasks_running = {'send_bdays': True, 'change_nicknames': True, 'change_roles': True}
             # ALWAYS start send_bdays before any other coroutine!
             self.send_bdays.before_loop(self.send_bdays_wait_to_run)
             self.send_bdays.start()
@@ -129,7 +136,7 @@ class bdaybot(commands.Bot):
         if after == self.user and before.roles != after.roles:
             guild = after.guild
             missing_manage_roles = False
-            channel_id, role_id = next(SQL("SELECT announcements_id, role_id FROM guilds WHERE guild_id=?", (guild.id,)))
+            channel_id, role_id = SQL("SELECT announcements_id, role_id FROM guilds WHERE guild_id=?", (guild.id,), next=True)
             try:
                 await self.cogs['bdaybot_commands'].update_role.can_run(self.fake_ctx('update_role', guild))
                 if role_id not in map(lambda role: role.id, after.roles):
