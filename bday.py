@@ -6,11 +6,14 @@ import pickle
 import asyncio
 import data as andres
 import logs
-from bdaybot_commands import emoji_urls, bdaybot_commands, bdaybot_helpcommand, dev_discord_ping
-import pickle
+from bdaybot_commands import emoji_urls, bdaybot_commands, \
+                        bdaybot_helpcommand, dev_discord_ping, \
+                        connection, cursor, SQL
+
+# Check here for any issues relating to the API ➡ https://status.discord.com/
+# Tested with discord.__version__ == 1.3.4
 
 logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s: %(asctime)s - [%(funcName)s()] %(message)s')
-# Check here for any issues relating to the API ➡ https://status.discord.com/
 
 # Pre discord 1.4 compability
 if not hasattr(tasks.Loop, 'is_running'):
@@ -44,31 +47,26 @@ class bdaybot(commands.Bot):
         self.bday_today, self.today_df = andres.get_latest(to_csv=True)
         super().__init__(*args, **kwargs)
         self.parsed_command_prefix = self.command_prefix[0] if isinstance(self.command_prefix, (list, tuple)) else self.command_prefix
+        self.new_day = True
         self.init_connection = False
 
     async def on_ready(self):
         if not self.init_connection:
             self.add_cog(bdaybot_commands(self))
             self.help_command = bdaybot_helpcommand()
-            try:
-                with open('announcements.pickle', mode='rb') as file:
-                    self.announcements = pickle.load(file)
-                    logger.info(f"'announcements.pickle' was sucessfully accessed.")
-            except (FileNotFoundError, EOFError):
-                self.announcements = dict()
-                logger.warning(f"Unsucessfully accessed 'announcements.pickle'. Created a new empty instance.")
 
             for guild in self.guilds:
-                found = False
-                if guild.id not in self.announcements:
-                    for channel in guild.text_channels:
+                channel = None
+                try:
+                    channel_id = SQL("SELECT announcements_id FROM guilds WHERE guild_id=?", (guild.id,), first_item=True)
+                    channel = guild.get_channel(channel_id)
+                except StopIteration:
+                    for possible_channel in guild.text_channels:
                         if "announcement" in channel.name.lower():
-                            found = True
+                            channel = possible_channel
                             break
-                else:
-                    channel = guild.get_channel(self.announcements[guild.id])
-                    found = True
-                if not found:
+
+                if channel is None:
                     logger.debug(f"The bot was unable to find the announcements channel in {guild}.")
                     await guild.owner.send((f"While looking through the text channels in **{guild}** "
                                             f"I was unable to find your announcements channel. Please use `{self.parsed_command_prefix}setannouncements` "
@@ -83,15 +81,14 @@ class bdaybot(commands.Bot):
                     await guild.owner.send((f"In **{guild}**, the announcements channel was detected as {channel_mention}, however, I don't have the required permissions to send messages in it. "
                                             f"If you would like to me to use {channel_mention} please give me the `send messages` permission and then use the `{self.parsed_command_prefix}setannouncements` "
                                             f"command to set {channel_mention} as the announcements channel."))
-                    self.announcements.pop(guild.id, 'lol')
+                    SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=?", (guild.id,), autocommit=True)
                 else:
                     logger.info(f"The bot detected '{channel}' as the announcements channel in {guild}.")
-                    if guild.id not in self.announcements:
+                    if channel_id is None:
                         logger.info(f"The bot also sent a DM message to {guild.owner} confirming the announcements channel was correct, since it was bot's first time in {guild}.")
                         await guild.owner.send((f"In **{guild}**, the announcement channel was automatically set to {channel_mention}! "
                                                 f"If you think this is a mistake use `{self.parsed_command_prefix}setannouncements` to change it."))
-                        self.announcements[guild.id] = channel.id
-            self.cogs['bdaybot_commands'].update_pickle('announcements', source='on_ready()')
+                        SQL("INSERT INTO guilds(guild_id, announcements_id) VALUES(?, ?)", (guild.id, channel.id), autocommit=True)
 
             self.tasks_running = {'send_bdays':True, 'change_nicknames':True, 'change_roles':True}
             # ALWAYS start send_bdays before any other coroutine!
@@ -117,7 +114,7 @@ class bdaybot(commands.Bot):
 
     async def on_guild_channel_update(self, before, after):
         relevant_channel = False
-        for guild_id, channel_id in self.announcements.items():
+        for guild_id, channel_id in SQL("SELECT guild_id, announcements_id FROM guilds"):
             if after.id == channel_id:
                 relevant_channel = True
                 break
@@ -129,13 +126,13 @@ class bdaybot(commands.Bot):
             logger.warning(f"In {after.guild} someone made it so that the bot can no longer send messages in {after}.")
 
     async def on_member_update(self, before, after):
-        # TODO: Add some way to stash the announcements.id if they screw up the channel
         if after == self.user and before.roles != after.roles:
             guild = after.guild
             missing_manage_roles = False
+            channel_id, role_id = next(SQL("SELECT announcements_id, role_id FROM guilds WHERE guild_id=?", (guild.id,)))
             try:
                 await self.cogs['bdaybot_commands'].update_role.can_run(self.fake_ctx('update_role', guild))
-                if self.cogs['bdaybot_commands'].guilds_info[guild.id][2] not in map(lambda role: role.id, after.roles):
+                if role_id not in map(lambda role: role.id, after.roles):
                     await self.invoke(self.fake_ctx('update_role', guild))
             except commands.BotMissingPermissions:
                 logger.warning(f"Someone in {guild} accidently made it so that the bot can no longer change roles.")
@@ -143,11 +140,11 @@ class bdaybot(commands.Bot):
                                         "Please give me the `manage roles` permission so I can change my role."))
                 missing_manage_roles = True
 
-            channel = guild.get_channel(self.announcements[guild.id]) if guild.id in self.announcements else None
+            channel = guild.get_channel(channel_id)
             if channel is not None and not self.permissions(channel, after, 'send_messages'):
                 channel_mention = f'**#{channel}**' if after.guild.owner.is_on_mobile() else channel.mention
                 beginning = "Additionally," if missing_manage_roles else f"While changing my roles you or someone in **{guild}** made it so"
-                del self.announcements[guild.id]
+                SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=?", (guild.id,), autocommit=True)
                 await guild.owner.send((f"{beginning} I can no longer send messages in {channel_mention}. "
                                         f"Therefore, {channel_mention} is no longer the announcements channel. "
                                         f"If you want to set a new announcements channel please use `{self.parsed_command_prefix}setannouncements`."))
@@ -166,19 +163,12 @@ class bdaybot(commands.Bot):
         self.cogs['bdaybot_commands'].update_data()
         logger.info(f"The 'send_bdays()' coroutine was run.")
 
-        # This is kind of risky cause this may cause this task to end
-        # Probably should wrap this with a `try-except` but first need
-        # to know exactly what error we should be excepting is
-        for guild in self.guilds:
-            self.cogs['bdaybot_commands'].guilds_info[guild.id][1] = False
-            await self.invoke(self.fake_ctx('update_nickname', guild))
+        self.new_day = True
 
         if self.bday_today:
-            for iteration, (guild_id, channel_id) in enumerate(self.announcements.items()):
+            for guild_id, channel_id in SQL("SELECT guild_id, announcements_id FROM guilds"):
                 guild = self.get_guild(guild_id)
                 channel = self.get_channel(channel_id)
-                # TODO: Add a check to see if channel or guild is a NoneType
-                # Should not be necessary if self.announcements is scrubbed sufficently well
 
                 # Changes nickname dm blocker to False so that if they accidently disable name changing
                 # owner will get a message
@@ -188,7 +178,7 @@ class bdaybot(commands.Bot):
                     logger.warning(f"The bot failed to find the announcements channel in {guild}. A message has been sent to {guild.owner}.")
                 else:
                     for id, series in self.today_df.iterrows():
-                        user = self.cogs['bdaybot_commands'].ID_to_discord(id, default=None)
+                        user = self.get_user(SQL("SELECT discord_user_id FROM guilds WHERE student_id=?", (id,), first_item=True))
                         if user is not None and iteration == 0:
                             await user.send(f"Happy birthday from me {self.user.mention} and all the developers of the bdaybot! Hope you have an awesome birthday!")
                         description = self.format_bday(series['FirstName'], series['LastName'], user, birthyear=series['Birthyear'])
@@ -237,7 +227,9 @@ class bdaybot(commands.Bot):
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
         # print(f"Next iteration is at {format(self.change_nicknames.next_iteration.astimezone(), '%I:%M:%S %p (%x)')}")
-        if self.send_bdays.current_loop == 0:
+        if self.new_day:
+            SQL("UPDATE guilds SET nickname_notice=0", autocommit=True)
+            self.new_day = False
             for guild in self.guilds:
                 await self.invoke(self.fake_ctx('update_nickname', guild))
         elif len(self.today_df) > 1:
@@ -322,10 +314,12 @@ class bdaybot(commands.Bot):
                                 .format(*map(lambda name: self.get_user(dev_discord_ping[name]).mention, dev_discord_ping)))
             logger.info(f"{mesage.author} discovered the 'who are ur devs' easter egg!")
 
-        valid_assistant = ['siri', 'alexa', 'google']
-        if any(map(inside, valid_assistant)):
-            await message.channel.send("Sorry, you got the wrong bot")
-            logger.info(f"{message.author} discovered the 'personal assistant' easter egg!")
+        # This feature is probably more annoying than actually entertaining
+        # User testimonial: https://discordapp.com/channels/633788616765603870/633799889582817281/736692056491032757
+        # valid_assistant = ['siri', 'alexa', 'google']
+        # if any(map(inside, valid_assistant)):
+        #     await message.channel.send("Sorry, you got the wrong bot")
+        #     logger.info(f"{message.author} discovered the 'personal assistant' easter egg!")
 
         await self.process_commands(message)
 
@@ -387,3 +381,5 @@ class bdaybot(commands.Bot):
 
 bot = bdaybot(testing=True, command_prefix=('+', 'b.'), case_insensitive=True)
 bot.run()
+
+connection.close()
