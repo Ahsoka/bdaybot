@@ -333,7 +333,7 @@ class bdaybot(commands.Bot):
     async def process_commands(self, message):
         ctx = await self.get_context(message)
         if ctx.command is not None and ctx.guild:
-            if not self.permissions(message.channel, message.guild.get_member(self.user.id), 'send_messages') and ctx.command.name != 'setannouncements':
+            if not self.permissions(message.channel, message.guild.get_member(self.user.id), 'send_messages'):
                 await ctx.author.send((f"You tried to use `{ctx.message.content}` in {ctx.channel.mention} in **{ctx.guild}**, however I do not have permission to send messages in that channel. "
                                         f"If you would like to use me in {ctx.channel.mention} please give me the `send messages` permission."))
                 logger.debug(f"{ctx.author} tried to use the bot in {message.channel}, which the bot does not have permission to speak in.")
