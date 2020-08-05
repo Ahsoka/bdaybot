@@ -43,7 +43,7 @@ official_student_df.to_sql('student_data', connection, index=False, if_exists='a
 # Creating TABLE discord_users
 create_discord_users_table = """CREATE TABLE discord_users(
                                 discord_user_id INT PRIMARY KEY,
-                                student_id INT,
+                                student_id INT UNIQUE,
                                 FOREIGN KEY(student_id) REFERENCES student_data(StuID) ON DELETE SET NULL
                                 )"""
 cursor.execute(create_discord_users_table)
@@ -82,7 +82,7 @@ for wishee_id, wishers in bday_dict.items():
     # cursor.execute(create_id_table, (f"id_{wishee_id}",))
     cursor.execute(create_id_table)
     for discord_id, student_id in wishers.items():
-        # WARNING: Line 87 is also a **BAD** idea for the reasons mentioned above
+        # WARNING: Line 88 is also a **BAD** idea for the reasons mentioned above
         # print(f"studentID: {student_id}")
         try:
             cursor.execute("INSERT INTO discord_users VALUES(?, ?)", (discord_id, student_id))
