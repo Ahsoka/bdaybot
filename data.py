@@ -7,6 +7,9 @@ import sqlite3
 from argparser import args
 import create_database
 
+# TODO: Use asqlite instead of sqlite3
+# See here for more info ➡ https://github.com/Rapptz/asqlite
+
 logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s.py: %(asctime)s - %(message)s')
 
 windows_vid_url, unix_vid_url = 'https://www.youtube.com/watch?v=IolxqkL7cD8', 'https://www.youtube.com/watch?v=5iWhQWVXosU'
