@@ -321,13 +321,13 @@ class bdaybot_commands(commands.Cog):
         try:
             SQL("SELECT * FROM student_data WHERE StuID=?", (id,), first_item=True)
         except StopIteration:
-            await ctx.author.send(f"**{ID}** is not a valid ID. Please use a valid 6-digit ID.")
+            await ctx.author.send(f"**{id}** is not a valid ID. Please use a valid 6-digit ID.")
             logger.debug(f"{ctx.author} tried to set their ID to an invalid ID.")
             return
         try:
             current_id = SQL("SELECT student_id FROM discord_users WHERE discord_user_id=?", (ctx.author.id,), first_item=True)
             if current_id == id:
-                await ctx.author.send(f"**{ID}** is already your current ID. Use `{ctx.prefix}getID` to view your current ID.")
+                await ctx.author.send(f"**{id}** is already your current ID. Use `{ctx.prefix}getID` to view your current ID.")
                 logger.debug(f"{ctx.author} tried to set their ID to the ID they already have.")
                 return
         except StopIteration:
@@ -336,16 +336,16 @@ class bdaybot_commands(commands.Cog):
         SQL("DELETE FROM discord_users WHERE discord_user_id=?", (ctx.author.id,), autocommit=True)
         try:
             SQL("INSERT INTO discord_users VALUES(?, ?)", (ctx.author.id, id), autocommit=True)
-            await ctx.author.send(f"Your ID has now been set to **{ID}**!")
+            await ctx.author.send(f"Your ID has now been set to **{id}**!")
             if current_id is None:
-                logger.info(f"{ctx.author} succesfully updated their ID from {current_id} to {ID}.")
+                logger.info(f"{ctx.author} succesfully updated their ID from {current_id} to {id}.")
             else:
-                logger.info(f"{ctx.author} succesfully set their ID to {ID}.")
+                logger.info(f"{ctx.author} succesfully set their ID to {id}.")
 
         except sqlite3.IntegrityError as error:
             if str(error) != "FOREIGN KEY constraint failed":
                 raise error
-            await ctx.author.send(f"**{ID}** is already in use. Please use another ID.")
+            await ctx.author.send(f"**{id}** is already in use. Please use another ID.")
             logger.debug(f"{ctx.author} tried to set their ID to an ID already in use.")
 
     @setID.error
