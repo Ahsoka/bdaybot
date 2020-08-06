@@ -13,3 +13,4 @@ bday_nonclass.py
 discsleep.py
 *.log
 time_data.csv
+*.db
