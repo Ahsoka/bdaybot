@@ -6,6 +6,7 @@ import pickle
 import asyncio
 import data as andres
 import logs
+from argparser import args as command_line
 from bdaybot_commands import emoji_urls, bdaybot_commands, \
                         bdaybot_helpcommand, dev_discord_ping, \
                         connection, cursor, SQL
@@ -29,7 +30,8 @@ class bdaybot(commands.Bot):
                     'mention_everyone':False, 'tts':False}
     cushion_delay = 5
 
-    def __init__(self, testing, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        testing = command_line.testing
         if testing:
             try:
                 self.TOKEN = os.environ['testing_token']
@@ -386,7 +388,7 @@ class bdaybot(commands.Bot):
             logger.debug(f"{ctx.author} tried to invoke the invalid command '{ctx.message.content}'.")
             # TODO maybe: Add a did you mean 'X' command, if u want.
 
-bot = bdaybot(testing=True, command_prefix=('+', 'b.'), case_insensitive=True)
+bot = bdaybot(command_prefix=('+', 'b.'), case_insensitive=True)
 bot.run()
 
 connection.close()

@@ -9,13 +9,14 @@ import pandas
 import sqlite3
 import pickle
 import data as andres
+from argparser import args
 
 dev_discord_ping = {'Andres':388899325885022211, 'Elliot':349319578419068940, 'Ryan':262676325846876161}
 
 logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s: %(asctime)s - [%(funcName)s()] %(message)s')
 
 # connection = sqlite3.connect("bdaybot.db", detect_types=sqlite3.PARSE_DECLTYPES)
-connection = sqlite3.connect("TEST-bdaybot.db", detect_types=sqlite3.PARSE_DECLTYPES)
+connection = sqlite3.connect(args.database, detect_types=sqlite3.PARSE_DECLTYPES)
 # Automatically convert 0 or 1 to bool
 sqlite3.register_converter("BOOLEAN", lambda val: bool(int(val)))
 
