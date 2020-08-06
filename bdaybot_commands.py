@@ -106,7 +106,7 @@ class bdaybot_commands(commands.Cog):
         self.bday_today, self.today_df = self.bot.bday_today, self.bot.today_df
         # TODO: Removed .to_list(), should still work but should test to make sure
         cycler = itertools.cycle(self.today_df['FirstName'] + " " + self.today_df['LastName'])
-        SQL("UPDATE guilds SET today_names_cycle=?", (pickle.dumps(cycler),))
+        SQL("UPDATE guilds SET today_names_cycle=?", (pickle.dumps(cycler),), autocommit=True)
 
     async def ping_devs(self, error, command, ctx=None):
         if ctx is not None:
@@ -424,7 +424,7 @@ class bdaybot_commands(commands.Cog):
         else:
             bday_role = ctx.guild.get_role(role_id)
             if bday_role is None:
-                SQL("UPDATE guilds SET role_id=NULL WHERE guild_id=?", (ctx.guild.id,))
+                SQL("UPDATE guilds SET role_id=NULL WHERE guild_id=?", (ctx.guild.id,), autocommit=True)
                 await self.bot.invoke(self.bot.fake_ctx('update_role', ctx.guild))
                 return
 
