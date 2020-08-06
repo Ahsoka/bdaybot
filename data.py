@@ -101,5 +101,3 @@ def get_latest(to_csv=False, supress=False):
         return (True, bday_df[bday_df['Timedelta'] == datetime.timedelta()])
     else:
         return (False, bday_df[bday_df['Timedelta'] == top_person['Timedelta']])
-
-update_data()
