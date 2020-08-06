@@ -13,7 +13,7 @@ from argparser import args
 
 dev_discord_ping = {'Andres':388899325885022211, 'Elliot':349319578419068940, 'Ryan':262676325846876161}
 
-logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s: %(asctime)s - [%(funcName)s()] %(message)s')
+logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s.py: %(asctime)s - [%(funcName)s()] %(message)s')
 
 # connection = sqlite3.connect("bdaybot.db", detect_types=sqlite3.PARSE_DECLTYPES)
 connection = sqlite3.connect(args.database, detect_types=sqlite3.PARSE_DECLTYPES)
