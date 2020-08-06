@@ -15,3 +15,4 @@ discsleep.py
 time_data.csv
 *.db
 *.pickle
+.DS_Store
