@@ -29,7 +29,7 @@ create_student_data_table = """CREATE TABLE student_data(
 create_discord_users_table = """CREATE TABLE discord_users(
                                 discord_user_id INT PRIMARY KEY,
                                 student_id INT UNIQUE,
-                                FOREIGN KEY(student_id) REFERENCES student_data(StuID) ON DELETE SET NULL
+                                FOREIGN KEY(student_id) REFERENCES student_data(StuID) ON DELETE CASCADE
                                 )"""
 
 confirm = False
