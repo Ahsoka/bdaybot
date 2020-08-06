@@ -38,4 +38,4 @@ Preface: This section of the database will work a little different than all the 
 * `bday_dict.pickle` (storing who wished who) ➡ `TABLE ?`
 
   * `discord_user_id`: **│ PRIMARY KEY and FOREIGN KEY `TABLE discord_users` │** ID for each Discord user that wished the given person a happy birthday
-  * `year`: The year when the wished occurred (so that people can wish every year it's the given person's birthday)
+  * `year`: **│ PRIMARY KEY │** The year when the wished occurred (so that people can wish every year it's the given person's birthday)
