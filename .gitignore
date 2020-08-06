@@ -14,3 +14,4 @@ discsleep.py
 *.log
 time_data.csv
 *.db
+*.pickle
