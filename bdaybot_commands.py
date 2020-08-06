@@ -384,7 +384,7 @@ class bdaybot_commands(commands.Cog):
     async def update_nickname(self, ctx):
         if not await self.valid_author(ctx, self.update_nickname):
             return
-        cycler = pickle.loads(SQL("SELECT today_names_cycle FROM guilds WHERE guild_id=?", (ctx.guild.id,), next=True))
+        cycler = pickle.loads(SQL("SELECT today_names_cycle FROM guilds WHERE guild_id=?", (ctx.guild.id,), first_item=True))
         new_name = next(cycler)
         await ctx.guild.me.edit(nick=new_name)
 
