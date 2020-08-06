@@ -50,7 +50,7 @@ def createLogger(name, *, fmt, datefmt='%I:%M %p'):
     # Create a handler that records all activity
     everything_save = os.path.join('logs', f'bdaybot.{format(datetime.datetime.today(), "%Y-%m-%d")}.log')
     everything = logging.handlers.TimedRotatingFileHandler(everything_save, when='midnight', encoding='UTF-8')
-    # Do not use loggging.NOTSET, does not working for some reason
+    # Do not use loggging.NOTSET, does not work for some reason
     # use logging.DEBUG if you want the lowest level
     everything.setLevel(logging.DEBUG)
     everything.setFormatter(pretty)
