@@ -156,6 +156,7 @@ class bdaybot_commands(commands.Cog):
         if self.bday_today:
             try:
                 discord_id, student_id = SQL("SELECT * FROM discord_users WHERE discord_user_id=?", (ctx.author.id,), next=True)
+                first_name = SQL("SELECT FirstName FROM student_data WHERE StuID=?", (student_id,), first_item=True)
             except StopIteration:
                 discord_id = None
                 if input_id is None:
@@ -171,7 +172,7 @@ class bdaybot_commands(commands.Cog):
                     logger.debug(f"{ctx.author} unsucessfully used the wish command because they included an invalid ID.")
                     return
 
-            if student_id != input_id:
+            if input_id is not None and student_id != input_id:
                 wish_embed.description = ("The ID you submitted does not match the ID you submitted previously.\n"
                                             f"Please use the same ID you have used in the past or don't use an ID at all")
                 await ctx.send(ctx.author.mention, embed=wish_embed)
@@ -184,7 +185,7 @@ class bdaybot_commands(commands.Cog):
                 discord_id = ctx.author.id
                 SQL("INSERT INTO discord_users VALUES(?, ?)", (discord_id, input_id), autocommit=True)
 
-            if input_id not in self.bday_df.index:
+            if input_id is not None and input_id not in andres.bday_df.index:
                 await ctx.send((f"Yay! {ctx.author.mention} Your ID is valid, however, you are not in the bdaybot's birthday database.\n"
                                 "Add yourself to database here ⬇\n"
                                 "**http://drneato.com/Bday/Bday2.php**"))
@@ -204,15 +205,16 @@ class bdaybot_commands(commands.Cog):
                 # Can use first name, last name, or first and last name together to wish someone
                 fullname_df = pandas.concat([self.today_df[['FirstName', 'LastName']],
                                             (self.today_df['FirstName'] + " " + self.today_df['LastName'])], axis='columns')
-                if not fullname_df.isin([name]).any(axis=None):
+                is_in = fullname_df.isin([name.title()])
+                if not is_in.any(axis=None):
                     try:
                         beginning_sql_query = "SELECT FirstName, LastName FROM student_data "
-                        split_name = name.split()
+                        split_name = name.title().split()
                         if len(message) == 1:
-                            invalid_first, invalid_last = SQL(beginning_sql_query + "WHERE FirstName=? OR LastName=?", (split_name[0],)*2, first_item=True)
+                            invalid_first, invalid_last = SQL(beginning_sql_query + "WHERE FirstName=? OR LastName=?", (split_name[0],)*2, next=True)
                         else:
                             invalid_first, invalid_last = SQL(beginning_sql_query + "WHERE (FirstName=? OR LastName=?) AND (FirstName=? OR LastName=?)",
-                                                            ([split_name[0]]*2 + [split_name[1]]*2), first_item=True)
+                                                            ([split_name[0]]*2 + [split_name[1]]*2), next=True)
                         wish_embed.description = (f"Today is not **{invalid_first} {invalid_last}{self.apostrophe(invalid_last)}** birthday.\n"
                                                 f"It is {self.get_bday_names()} birthday today. Wish them a happy birthday!")
                         await ctx.send(ctx.author.mention, embed=wish_embed)
@@ -223,7 +225,7 @@ class bdaybot_commands(commands.Cog):
                         logger.debug(f"{ctx.author} unsucessfully used the wish command because they used a name that is not in the birthday database.")
                     return
 
-            wishee_id, wishee_series = next(fullname_df[fullname_df.isin([name]).any(axis='columns')].iterrows())
+            wishee_id, wishee_series = next(fullname_df[is_in.any(axis='columns')].iterrows())
             proper_name = wishee_series['FirstName'] + " " + wishee_series['LastName']
 
             table_name = f"id_{wishee_id}"
@@ -249,7 +251,7 @@ class bdaybot_commands(commands.Cog):
                 # This is generally bad practice, however, it is okay here
                 # because of the sanitized input
                 SQL("INSERT INTO {} VALUES(?, ?)".format(table_name),
-                    (discord_user_id, datetime.date.today().year), autocommit=True)
+                    (ctx.author.id, datetime.date.today().year), autocommit=True)
             except sqlite3.IntegrityError as error:
                 if str(error) != f"UNIQUE constraint failed: {table_name}.discord_user_id, {table_name}.year":
                     raise error
@@ -264,7 +266,7 @@ class bdaybot_commands(commands.Cog):
             logger.info(f"{ctx.author} succesfully wished {proper_name} a happy birthday!")
 
         else:
-            wish_embed.description = (f" You cannot use the `{ctx.prefix}wish` command if it is no one's birthday today.\n"
+            wish_embed.description = (f"You cannot use the `{ctx.prefix}wish` command if it is no one's birthday today.\n"
                                         "However, it will be "
                                         f"**{self.get_bday_names()}** birthday on {format(self.today_df.iloc[0]['Birthdate'], '%A, %B %d')}")
             await ctx.send(ctx.author.mention, embed=wish_embed)
@@ -316,6 +318,8 @@ class bdaybot_commands(commands.Cog):
     @commands.command()
     @dm_bot_has_guild_permissions(manage_messages=True)
     async def setID(self, ctx, id: int):
+        # TODO: Unlikely, however, if someone CHANGES their ID (from one that has been set in the past)
+        # to another ID we should also transfer any of their wishes with the new id
         if ctx.guild:
             await ctx.message.delete()
         try:
@@ -531,7 +535,6 @@ class bdaybot_commands(commands.Cog):
                 logger.info(f"{ctx.author} successfully set the announcements channel to {channel}!")
         except ValueError:
             await ctx.send(f"{ctx.author.mention} '{channel}' is not a valid channel name.")
-        channel = ctx.guild.get_channel(channel_ID)
 
     @setannouncements.error
     async def handle_setannouncements_error(self, ctx, error):
@@ -549,7 +552,7 @@ class bdaybot_commands(commands.Cog):
     @commands.guild_only()
     async def getannouncements(self, ctx):
         try:
-            id = SQL("SELECT announcements_id FROM guild WHERE guild_id=?", (ctx.guild.id,), first_item=True)
+            id = SQL("SELECT announcements_id FROM guilds WHERE guild_id=?", (ctx.guild.id,), first_item=True)
             await ctx.send((f"{ctx.author.mention} The current announcements channel is {ctx.guild.get_channel(id).mention}. "
                             f"If you like to change the announcements channel use `{ctx.prefix}setannouncements`"))
             logger.info(f"{ctx.author} successfully accessed the setannouncements command.")
