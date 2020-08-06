@@ -123,7 +123,7 @@ class bdaybot_commands(commands.Cog):
                     await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
                     await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
                     if ok_log:
-                        logger.error(f"{ctx.author.mention} said {ctx.message.content} which caused the following error with {command.name} in {parsed_ctx_guild}. Error message: {repr(error)}")
+                        logger.error(f"{ctx.author} said '{ctx.message.content}' which caused the following error with {command.name} in {parsed_ctx_guild}. Error message: {repr(error)}")
                 elif ctx is None:
                     await dev.send(f"The following error occured with the `{command}` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
                 else:
