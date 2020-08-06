@@ -72,7 +72,7 @@ temp_connection = sqlite3.connect(args.database)
 official_student_df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
 temp_connection.close()
 # print(official_student_df)
-logger.info("Sucessfully accessed TABLE student_data in bdaybot.db file")
+logger.info(f"Sucessfully accessed TABLE student_data in {args.database} file")
 bday_df = bday_df[bday_df['StuID'].isin(official_student_df['StuID'])]
 bday_df.drop_duplicates(['StuID'], inplace=True)
 bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
