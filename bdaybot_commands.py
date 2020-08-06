@@ -335,7 +335,7 @@ class bdaybot_commands(commands.Cog):
 
         SQL("DELETE FROM discord_users WHERE discord_user_id=?", (ctx.author.id,), autocommit=True)
         try:
-            SQL("INSERT INTO discord_users VALUES(?, ?)", (ctx,author.id, id), autocommit=True)
+            SQL("INSERT INTO discord_users VALUES(?, ?)", (ctx.author.id, id), autocommit=True)
             await ctx.author.send(f"Your ID has now been set to **{ID}**!")
             if current_id is None:
                 logger.info(f"{ctx.author} succesfully updated their ID from {current_id} to {ID}.")
