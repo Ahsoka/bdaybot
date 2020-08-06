@@ -40,6 +40,10 @@ if __name__ == '__main__':
         if 'yes' in yes_or_no:
             confirm = True
             os.remove(default_database_name)
+    else:
+        confirm = True
+
+connection = None
 
 if __name__ == '__main__' and confirm:
     # connection = sqlite3.connect(':memory:')
@@ -115,7 +119,6 @@ elif __name__ == '__main__':
     print("Cancelling database creation!")
 else:
     from argparser import args
-    connection = None
     if not os.path.isfile(args.database):
         connection = sqlite3.connect(args.database)
         cursor = connection.cursor()
