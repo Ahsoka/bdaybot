@@ -341,7 +341,7 @@ class bdaybot_commands(commands.Cog):
         try:
             SQL("INSERT INTO discord_users VALUES(?, ?)", (ctx.author.id, id), autocommit=True)
             await ctx.author.send(f"Your ID has now been set to **{id}**!")
-            if current_id is None:
+            if current_id is not None:
                 logger.info(f"{ctx.author} succesfully updated their ID from {current_id} to {id}.")
             else:
                 logger.info(f"{ctx.author} succesfully set their ID to {id}.")
