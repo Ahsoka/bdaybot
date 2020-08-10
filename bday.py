@@ -175,7 +175,7 @@ class bdaybot(commands.Bot):
         self.new_day = True
 
         if self.bday_today:
-            for guild_id, channel_id in SQL("SELECT guild_id, announcements_id FROM guilds"):
+            for iteration, guild_id, channel_id in enumerate(SQL("SELECT guild_id, announcements_id FROM guilds")):
                 guild = self.get_guild(guild_id)
                 channel = self.get_channel(channel_id)
 
@@ -191,6 +191,7 @@ class bdaybot(commands.Bot):
                             user = self.get_user(SQL("SELECT discord_user_id FROM discord_users WHERE student_id=?", (id,), first_item=True))
                             if iteration == 0:
                                 await user.send(f"Happy birthday from me {self.user.mention} and all the developers of the bdaybot! Hope you have an awesome birthday!")
+                                logger.info(f"The bdaybot sent a message {self.user} wishing them a happy birthday")
                         except StopIteration:
                             user = None
                         description = self.format_bday(series['FirstName'], series['LastName'], user, birthyear=series['Birthyear'])
