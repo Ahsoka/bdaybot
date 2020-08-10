@@ -134,7 +134,7 @@ class bdaybot_commands(commands.Cog):
                 logger.critical(f"The following error occurred unexpectedly while trying to ping {dev_name}\n{repr(error)}")
                 if str(error).lower() == 'session is closed':
                     break
-        if ctx.guild and hasattr(ctx, 'author'):
+        if ctx and ctx.guild and hasattr(ctx, 'author'):
             return (f" {self.bot.get_user(dev_discord_ping['Andres']).mention}, "
                     f"{self.bot.get_user(dev_discord_ping['Elliot']).mention},"
                     f" or {self.bot.get_user(dev_discord_ping['Ryan']).mention} fix this!")

@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands, tasks
 import os
 import datetime
-import pickle
+import itertools
 import asyncio
 import data as andres
 import logs
@@ -51,6 +51,7 @@ class bdaybot(commands.Bot):
         self.parsed_command_prefix = self.command_prefix[0] if isinstance(self.command_prefix, (list, tuple)) else self.command_prefix
         self.new_day = True
         self.init_connection = False
+        self.wish_bday_counter = itertools.count()
 
     async def on_ready(self):
         if not self.init_connection:
@@ -175,28 +176,27 @@ class bdaybot(commands.Bot):
         self.new_day = True
 
         if self.bday_today:
-            for iteration, guild_id, channel_id in enumerate(SQL("SELECT guild_id, announcements_id FROM guilds")):
-                guild = self.get_guild(guild_id)
-                channel = self.get_channel(channel_id)
+            delete_guilds = [guild_id[0] for guild_id in SQL("SELECT guild_id FROM guilds") if guild_id[0] not in map(lambda guild: guild.id, self.guilds)]
+            for guild_id in delete_guilds:
+                SQL("DELETE FROM guilds WHERE guild_id=?", (guild_id,), autocommit=True)
+            if len(delete_guilds) >= 1:
+                optional_s = '' if len(delete_guilds) == 1 else 's'
+                logger.info(f"Deleted {len(delete_guilds)} guild{optional_s} the bot was no longer in from the SQL database")
 
-                # Changes nickname dm blocker to False so that if they accidently disable name changing
-                # owner will get a message
+            for guild in self.guilds:
+                channel = guild.get_channel(SQL("SELECT announcements_id FROM guilds WHERE guild_id=?", (guild.id,), first_item=True))
+                print(guild, channel)
                 if channel is None:
                     await guild.owner.send((f"While trying to send the birthday message, I failed to find the announcements channel in **{guild}**. "
-                                            f"Please use `{self.parsed_command_prefix}setannouncements` to set the announcements channel so I can send a birthday message!"))
+                                                    f"Please use `{self.parsed_command_prefix}setannouncements` to set the announcements channel so I can send a birthday message!"))
                     logger.warning(f"The bot failed to find the announcements channel in {guild}. A message has been sent to {guild.owner}.")
                 else:
-                    for id, series in self.today_df.iterrows():
-                        try:
-                            user = self.get_user(SQL("SELECT discord_user_id FROM discord_users WHERE student_id=?", (id,), first_item=True))
-                            if iteration == 0:
-                                await user.send(f"Happy birthday from me {self.user.mention} and all the developers of the bdaybot! Hope you have an awesome birthday!")
-                                logger.info(f"The bdaybot sent a message {self.user} wishing them a happy birthday")
-                        except StopIteration:
-                            user = None
-                        description = self.format_bday(series['FirstName'], series['LastName'], user, birthyear=series['Birthyear'])
+                    async for description in self.wish_bday():
                         embed = discord.Embed(description=description).set_author(name="Happy Birthday! 🎉", icon_url=emoji_urls.partying_face)
                         await channel.send(embed=embed)
+                    logger.info(f"The bot sent the birthday message in the '{channel}' channel in {guild}")
+                # Changes nickname dm blocker to False so that if they accidently disable name changing
+                # owner will get a message
 
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
@@ -281,17 +281,24 @@ class bdaybot(commands.Bot):
         # In the code below it is now converted to the local time zone automatically
         logger.info(f"The next iteration is scheduled for {format(self.change_roles.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
 
-    def format_bday(self, first_name, last_name, user=None, *, birthyear=None, birthdate=None):
-        full_name = f"***__{first_name} {last_name}__*** "
-        mention = '' if user is None else f"{user.mention} "
-        if birthdate is None:
-            assert birthyear is not None, 'format_discord() cannot accept birthyear as a None value'
-            age = datetime.datetime.today().year - birthyear
-            age_portion = ' 🎂 🎉' if age >= 100 or age <= 14  else f'\nCongratulations on turning _**{age}**_   🎂 🎉'
-            return f"Happy Birthday to {full_name}{mention}🎈 🎊{age_portion}"
-        else:
-            assert birthdate is not None, 'format_discord() cannot accept birthdate as a None value'
-            return f"Upcoming Birthday for {full_name}{mention} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
+    async def wish_bday(self):
+        # Upcoming Birthday Message:
+        # f"Upcoming Birthday for {full_name}{mention} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
+        times_called = next(self.wish_bday_counter)
+        for id, series in self.today_df.iterrows():
+            try:
+                user = self.get_user(SQL("SELECT discord_user_id FROM discord_users WHERE student_id=?", (id,), first_item=True))
+                # TODO: Delete users if self.get_user(...) returns None
+                if times_called == 0 and user is not None:
+                    await user.send(f"Happy birthday from me {self.user.mention} and all the developers of the bdaybot! Hope you have an awesome birthday!")
+                    logger.info(f"The bdaybot sent a message {self.user} wishing them a happy birthday")
+            except StopIteration:
+                user = None
+            full_name = f"***__{series['FirstName']} {series['LastName']}__*** "
+            mention = '' if user is None else f"{user.mention} "
+            age = datetime.datetime.today().year - series['Birthyear']
+            age_portion = ' 🎂 🎉' if age >= 100 or age <= 14  else f'\nCongratulations on turning _**{age}**_ 🎂 🎉'
+            yield f"Happy Birthday to {full_name}{mention}🎈 🎊{age_portion}"
 
     async def on_message(self, message):
         valid_purposes = ['your purpose', 'ur purpose']
