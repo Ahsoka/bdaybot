@@ -192,7 +192,7 @@ class bdaybot(commands.Bot):
                             if iteration == 0:
                                 await user.send(f"Happy birthday from me {self.user.mention} and all the developers of the bdaybot! Hope you have an awesome birthday!")
                         except StopIteration:
-                            pass
+                            user = None
                         description = self.format_bday(series['FirstName'], series['LastName'], user, birthyear=series['Birthyear'])
                         embed = discord.Embed(description=description).set_author(name="Happy Birthday! 🎉", icon_url=emoji_urls.partying_face)
                         await channel.send(embed=embed)
