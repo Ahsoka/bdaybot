@@ -187,9 +187,12 @@ class bdaybot(commands.Bot):
                     logger.warning(f"The bot failed to find the announcements channel in {guild}. A message has been sent to {guild.owner}.")
                 else:
                     for id, series in self.today_df.iterrows():
-                        user = self.get_user(SQL("SELECT discord_user_id FROM discord_users WHERE student_id=?", (id,), first_item=True))
-                        if user is not None and iteration == 0:
-                            await user.send(f"Happy birthday from me {self.user.mention} and all the developers of the bdaybot! Hope you have an awesome birthday!")
+                        try:
+                            user = self.get_user(SQL("SELECT discord_user_id FROM discord_users WHERE student_id=?", (id,), first_item=True))
+                            if iteration == 0:
+                                await user.send(f"Happy birthday from me {self.user.mention} and all the developers of the bdaybot! Hope you have an awesome birthday!")
+                        except StopIteration:
+                            pass
                         description = self.format_bday(series['FirstName'], series['LastName'], user, birthyear=series['Birthyear'])
                         embed = discord.Embed(description=description).set_author(name="Happy Birthday! 🎉", icon_url=emoji_urls.partying_face)
                         await channel.send(embed=embed)
