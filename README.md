@@ -1,15 +1,15 @@
 ## Background
-The bdaybot was commissioned by Dr. Neat in an effort to mimic the feel of the in-person classroom.  One of aspect of the in-person classroom
-Dr. Neat really cares about is who's birthday it is. Originally, he commissioned [Elliot] to work on the project.  Later on however, [Ryan] and [Andres] were also added to the project.  The three of us would ultimately be responsible for creating the bot and making the bot what it is today.
+The bdaybot was commissioned by Dr. Neat in an effort to mimic the feel of the in-person classroom.  One aspect of the in-person classroom
+Dr. Neat really cares about who's birthday is it. Originally, he commissioned [Elliot] to work on the project.  Later on however, [Ryan] and [Andres] were also added to the project.  The three of us would ultimately be responsible for creating the bot and making the bot what it is today.
 ## What Does the Bdaybot Actually Do?
 The bdaybot has two main functions, showing whose birthday it is and increasing interaction in the servers it is in.  
 
 **How it shows whose birthday it is**:
 * Nickname
-    * The bot changes its name to whoever's birthday is today. If there's no one's birthday today then it will change its name to person with the closest birthday.
+    * The bot changes its name to whomever's birthday is today. If there's no one's birthday today then it will change its name to the person with the closest birthday.
     * If there are multiple people's birthday today it will cycle through everyone's birthday. Same applies if there are multiple people's birthday upcoming.
 * Roles:
-    * The bot's role is a crucial part of it's ability to make the birthday person visible to people in the server.
+    * The bot's role is a crucial part of its ability to make the birthday person visible to people in the server.
     * The bot's role will either be the "Upcoming" role which indicates that someone's birthday is upcoming or the "Happy Birthday" role.
     * The "Upcoming" role also includes information about when the upcoming person's birthday is.
 
@@ -17,10 +17,10 @@ The bdaybot has two main functions, showing whose birthday it is and increasing 
 <!-- Pretty poor overview of how it helps increase interaction in the server.
 Might want to look at this section again -->
 * Commands:
-    * `+upcoming`: Used for checking whose birthday are upcoming
+    * `+upcoming`: Used for checking whose birthdays are upcoming
     * `+wish`: Used for wishing people a happy birthday
-* Easters Eggs:
-    * There are various words or phrases that can be said to the bot to triggered some type of funny or silly response from the bot
+* Easter Eggs:
+    * There are various words or phrases that can be said to the bot to trigger some type of funny or silly response from the bot
 
 ## Programmatic Design Overview:
 ### Robustness
@@ -50,7 +50,7 @@ This is the module that allows the bdaybot to access the environment variables m
 [Elliot]: https://github.com/Falcons-Royale
 [Ryan]: https://github.com/ryanlee68
 
-## TODO List:
+## ToDo List:
 Although the Bday bot may be the single most greatest, robust, and perfect bot to ever exist in all the multiverses in all past, present, and future spacetime, there are still some tweaks and other important methods we have yet to do.
 
 * Some of the methods can be implemented more efficiently, the functions that need more efficient code are commented in the code itself ctrl + f and search for ```TODO```
