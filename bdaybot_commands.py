@@ -10,6 +10,7 @@ import sqlite3
 import pickle
 import data as andres
 from argparser import args
+from aiohttp.client_exceptions import ClientConnectorError
 
 dev_discord_ping = {'Andres':388899325885022211, 'Elliot':349319578419068940, 'Ryan':262676325846876161}
 
@@ -403,6 +404,9 @@ class bdaybot_commands(commands.Cog):
             await ctx.guild.owner.send(f"Currently I cannot change my nickname in {ctx.guild}. Please give me the `change nickname` permission so I can work properly.")
             SQL("UPDATE guilds SET nickname_notice=? WHERE guilds_id=?", (False, ctx.guild.id), autocommit=True)
             logger.warning(f"The bot unsucessfully changed its nickname in '{ctx.guild}'. A DM message requesting to change it's permissions was sent to {ctx.guild.owner}.")
+        elif isinstance(error, commands.CommandInvokeError) and \
+                isinstance(error.original, ClientConnectorError):
+            logger.warning(f"Ignoring {error.original!r}")
         else:
             await self.ping_devs(error, self.update_nickname, ctx=ctx)
 
