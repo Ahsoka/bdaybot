@@ -390,6 +390,7 @@ class bdaybot_commands(commands.Cog):
             return
         cycler = pickle.loads(SQL("SELECT today_names_cycle FROM guilds WHERE guild_id=?", (ctx.guild.id,), first_item=True))
         new_name = next(cycler)
+        SQL("UPDATE guilds SET today_names_cycle=? WHERE guild_id=?", (pickle.dumps(cycler), ctx.guild.id), autocommit=True)
         await ctx.guild.me.edit(nick=new_name)
 
     @update_nickname.error
