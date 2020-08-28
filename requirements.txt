@@ -1,3 +1,4 @@
 pandas
 discord.py
 requests
+psycopg2
