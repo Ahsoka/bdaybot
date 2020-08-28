@@ -6,24 +6,17 @@ import requests
 import datetime
 import itertools
 import pandas
-import sqlite3
+import psycopg2
 import pickle
 import data as andres
 from argparser import args
-from aiohttp.client_exceptions import ClientConnectorError
 
 dev_discord_ping = {'Andres':388899325885022211, 'Elliot':349319578419068940, 'Ryan':262676325846876161}
 
 logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s.py: %(asctime)s - [%(funcName)s()] %(message)s')
 
-# connection = sqlite3.connect("bdaybot.db", detect_types=sqlite3.PARSE_DECLTYPES)
-connection = sqlite3.connect(args.database, detect_types=sqlite3.PARSE_DECLTYPES)
-# Automatically convert 0 or 1 to bool
-sqlite3.register_converter("BOOLEAN", lambda val: bool(int(val)))
+connection = psycopg2.connect(dbname='botsdb')
 
-# DEBUG: **MUST** include this line in order to use
-# FOREIGN KEYS, by default they are **DISABLED**
-connection.execute("PRAGMA foreign_keys = 1")
 cursor = connection.cursor()
 
 # Makes SQL queries shorter and more obvious
@@ -31,18 +24,17 @@ def SQL(*args, autocommit=False, first_item=False, **kwargs):
     advance = kwargs.pop('next', False)
     if autocommit:
         with connection:
-            result = cursor.execute(*args, **kwargs)
+            cursor.execute(*args, **kwargs)
+            return
     else:
-        result = cursor.execute(*args, **kwargs)
-    if first_item:
-        return next(result)[0]
-    if advance:
-        return next(result)
-    return result
+        cursor.execute(*args, **kwargs)
+    if first_item or advance:
+        returning = cursor.fetchone()
+        if returning is None:
+            raise StopIteration
+        return returning[0] if first_item else returning
 
-if SQL("PRAGMA foreign_keys", first_item=True) == 0:
-    logger.critical("Foreign keys was disable when accessing the SQL database")
-    raise RuntimeError("Foreign keys is disabled")
+    return cursor.fetchall()
 
 class emoji_urls:
     # TODO: Check the links everytime the variables are accessed or
@@ -107,7 +99,7 @@ class bdaybot_commands(commands.Cog):
         self.bday_today, self.today_df = self.bot.bday_today, self.bot.today_df
         # TODO: Removed .to_list(), should still work but should test to make sure
         cycler = itertools.cycle(self.today_df['FirstName'] + " " + self.today_df['LastName'])
-        SQL("UPDATE guilds SET today_names_cycle=?", (pickle.dumps(cycler),), autocommit=True)
+        SQL("UPDATE guilds SET today_names_cycle=%s", (pickle.dumps(cycler),), autocommit=True)
 
     async def ping_devs(self, error, command, ctx=None):
         if ctx is not None:
@@ -156,8 +148,8 @@ class bdaybot_commands(commands.Cog):
 
         if self.bday_today:
             try:
-                discord_id, student_id = SQL("SELECT * FROM discord_users WHERE discord_user_id=?", (ctx.author.id,), next=True)
-                first_name = SQL("SELECT FirstName FROM student_data WHERE StuID=?", (student_id,), first_item=True)
+                discord_id, student_id = SQL("SELECT * FROM discord_users WHERE discord_user_id=%s", (ctx.author.id,), next=True)
+                first_name = SQL("SELECT FirstName FROM student_data WHERE StuID=%s", (student_id,), first_item=True)
             except StopIteration:
                 discord_id = None
                 if input_id is None:
@@ -166,7 +158,7 @@ class bdaybot_commands(commands.Cog):
                     logger.debug(f"{ctx.author} unsucessfully used the wish command because they forgot to put their student ID.")
                     return
                 try:
-                    student_id, first_name = SQL("SELECT StuID, FirstName FROM student_data WHERE StuID=?", (input_id,), next=True)
+                    student_id, first_name = SQL("SELECT StuID, FirstName FROM student_data WHERE StuID=%s", (input_id,), next=True)
                 except StopIteration:
                     wish_embed.description = "Your ID is invalid, please use a valid 6-digit ID"
                     await ctx.send(ctx.author.mention, embed=wish_embed)
@@ -184,7 +176,7 @@ class bdaybot_commands(commands.Cog):
                 await ctx.send(f"{ctx.author.mention} Once you've submitted your ID once, you do not need to submitted it again to send wishes!")
             elif input_id is not None:
                 discord_id = ctx.author.id
-                SQL("INSERT INTO discord_users VALUES(?, ?)", (discord_id, input_id), autocommit=True)
+                SQL("INSERT INTO discord_users VALUES(%s, %s)", (discord_id, input_id), autocommit=True)
 
             if input_id is not None and input_id not in andres.bday_df.index:
                 await ctx.send((f"Yay! {ctx.author.mention} Your ID is valid, however, you are not in the bdaybot's birthday database.\n"
@@ -212,9 +204,9 @@ class bdaybot_commands(commands.Cog):
                         beginning_sql_query = "SELECT FirstName, LastName FROM student_data "
                         split_name = name.title().split()
                         if len(message) == 1:
-                            invalid_first, invalid_last = SQL(beginning_sql_query + "WHERE FirstName=? OR LastName=?", (split_name[0],)*2, next=True)
+                            invalid_first, invalid_last = SQL(beginning_sql_query + "WHERE FirstName=%s OR LastName=%s", (split_name[0],)*2, next=True)
                         else:
-                            invalid_first, invalid_last = SQL(beginning_sql_query + "WHERE (FirstName=? OR LastName=?) AND (FirstName=? OR LastName=?)",
+                            invalid_first, invalid_last = SQL(beginning_sql_query + "WHERE (FirstName=%s OR LastName=%s) AND (FirstName=%s OR LastName=%s)",
                                                             ([split_name[0]]*2 + [split_name[1]]*2), next=True)
                         wish_embed.description = (f"Today is not **{invalid_first} {invalid_last}{self.apostrophe(invalid_last)}** birthday.\n"
                                                 f"It is {self.get_bday_names()} birthday today. Wish them a happy birthday!")
@@ -251,7 +243,7 @@ class bdaybot_commands(commands.Cog):
                 # Same warning applies to this line as above
                 # This is generally bad practice, however, it is okay here
                 # because of the sanitized input
-                SQL("INSERT INTO {} VALUES(?, ?)".format(table_name),
+                SQL("INSERT INTO {} VALUES(%s, %s)".format(table_name),
                     (ctx.author.id, datetime.date.today().year), autocommit=True)
             except sqlite3.IntegrityError as error:
                 if str(error) != f"UNIQUE constraint failed: {table_name}.discord_user_id, {table_name}.year":
@@ -288,7 +280,7 @@ class bdaybot_commands(commands.Cog):
     @commands.command()
     async def getID(self, ctx, *message):
         try:
-            id = SQL("SELECT student_id FROM discord_users WHERE discord_user_id=?", (ctx.author.id,), first_item=True)
+            id = SQL("SELECT student_id FROM discord_users WHERE discord_user_id=%s", (ctx.author.id,), first_item=True)
             await ctx.author.send(f"Your ID is **{id}**.  If this is a mistake use `{ctx.prefix}setID` to change it.")
             logger.info(f"{ctx.author} succesfully used the getID command.")
         except StopIteration:
@@ -324,13 +316,13 @@ class bdaybot_commands(commands.Cog):
         if ctx.guild:
             await ctx.message.delete()
         try:
-            SQL("SELECT * FROM student_data WHERE StuID=?", (id,), first_item=True)
+            SQL("SELECT * FROM student_data WHERE StuID=%s", (id,), first_item=True)
         except StopIteration:
             await ctx.author.send(f"**{id}** is not a valid ID. Please use a valid 6-digit ID.")
             logger.debug(f"{ctx.author} tried to set their ID to an invalid ID.")
             return
         try:
-            current_id = SQL("SELECT student_id FROM discord_users WHERE discord_user_id=?", (ctx.author.id,), first_item=True)
+            current_id = SQL("SELECT student_id FROM discord_users WHERE discord_user_id=%s", (ctx.author.id,), first_item=True)
             if current_id == id:
                 await ctx.author.send(f"**{id}** is already your current ID. Use `{ctx.prefix}getID` to view your current ID.")
                 logger.debug(f"{ctx.author} tried to set their ID to the ID they already have.")
@@ -338,9 +330,9 @@ class bdaybot_commands(commands.Cog):
         except StopIteration:
             current_id = None
 
-        SQL("DELETE FROM discord_users WHERE discord_user_id=?", (ctx.author.id,), autocommit=True)
+        SQL("DELETE FROM discord_users WHERE discord_user_id=%s", (ctx.author.id,), autocommit=True)
         try:
-            SQL("INSERT INTO discord_users VALUES(?, ?)", (ctx.author.id, id), autocommit=True)
+            SQL("INSERT INTO discord_users VALUES(%s, %s)", (ctx.author.id, id), autocommit=True)
             await ctx.author.send(f"Your ID has now been set to **{id}**!")
             if current_id is not None:
                 logger.info(f"{ctx.author} succesfully updated their ID from {current_id} to {id}.")
@@ -389,20 +381,20 @@ class bdaybot_commands(commands.Cog):
     async def update_nickname(self, ctx):
         if not await self.valid_author(ctx, self.update_nickname):
             return
-        cycler = pickle.loads(SQL("SELECT today_names_cycle FROM guilds WHERE guild_id=?", (ctx.guild.id,), first_item=True))
+        cycler = pickle.loads(SQL("SELECT today_names_cycle FROM guilds WHERE guild_id=%s", (ctx.guild.id,), first_item=True))
         new_name = next(cycler)
-        SQL("UPDATE guilds SET today_names_cycle=? WHERE guild_id=?", (pickle.dumps(cycler), ctx.guild.id), autocommit=True)
+        SQL("UPDATE guilds SET today_names_cycle=%s WHERE guild_id=%s", (pickle.dumps(cycler), ctx.guild.id), autocommit=True)
         await ctx.guild.me.edit(nick=new_name)
 
     @update_nickname.error
     async def handle_update_nickname_error(self, ctx, error):
         if not await self.valid_author(ctx, self.update_nickname):
             return
-        nickname_notice = SQL("SELECT nickname_notice FROM guilds WHERE guild_id=?",
+        nickname_notice = SQL("SELECT nickname_notice FROM guilds WHERE guild_id=%s",
                                 (ctx.guild.id,), first_item=True)
         if isinstance(error, commands.BotMissingPermissions) and nickname_notice:
             await ctx.guild.owner.send(f"Currently I cannot change my nickname in {ctx.guild}. Please give me the `change nickname` permission so I can work properly.")
-            SQL("UPDATE guilds SET nickname_notice=? WHERE guilds_id=?", (False, ctx.guild.id), autocommit=True)
+            SQL("UPDATE guilds SET nickname_notice=%s WHERE guilds_id=%s", (False, ctx.guild.id), autocommit=True)
             logger.warning(f"The bot unsucessfully changed its nickname in '{ctx.guild}'. A DM message requesting to change it's permissions was sent to {ctx.guild.owner}.")
         else:
             logger.warning(f"Ignoring {error!r}")
@@ -418,15 +410,15 @@ class bdaybot_commands(commands.Cog):
                             else (f"Upcoming Bday-{format(self.today_df.iloc[0]['Birthdate'], '%a %b %d')}",
                                     discord.Color.from_rgb(162, 217, 145))
 
-        role_id = SQL("SELECT role_id FROM guilds WHERE guild_id=?", (ctx.guild.id,), first_item=True)
+        role_id = SQL("SELECT role_id FROM guilds WHERE guild_id=%s", (ctx.guild.id,), first_item=True)
         if role_id is None:
             bday_role = await ctx.guild.create_role(reason='Creating the Happy Birthday/Upcoming Birthday role',
                                                     name=role_name, hoist=True, color=color)
-            SQL("UPDATE guilds SET role_id=? WHERE guild_id=?", (bday_role.id, ctx.guild.id), autocommit=True)
+            SQL("UPDATE guilds SET role_id=%s WHERE guild_id=%s", (bday_role.id, ctx.guild.id), autocommit=True)
         else:
             bday_role = ctx.guild.get_role(role_id)
             if bday_role is None:
-                SQL("UPDATE guilds SET role_id=NULL WHERE guild_id=?", (ctx.guild.id,), autocommit=True)
+                SQL("UPDATE guilds SET role_id=NULL WHERE guild_id=%s", (ctx.guild.id,), autocommit=True)
                 await self.bot.invoke(self.bot.fake_ctx('update_role', ctx.guild))
                 return
 
@@ -454,7 +446,7 @@ class bdaybot_commands(commands.Cog):
                             f"A DM message requesting to change its permissions was sent to {ctx.guild.owner}.")
         elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden):
             # TODO: Have the bot fix this problem on its own if possible
-            current_role_id = SQL("SELECT role_id FROM guilds WHERE guild_id=?", (ctx.guild.id,), first_item=True)
+            current_role_id = SQL("SELECT role_id FROM guilds WHERE guild_id=%s", (ctx.guild.id,), first_item=True)
             current_role = ctx.guild.get_role(current_role_id)
             most_likely = [role for role in ctx.guild.me.roles
                             if role.id != current_role_id and
@@ -490,7 +482,7 @@ class bdaybot_commands(commands.Cog):
 
         for id, row in upcoming_df.iloc[:num].iterrows():
             try:
-                id = SQL("SELECT discord_user_id FROM discord_users WHERE student_id=?", (id,), first_item=True)
+                id = SQL("SELECT discord_user_id FROM discord_users WHERE student_id=%s", (id,), first_item=True)
                 mention = self.bot.get_user(id).mention
             except StopIteration:
                 mention = ''
@@ -532,7 +524,7 @@ class bdaybot_commands(commands.Cog):
                 await ctx.send(f"{ctx.author.mention} I cannot use {channel.mention} as the new announcements channel because I do not have the `send messages` permission in that channel.")
                 logger.info(f"In {ctx.guild}, {ctx.author} tried to set the announcements channel to a channel the bot could not speak in.")
             else:
-                SQL("UPDATE guilds SET announcements_id=? WHERE guild_id=?", (channel_id, ctx.guild.id), autocommit=True)
+                SQL("UPDATE guilds SET announcements_id=%s WHERE guild_id=%s", (channel_id, ctx.guild.id), autocommit=True)
                 await ctx.send(f"The new announcements channel is now {channel.mention}!")
                 logger.info(f"{ctx.author} successfully set the announcements channel to {channel}!")
         except ValueError:
@@ -554,7 +546,7 @@ class bdaybot_commands(commands.Cog):
     @commands.guild_only()
     async def getannouncements(self, ctx):
         try:
-            id = SQL("SELECT announcements_id FROM guilds WHERE guild_id=?", (ctx.guild.id,), first_item=True)
+            id = SQL("SELECT announcements_id FROM guilds WHERE guild_id=%s", (ctx.guild.id,), first_item=True)
             await ctx.send((f"{ctx.author.mention} The current announcements channel is {ctx.guild.get_channel(id).mention}. "
                             f"If you like to change the announcements channel use `{ctx.prefix}setannouncements`"))
             logger.info(f"{ctx.author} successfully accessed the setannouncements command.")

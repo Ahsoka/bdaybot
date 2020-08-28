@@ -3,12 +3,9 @@ import urllib.request, urllib.error
 import os
 import datetime
 import logs
-import sqlite3
+import psycopg2
 from argparser import args
 import create_database
-
-# TODO: Use asqlite instead of sqlite3
-# See here for more info ➡ https://github.com/Rapptz/asqlite
 
 logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s.py: %(asctime)s - %(message)s')
 
@@ -71,11 +68,13 @@ def timedelta_today(date):
 bday_df = pandas.DataFrame(data_dict)
 bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
 # official_student_df = pandas.concat([pandas.read_csv('Student Locator Spring 2020.csv', usecols=['StuID', 'LastName', 'FirstName', 'Grd']), pandas.DataFrame({'StuID': [123456], 'LastName': ['Neat'], 'FirstName': ['Dr.'], 'Grd': [-1]})])
-temp_connection = sqlite3.connect(args.database)
+
+temp_connection = psycopg2.connect(dbname='botsdb')
 official_student_df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
 temp_connection.close()
+official_student_df.rename(columns={'stuid':'StuID', 'firstname':'FirstName', 'lastname':'LastName', 'grd':'Grd'}, inplace=True)
 # print(official_student_df)
-logger.info(f"Sucessfully accessed TABLE student_data in {args.database} file")
+logger.info(f"Sucessfully accessed TABLE student_data in the botsdb database (PostgresSQL)")
 bday_df = bday_df[bday_df['StuID'].isin(official_student_df['StuID'])]
 bday_df.drop_duplicates(['StuID'], inplace=True)
 bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])

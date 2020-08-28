@@ -58,16 +58,16 @@ class bdaybot(commands.Bot):
 
             for guild in self.guilds:
                 try:
-                    channel_id = SQL("SELECT announcements_id FROM guilds WHERE guild_id=?", (guild.id,), first_item=True)
+                    channel_id = SQL("SELECT announcements_id FROM guilds WHERE guild_id=%s", (guild.id,), first_item=True)
                     channel = guild.get_channel(channel_id)
                     if channel is None:
                         logger.warning(f"The bot detect the announcements channel in {guild} was deleted. "
                                         "The owner has been sent a message prompting them to set a new announcements channel.")
                         guild.owner.send((f"In **{guild}**, the announcements channel appears to have been deleted. Please use "
                                             f"`{self.parsed_command_prefix}setannouncements` to set a new announcements channel."))
-                        SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=?", (guild.id,), autocommit=True)
+                        SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=%s", (guild.id,), autocommit=True)
                     elif not self.permissions(channel, guild.get_member(self.user.id), 'send_messages'):
-                        SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=?", (guild.id,), autocommit=True)
+                        SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=%s", (guild.id,), autocommit=True)
                         # TODO: Keep an eye on Discord mobile because they might change it so it does not always say '#invalid-channel' and actually shows the channel
                         channel_mention = f'**#{channel}**' if guild.owner.is_on_mobile() else channel.mention
                         logger.warning((f"The bot detected '{channel}' as the announcements channel, however, "
@@ -83,7 +83,7 @@ class bdaybot(commands.Bot):
                 except StopIteration:
                     for iteration, channel in enumerate(guild.text_channels):
                         if "announcement" in channel.name.lower():
-                            SQL("INSERT INTO guilds(guild_id, announcements_id) VALUES(?, ?)", (guild.id, channel.id), autocommit=True)
+                            SQL("INSERT INTO guilds(guild_id, announcements_id) VALUES(%s, %s)", (guild.id, channel.id), autocommit=True)
                             channel_mention = f'**#{channel}**' if guild.owner.is_on_mobile() else channel.mention
                             logger.info(f"The bot sent a DM message to {guild.owner} confirming the announcements channel was correct, "
                                         f"since it is the bot's first time in {guild}.")
@@ -137,7 +137,7 @@ class bdaybot(commands.Bot):
         if after == self.user and before.roles != after.roles:
             guild = after.guild
             missing_manage_roles = False
-            channel_id, role_id = SQL("SELECT announcements_id, role_id FROM guilds WHERE guild_id=?", (guild.id,), next=True)
+            channel_id, role_id = SQL("SELECT announcements_id, role_id FROM guilds WHERE guild_id=%s", (guild.id,), next=True)
             try:
                 await self.cogs['bdaybot_commands'].update_role.can_run(self.fake_ctx('update_role', guild))
                 if role_id not in map(lambda role: role.id, after.roles):
@@ -152,7 +152,7 @@ class bdaybot(commands.Bot):
             if channel is not None and not self.permissions(channel, after, 'send_messages'):
                 channel_mention = f'**#{channel}**' if after.guild.owner.is_on_mobile() else channel.mention
                 beginning = "Additionally," if missing_manage_roles else f"While changing my roles you or someone in **{guild}** made it so"
-                SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=?", (guild.id,), autocommit=True)
+                SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=%s", (guild.id,), autocommit=True)
                 await guild.owner.send((f"{beginning} I can no longer send messages in {channel_mention}. "
                                         f"Therefore, {channel_mention} is no longer the announcements channel. "
                                         f"If you want to set a new announcements channel please use `{self.parsed_command_prefix}setannouncements`."))
@@ -176,13 +176,13 @@ class bdaybot(commands.Bot):
         if self.bday_today:
             delete_guilds = [guild_id[0] for guild_id in SQL("SELECT guild_id FROM guilds") if guild_id[0] not in map(lambda guild: guild.id, self.guilds)]
             for guild_id in delete_guilds:
-                SQL("DELETE FROM guilds WHERE guild_id=?", (guild_id,), autocommit=True)
+                SQL("DELETE FROM guilds WHERE guild_id=%s", (guild_id,), autocommit=True)
             if len(delete_guilds) >= 1:
                 optional_s = '' if len(delete_guilds) == 1 else 's'
                 logger.info(f"Deleted {len(delete_guilds)} guild{optional_s} the bot was no longer in from the SQL database")
 
             for guild in self.guilds:
-                channel = guild.get_channel(SQL("SELECT announcements_id FROM guilds WHERE guild_id=?", (guild.id,), first_item=True))
+                channel = guild.get_channel(SQL("SELECT announcements_id FROM guilds WHERE guild_id=%s", (guild.id,), first_item=True))
                 print(guild, channel)
                 if channel is None:
                     await guild.owner.send((f"While trying to send the birthday message, I failed to find the announcements channel in **{guild}**. "
@@ -239,7 +239,7 @@ class bdaybot(commands.Bot):
     async def change_nicknames(self):
         # print(f"Next iteration is at {format(self.change_nicknames.next_iteration.astimezone(), '%I:%M:%S %p (%x)')}")
         if self.new_day:
-            SQL("UPDATE guilds SET nickname_notice=0", autocommit=True)
+            SQL("UPDATE guilds SET nickname_notice=false", autocommit=True)
             self.new_day = False
             for guild in self.guilds:
                 await self.invoke(self.fake_ctx('update_nickname', guild))
@@ -284,7 +284,7 @@ class bdaybot(commands.Bot):
         # f"Upcoming Birthday for {full_name}{mention} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
         for iteration, (id, series) in enumerate(self.today_df.iterrows()):
             try:
-                user = self.get_user(SQL("SELECT discord_user_id FROM discord_users WHERE student_id=?", (id,), first_item=True))
+                user = self.get_user(SQL("SELECT discord_user_id FROM discord_users WHERE student_id=%s", (id,), first_item=True))
                 # TODO: Delete users if self.get_user(...) returns None
                 if iteration == 0 and user is not None:
                     await user.send(f"Happy birthday from me {self.user.mention} and all the developers of the bdaybot! Hope you have an awesome birthday!")
