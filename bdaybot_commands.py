@@ -235,9 +235,8 @@ class bdaybot_commands(commands.Cog):
                                     ON DELETE CASCADE
                                     )""".format(table_name)
                 SQL(create_id_table, autocommit=True)
-            except sqlite3.OperationalError as error:
-                if str(error) != f"table {table_name} already exists":
-                    raise error
+            except psycopg2.errors.DuplicateTable:
+                connection.rollback()
 
             try:
                 # Same warning applies to this line as above
@@ -245,9 +244,8 @@ class bdaybot_commands(commands.Cog):
                 # because of the sanitized input
                 SQL("INSERT INTO {} VALUES(%s, %s)".format(table_name),
                     (ctx.author.id, datetime.date.today().year), autocommit=True)
-            except sqlite3.IntegrityError as error:
-                if str(error) != f"UNIQUE constraint failed: {table_name}.discord_user_id, {table_name}.year":
-                    raise error
+            except psycopg2.errors.UniqueViolation:
+                connection.rollback()
                 wish_embed.description = f"You cannot wish **{proper_name}** a happy birthday more than once!\nTry wishing someone else a happy birthday!"
                 await ctx.send(ctx.author.mention, embed=wish_embed)
                 logger.debug(f"{ctx.author} tried to wish {proper_name} a happy birthday even though they already wished them before.")
@@ -338,10 +336,8 @@ class bdaybot_commands(commands.Cog):
                 logger.info(f"{ctx.author} succesfully updated their ID from {current_id} to {id}.")
             else:
                 logger.info(f"{ctx.author} succesfully set their ID to {id}.")
-
-        except sqlite3.IntegrityError as error:
-            if str(error) != "FOREIGN KEY constraint failed":
-                raise error
+        except psycopg2.errors.UniqueViolation:
+            connection.rollback()
             await ctx.author.send(f"**{id}** is already in use. Please use another ID.")
             logger.debug(f"{ctx.author} tried to set their ID to an ID already in use.")
 
