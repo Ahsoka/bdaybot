@@ -65,29 +65,52 @@ def timedelta_today(date):
     # delta = date - datetime.date.today().replace(day=20)
     return delta if delta >= datetime.timedelta() else delta + datetime.timedelta(days=365)
 
-bday_df = pandas.DataFrame(data_dict)
-bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
-# official_student_df = pandas.concat([pandas.read_csv('Student Locator Spring 2020.csv', usecols=['StuID', 'LastName', 'FirstName', 'Grd']), pandas.DataFrame({'StuID': [123456], 'LastName': ['Neat'], 'FirstName': ['Dr.'], 'Grd': [-1]})])
+def dict_to_df():
+    bday_df = pandas.DataFrame(data_dict)
+    bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
+    # official_student_df = pandas.concat([pandas.read_csv('Student Locator Spring 2020.csv', usecols=['StuID', 'LastName', 'FirstName', 'Grd']), pandas.DataFrame({'StuID': [123456], 'LastName': ['Neat'], 'FirstName': ['Dr.'], 'Grd': [-1]})])
 
-temp_connection = psycopg2.connect(dbname='botsdb')
-official_student_df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
-temp_connection.close()
-official_student_df.rename(columns={'stuid':'StuID', 'firstname':'FirstName', 'lastname':'LastName', 'grd':'Grd'}, inplace=True)
-# print(official_student_df)
-logger.info(f"Sucessfully accessed TABLE student_data in the botsdb database (PostgresSQL)")
-bday_df = bday_df[bday_df['StuID'].isin(official_student_df['StuID'])]
-bday_df.drop_duplicates(['StuID'], inplace=True)
-bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
-bday_df.set_index('StuID', inplace=True); official_student_df.set_index('StuID', inplace=True)
-bday_df[['FirstName', 'LastName']] = official_student_df[['FirstName', 'LastName']]
-bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
-logger.info("Sucessfully created and modified the 'bday_df' DataFrame")
+    temp_connection = psycopg2.connect(dbname='botsdb')
+    official_student_df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
+    temp_connection.close()
+    official_student_df.rename(columns={'stuid':'StuID', 'firstname':'FirstName', 'lastname':'LastName', 'grd':'Grd'}, inplace=True)
+    # print(official_student_df)
+    logger.info(f"Sucessfully accessed TABLE student_data in the botsdb database (PostgresSQL)")
+    bday_df = bday_df[bday_df['StuID'].isin(official_student_df['StuID'])]
+    bday_df.drop_duplicates(['StuID'], inplace=True)
+    bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
+    bday_df.set_index('StuID', inplace=True); official_student_df.set_index('StuID', inplace=True)
+    bday_df[['FirstName', 'LastName']] = official_student_df[['FirstName', 'LastName']]
+    bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
+    logger.info("Sucessfully created and modified the 'bday_df' DataFrame")
+
+dict_to_df()
 
 def update_data(inplace=True, supress=False):
     # TODO: Pull from the neato website again in case someone added themselves to bdaybot database.
     # Currently the database will never be updated until the bot is run again.
     # Also might want to add some type of check to see if the database has changed so
     # no computation is wasted on parsing the string if the database has not changed.
+    try:
+        temp_raw_data = urllib.request.urlopen(url).read().decode('UTF-8')
+    except (urllib.error.URLError, urllib.error.HTTPError) as error:
+        logger.critical("Failed to access the raw data from drneato.com")
+        raise error
+
+    logger.info('Sucessfully read the raw data from drneato.com')
+    # data_dict = dict(((column_name, []) for column_name in ['FirstName', 'LastName', 'PeriodNumber', 'Birthdate', 'Birthyear', 'Radio', 'Question#1', 'Question#2', 'Question#3', 'StuID']))
+    temp_raw_data = dict(((column_name, []) for column_name in ['PeriodNumber', 'Birthdate', 'Birthyear', 'Radio', 'Question#1', 'Question#2', 'Question#3', 'StuID']))
+
+    num = 0
+    for key in data_dict:
+        if (key in temp_raw_data and data_dict[key] == temp_raw_data[key]):
+            num+=1
+    if num is len(data_dict):
+        logger.info('Data.txt is same as 24 hours ago')
+    else:
+        data_dict = temp_raw_data
+        dict_to_df()
+
     bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
     if not supress:
         logger.info(f"Sucessfully updated 'bday_df'")
