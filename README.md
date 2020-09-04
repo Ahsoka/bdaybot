@@ -1,6 +1,6 @@
 ## Background
-The bdaybot was commissioned by Dr. Neat in an effort to mimic the feel of the in-person classroom.  One aspect of the in-person classroom
-Dr. Neat really cares about who's birthday is it. Originally, he commissioned [Elliot] to work on the project.  Later on however, [Ryan] and [Andres] were also added to the project.  The three of us would ultimately be responsible for creating the bot and making the bot what it is today.
+The bdaybot was commissioned by [Dr. Neat] in an effort to mimic the feel of the in-person classroom.  One aspect of the in-person classroom
+[Dr. Neat] really cares about who's birthday is it. Originally, he commissioned [Elliot] to work on the project.  Later on however, [Ryan] and [Andres] were also added to the project.  The three of us would ultimately be responsible for creating the bot and making the bot what it is today.
 ## What Does the Bdaybot Actually Do?
 The bdaybot has two main functions, showing whose birthday it is and increasing interaction in the servers it is in.  
 
@@ -45,11 +45,6 @@ The logging package allows the bdaybot to have an extremely comprehensive loggin
 ### [OS](https://docs.python.org/3/library/os.html)
 This is the module that allows the bdaybot to access the environment variables mentioned above.
 
-<!-- Only first names are used in order to enforce some level of privacy -->
-[Andres]: https://github.com/TurretAA12
-[Elliot]: https://github.com/Falcons-Royale
-[Ryan]: https://github.com/ryanlee68
-
 ## ToDo List:
 Although the Bday bot may be the single most greatest, robust, and perfect bot to ever exist in all the multiverses in all past, present, and future spacetime, there are still some tweaks and other important methods we have yet to do.
 
@@ -57,7 +52,7 @@ Although the Bday bot may be the single most greatest, robust, and perfect bot t
 * New event named showwish that returns all the wishers for the input e.g ```+showwish Firstname Lastname```
 * New event named age that returns the input's age e.g ```+age Firstname Lastname```
 * New event named birthday that returns the input's birthday e.g ```+birthday Firstname Lastname```
-* If the discord user's birthday is today's birthday and is online, then the bdaybot shouls move them all the way up to the bday rols, but if the discord user is       offline, then the bdaybot should just rename itself to the bday person 
+* If the discord user's birthday is today's birthday and is online, then the bdaybot shouls move them all the way up to the bday rols, but if the discord user is       offline, then the bdaybot should just rename itself to the bday person
 
 ## The Future of the Birthday Robot
 In order to implement these features listed below, we need your help to help progress the bdaybot become better in the future. Us three normies cannot implement these features below by themselves, so if you attend CVHS, we ask those who are interested in the future of bdaybot to help us implement even just a small part of the features listed below.
@@ -67,3 +62,9 @@ In order to implement these features listed below, we need your help to help pro
 * Create more incentives to use the bdaybot e.g: candy every month to the person who wished the most people, etc..
 * Instead of renaming the bdaybot to the student's name on his/her birthday, make the bday student's discord user itself show all the way at the top of the server even if he/she is offline on discord
 * If you have other ideas for the bdaybot please message nayr#2153 on discord
+
+<!-- Only first names are used in order to enforce some level of privacy -->
+[Andres]: https://github.com/TurretAA12
+[Elliot]: https://github.com/Falcons-Royale
+[Ryan]: https://github.com/ryanlee68
+[Dr. Neat]: https://github.com/gregneat
