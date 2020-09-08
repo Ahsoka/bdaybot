@@ -39,7 +39,7 @@ The datetime package allows us to give the bdaybot the ability to know what the 
 ### [Pandas](https://pandas.pydata.org/)
 Pandas is used as an easy way to manipulated the birthday data.  Pandas has all sort of useful features, one of which allows us to sort the birthday database by whose's birthday is closest to the day today.
 ### [Psycopg2](https://www.psycopg.org/)
-Psycopg2 allows the bdaybot to connect, read, and write to the database discussed above.  This package allows the bdaybot to send SQL queries to both edit data and read data for various operations of the bdaybot.  Psycopg2 was also used to create the tables used to store data.  See [this file](https://github.com/ryanlee68/teacherbot) for the exact database schema.
+Psycopg2 allows the bdaybot to connect, read, and write to the database discussed above.  This package allows the bdaybot to send SQL queries to both edit data and read data for various operations of the bdaybot.  Psycopg2 was also used to create the tables used to store data.  See [this file](https://github.com/ryanlee68/teacherbot/blob/master/transfer-to-postgres.py) for the exact database schema.
 ### [Discord.py](https://discordpy.readthedocs.io/en/latest/)
 Discord.py allows the bdaybot to actually communicate with the Discord servers.  It allows the bdaybot to do all the discord related operations.
 ### [Logging](https://docs.python.org/3/library/logging.html)
