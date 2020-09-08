@@ -88,6 +88,7 @@ def update_data(inplace=True, supress=False):
     # Currently the database will never be updated until the bot is run again.
     # Also might want to add some type of check to see if the database has changed so
     # no computation is wasted on parsing the string if the database has not changed.
+    # what is timedelta_today
     bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
     if not supress:
         logger.info(f"Sucessfully updated 'bday_df'")
