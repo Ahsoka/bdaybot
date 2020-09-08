@@ -38,8 +38,8 @@ This section will be an overview of what each package/library is used for the in
 The datetime package allows us to give the bdaybot the ability to know what the time and date are.  As outlined above, the core functionality of the bdaybot is to display birthdays which is inherently linked to the date and time.
 ### [Pandas](https://pandas.pydata.org/)
 Pandas is used as an easy way to manipulated the birthday data.  Pandas has all sort of useful features, one of which allows us to sort the birthday database by whose's birthday is closest to the day today.
-### [Pickle](https://docs.python.org/3/library/pickle.html)
-Pickle is used to store Python objects as files.  Pickle is used in the bdaybot to store critical data so that even if the bdaybot shuts off expectedly or unexpectedly the critical data will be saved as a file no matter what.
+### [Psycopg2](https://www.psycopg.org/)
+Psycopg2 allows the bdaybot to connect, read, and write to the database discussed above.  This package allows the bdaybot to send SQL queries to both edit data and read data for various operations of the bdaybot.  Psycopg2 was also used to create the tables used to store data.  See [this file](https://github.com/ryanlee68/teacherbot) for the exact database schema.
 ### [Discord.py](https://discordpy.readthedocs.io/en/latest/)
 Discord.py allows the bdaybot to actually communicate with the Discord servers.  It allows the bdaybot to do all the discord related operations.
 ### [Logging](https://docs.python.org/3/library/logging.html)
