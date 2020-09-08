@@ -117,6 +117,9 @@ class bdaybot(commands.Bot):
         else:
             logger.debug(f"{self.user} has succesfully reconnected to Discord.")
 
+    async def on_resume(self):
+        logger.debug(f"{self.user} has succesfully reconnected to Discord.")
+
     async def on_disconnect(self):
         logger.warning(f"{self.user} disconnected from Discord.")
 
