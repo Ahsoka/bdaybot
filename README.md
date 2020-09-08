@@ -47,7 +47,7 @@ The logging package allows the bdaybot to have an extremely comprehensive loggin
 ### [OS](https://docs.python.org/3/library/os.html)
 This is the module that allows the bdaybot to access the environment variables mentioned above.
 
-## ToDo List:
+## TODO List:
 Although the Bday bot may be the single most greatest, robust, and perfect bot to ever exist in all the multiverses in all past, present, and future spacetime, there are still some tweaks and other important methods we have yet to do.
 
 * Some of the methods can be implemented more efficiently, the functions that need more efficient code are commented in the code itself ctrl + f and search for ```TODO```
