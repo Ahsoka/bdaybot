@@ -51,6 +51,10 @@ class bdaybot(commands.Bot):
         self.new_day = True
         self.init_connection = False
 
+    async def on_connect(self):
+        if self.init_connection:
+            logger.debug(f"{self.user} has succesfully reconnected to Discord.")
+
     async def on_ready(self):
         if not self.init_connection:
             self.add_cog(bdaybot_commands(self))
