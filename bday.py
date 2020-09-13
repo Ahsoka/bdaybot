@@ -125,6 +125,17 @@ class bdaybot(commands.Bot):
         logger.debug(f"{self.user} has succesfully reconnected to Discord.")
 
     async def on_disconnect(self):
+        # IMPORTANT TODO: Figure out how to reliably track
+        # when the bdaybot reconnects. The `on_disconnect()` function is called
+        # everytime the bdaybot gets disconnected (as far as
+        # we know), however, we have not determined the functions
+        # that are called when reconnecting. So far the `on_resume`,
+        # `on_connect`, and `on_ready` functions have been identified
+        # as possible functions, however, these functions do not
+        # encompass the entire set of functions that are called
+        # when reconnecting. After some investigation into this
+        # this issue it appears that function like this does not
+        # exist, which means we will have to be implemented ourselves.
         logger.warning(f"{self.user} disconnected from Discord.")
 
     async def on_guild_channel_update(self, before, after):
