@@ -9,6 +9,9 @@ from argparser import args as command_line
 from bdaybot_commands import emoji_urls, bdaybot_commands, \
                         bdaybot_helpcommand, dev_discord_ping, \
                         connection, cursor, SQL
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Check here for any issues relating to the API ➡ https://status.discord.com/
 # Tested with discord.__version__ == 1.3.4
