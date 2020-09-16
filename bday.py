@@ -6,16 +6,15 @@ import asyncio
 import data as andres
 import logs
 from argparser import args as command_line
+from dotenv import load_dotenv
 from bdaybot_commands import emoji_urls, bdaybot_commands, \
                         bdaybot_helpcommand, dev_discord_ping, \
                         connection, cursor, SQL
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # Check here for any issues relating to the API ➡ https://status.discord.com/
 # Tested with discord.__version__ == 1.3.4
 
+load_dotenv()
 logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s: %(asctime)s - [%(funcName)s()] %(message)s')
 
 # Pre discord 1.4 compability
