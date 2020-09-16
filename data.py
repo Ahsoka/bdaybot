@@ -4,9 +4,11 @@ import os
 import datetime
 import logs
 import psycopg2
-from argparser import args
 import create_database
+from argparser import args
+from dotenv import load_dotenv
 
+load_dotenv()
 logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s.py: %(asctime)s - %(message)s')
 
 windows_vid_url, unix_vid_url = 'https://www.youtube.com/watch?v=IolxqkL7cD8', 'https://www.youtube.com/watch?v=5iWhQWVXosU'
