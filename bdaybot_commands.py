@@ -228,7 +228,7 @@ class bdaybot_commands(commands.Cog):
                 # sanitized and can only result in an integer then it is IMPOSSIBLE to do
                 # an SQL injection attack with this input method
                 create_id_table = """CREATE TABLE {}(
-                                    discord_user_id INT,
+                                    discord_user_id BIGINT,
                                     year INT,
                                     PRIMARY KEY(discord_user_id, year),
                                     FOREIGN KEY(discord_user_id) REFERENCES discord_users(discord_user_id)
