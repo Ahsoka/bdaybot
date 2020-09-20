@@ -192,7 +192,7 @@ class bdaybot_commands(commands.Cog):
                 logger.debug(f"{ctx.author} unsucessfully used the wish command because they failed to include who they wanted to wish.")
                 return
             elif len(message) == 0:
-                name = self.today_df.iloc[0]['FirstName'] + ' ' + self.today_df.iloc[0]['LastName']
+                wishee_id, proper_name = self.today_df.iloc[0].index.values[0], self.today_df.iloc[0]['FirstName'] + ' ' + self.today_df.iloc[0]['LastName']
             elif len(message) >= 1:
                 name = " ".join(message)
                 # Can use first name, last name, or first and last name together to wish someone
@@ -218,8 +218,8 @@ class bdaybot_commands(commands.Cog):
                         logger.debug(f"{ctx.author} unsucessfully used the wish command because they used a name that is not in the birthday database.")
                     return
 
-            wishee_id, wishee_series = next(fullname_df[is_in.any(axis='columns')].iterrows())
-            proper_name = wishee_series['FirstName'] + " " + wishee_series['LastName']
+                wishee_id, wishee_series = next(fullname_df[is_in.any(axis='columns')].iterrows())
+                proper_name = wishee_series['FirstName'] + " " + wishee_series['LastName']
 
             table_name = f"id_{wishee_id}"
             try:
