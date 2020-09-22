@@ -606,7 +606,7 @@ class bdaybot_helpcommand(commands.HelpCommand):
                             "▶ If there are multiple people's birthday today you must specify who you want to wish a happy birthday.\n"
                             f"\ne.g. If you want wish Jaiden a happy birthday, use `{ctx.prefix}wish Jaiden 694208`"
                             "\nThe ID you submit is checked against a list of valid IDs so use your real ID.\n"
-                            "\nYour message containing your ID is deleted to keep your ID confidental.\n\n"
+                            "\n**Your message containing your ID is deleted to keep your ID confidental.**\n\n"
                             f"The `{ctx.prefix}wish` command is not available on days when it is no one's birthday")
 
             description += "." if self.bday_today else " (like today)."
