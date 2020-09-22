@@ -358,7 +358,7 @@ class bdaybot_commands(commands.Cog):
             await ctx.send(f"{self.maybe_mention(ctx)}Congrats, you managed to break the `{ctx.prefix}setID` command.{await self.ping_devs(error, self.setID, ctx=ctx)}")
 
     async def valid_author(self, ctx, command, send=True, devs=False):
-        # TODO: Might want to change this so it only recongizes itself as a valid_author as opposed to any bot user
+        # TODO: Might want to change this so it only recognizes itself as a valid_author as opposed to any bot user
         # Extremely unlikely that a bot will end up using the hidden commands however if u have time fix this.
         if hasattr(ctx, 'author') and not ctx.author.bot:
             if devs:
