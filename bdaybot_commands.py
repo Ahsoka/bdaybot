@@ -235,6 +235,7 @@ class bdaybot_commands(commands.Cog):
                                     ON DELETE CASCADE
                                     )""".format(table_name)
                 SQL(create_id_table, autocommit=True)
+                logger.info(f"SQL Table {table_name} was created to store wishes")
             except psycopg2.errors.DuplicateTable:
                 connection.rollback()
 
