@@ -260,7 +260,7 @@ class bdaybot_commands(commands.Cog):
         else:
             wish_embed.description = (f"You cannot use the `{ctx.prefix}wish` command if it is no one's birthday today.\n"
                                         "However, it will be "
-                                        f"**{self.get_bday_names()}** birthday on {format(self.today_df.iloc[0]['Birthdate'], '%A, %B %d')}")
+                                        f"**{self.get_bday_names()}** birthday on **{format(self.today_df.iloc[0]['Birthdate'], '%A, %B %d')}**")
             await ctx.send(ctx.author.mention, embed=wish_embed)
             logger.debug(f"{ctx.author} tried to use the wish command on day when it was no one's birthday.")
 
