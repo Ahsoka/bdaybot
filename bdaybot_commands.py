@@ -192,7 +192,7 @@ class bdaybot_commands(commands.Cog):
                 logger.debug(f"{ctx.author} unsucessfully used the wish command because they failed to include who they wanted to wish.")
                 return
             elif len(message) == 0:
-                wishee_id, proper_name = self.today_df.iloc[0].index.values[0], self.today_df.iloc[0]['FirstName'] + ' ' + self.today_df.iloc[0]['LastName']
+                wishee_id, proper_name = self.today_df.index.values[0], self.today_df.iloc[0]['FirstName'] + ' ' + self.today_df.iloc[0]['LastName']
             elif len(message) >= 1:
                 name = " ".join(message)
                 # Can use first name, last name, or first and last name together to wish someone
