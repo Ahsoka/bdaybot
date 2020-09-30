@@ -73,7 +73,7 @@ bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
 
 temp_connection = connection = psycopg2.connect(dbname='botsdb',
                                                 host=os.environ['host'],
-                                                user=os.environ['user'],
+                                                user=os.environ['dbuser'],
                                                 password=os.environ['password']) if args.testing else psycopg2.connect(dbname='botsdb')
 official_student_df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
 temp_connection.close()

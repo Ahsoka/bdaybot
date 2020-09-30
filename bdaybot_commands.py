@@ -8,6 +8,7 @@ import itertools
 import pandas
 import psycopg2
 import pickle
+import os
 import data as andres
 from argparser import args
 from dotenv import load_dotenv
@@ -21,7 +22,7 @@ logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s.py: %(asctime
 
 connection = psycopg2.connect(dbname='botsdb',
                               host=os.environ['host'],
-                              user=os.environ['user'],
+                              user=os.environ['dbuser'],
                               password=os.environ['password']) if args.testing else psycopg2.connect(dbname='botsdb')
 
 cursor = connection.cursor()
