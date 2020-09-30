@@ -334,9 +334,9 @@ class bdaybot(commands.Bot):
         # TODO: Add protections for the unlikely event that someone tries to break the bot
         # by activating the secret messages in a channel that the bot cannot send messages in.
         if (inside('what') or inside('wat')) and any(map(inside, valid_purposes)):
-            for i in range(len(secret_messages)):
-                await message.channel.send(secret_messages[i])
-                await asyncio.sleep(2)
+            for message in secret_messages:
+                    await message.channel.send(message)
+                    await asyncio.sleep(2)
                 
             await asyncio.sleep(3)
             await message.channel.send("My one and only purpose is to print out birthdays every 24 hours.")
