@@ -10,12 +10,19 @@ import psycopg2
 import pickle
 import data as andres
 from argparser import args
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 dev_discord_ping = {'Andres':388899325885022211, 'Elliot':349319578419068940, 'Ryan':262676325846876161}
 
 logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s.py: %(asctime)s - [%(funcName)s()] %(message)s')
 
-connection = psycopg2.connect(dbname='botsdb')
+connection = psycopg2.connect(dbname='botsdb',
+                              host=os.environ['host'],
+                              user=os.environ['user'],
+                              password=os.environ['password']) if args.testing else psycopg2.connect(dbname='botsdb')
 
 cursor = connection.cursor()
 

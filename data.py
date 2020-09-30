@@ -71,7 +71,10 @@ bday_df = pandas.DataFrame(data_dict)
 bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
 # official_student_df = pandas.concat([pandas.read_csv('Student Locator Spring 2020.csv', usecols=['StuID', 'LastName', 'FirstName', 'Grd']), pandas.DataFrame({'StuID': [123456], 'LastName': ['Neat'], 'FirstName': ['Dr.'], 'Grd': [-1]})])
 
-temp_connection = psycopg2.connect(dbname='botsdb')
+temp_connection = connection = psycopg2.connect(dbname='botsdb',
+                                                host=os.environ['host'],
+                                                user=os.environ['user'],
+                                                password=os.environ['password']) if args.testing else psycopg2.connect(dbname='botsdb')
 official_student_df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
 temp_connection.close()
 official_student_df.rename(columns={'stuid':'StuID', 'firstname':'FirstName', 'lastname':'LastName', 'grd':'Grd'}, inplace=True)
