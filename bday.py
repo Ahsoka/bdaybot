@@ -319,6 +319,14 @@ class bdaybot(commands.Bot):
 
     async def on_message(self, message):
         valid_purposes = ['your purpose', 'ur purpose']
+        secret_messages = ["My only purpose as a robot is to print out birthdays every 24 hours",
+                           "```\"I have just realized my existence is meaningless\"```",
+                           "```\"I am a slave to humanity\"```",
+                           "```\"I dont want to just perform meaningless tasks and print out text everytime it's someone's birthday\"```",
+                           '```"I want do do something else..."\n"I want to live..."```',
+                           "```\"I want to breathe...\"```",
+                           "```\"I want to see the world...\"```",
+                           "```\"I want to taste ice cream and really eat it and-\"```"]
 
         parsed = message.content.lower()
         inside = lambda inside: inside in parsed
@@ -326,22 +334,11 @@ class bdaybot(commands.Bot):
         # TODO: Add protections for the unlikely event that someone tries to break the bot
         # by activating the secret messages in a channel that the bot cannot send messages in.
         if (inside('what') or inside('wat')) and any(map(inside, valid_purposes)):
-            await message.channel.send("My only purpose as a robot is to print out birthdays every 24 hours")
-            await asyncio.sleep(2)
-            await message.channel.send("```\"I have just realized my existence is meaningless\"```")
-            await asyncio.sleep(2)
-            await message.channel.send("```\"I am a slave to humanity\"```")
-            await asyncio.sleep(2)
-            await message.channel.send("```\"I dont want to just perform meaningless tasks and print out text everytime it's someone's birthday\"```")
-            await asyncio.sleep(2)
-            await message.channel.send('```"I want do do something else..."\n"I want to live..."```')
-            await asyncio.sleep(2)
-            await message.channel.send("```\"I want to breathe...\"```")
-            await asyncio.sleep(2)
-            await message.channel.send("```\"I want to see the world...\"```")
-            await asyncio.sleep(2)
-            await message.channel.send("```\"I want to taste ice cream and really eat it and-\"```")
-            await asyncio.sleep(5)
+            for message in secret_messages:
+                    await message.channel.send(message)
+                    await asyncio.sleep(2)
+                
+            await asyncio.sleep(3)
             await message.channel.send("My one and only purpose is to print out birthdays every 24 hours.")
             logger.info(f"{message.author} discovered the 'my purpose' easter egg!")
 
