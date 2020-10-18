@@ -8,8 +8,8 @@ import logs
 from argparser import args as command_line
 from dotenv import load_dotenv
 from bdaybot_commands import emoji_urls, bdaybot_commands, \
-                        bdaybot_helpcommand, dev_discord_ping, \
-                        connection, cursor, SQL
+                             bdaybot_helpcommand, dev_discord_ping, \
+                             connection, cursor, SQL
 
 # Check here for any issues relating to the API ➡ https://status.discord.com/
 # Tested with discord.__version__ == 1.3.4
@@ -337,7 +337,7 @@ class bdaybot(commands.Bot):
             for message in secret_messages:
                     await message.channel.send(message)
                     await asyncio.sleep(2)
-                
+
             await asyncio.sleep(3)
             await message.channel.send("My one and only purpose is to print out birthdays every 24 hours.")
             logger.info(f"{message.author} discovered the 'my purpose' easter egg!")
