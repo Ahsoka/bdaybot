@@ -10,25 +10,20 @@ import psycopg2
 import pickle
 import os
 import data as andres
-from argparser import args
+from argparser import args as cmd_args
 from dotenv import load_dotenv
 
 load_dotenv()
-
 
 dev_discord_ping = {'Andres':388899325885022211, 'Elliot':349319578419068940, 'Ryan':262676325846876161}
 
 logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s.py: %(asctime)s - [%(funcName)s()] %(message)s')
 
-connection = psycopg2.connect(dbname='botsdb',
-                              host=os.environ['host'],
-                              user=os.environ['dbuser'],
-                              password=os.environ['password']) if args.testing else psycopg2.connect(dbname='botsdb')
-
-cursor = connection.cursor()
-
 # Makes SQL queries shorter and more obvious
 def SQL(*args, autocommit=False, first_item=False, **kwargs):
+    if args and cmd_args.testing:
+        args = list(args)
+        args[0] = args[0].replace('%s', '?')
     advance = kwargs.pop('next', False)
     if autocommit:
         with connection:
@@ -43,6 +38,22 @@ def SQL(*args, autocommit=False, first_item=False, **kwargs):
         return returning[0] if first_item else returning
 
     return cursor.fetchall()
+
+if cmd_args.testing:
+    import sqlite3
+    connection = sqlite3.connect(cmd_args.database, detect_types=sqlite3.PARSE_DECLTYPES)
+    # Automatically convert 0 or 1 to bool
+    sqlite3.register_converter("BOOLEAN", lambda val: bool(int(val)))
+    # DEBUG: **MUST** include this line in order to use
+    # FOREIGN KEYS, by default they are **DISABLED**
+    connection.execute("PRAGMA foreign_keys = 1")
+    cursor = connection.cursor()
+    from create_database import create_guilds_table, create_discord_users_table
+    SQL('\n'.join(create_discord_users_table.splitlines()[:-2])[:-1] + ')', autocommit=True)
+    SQL(create_guilds_table, autocommit=True)
+else:
+    connection = psycopg2.connect(dbname='botsdb')
+    cursor = connection.cursor()
 
 class emoji_urls:
     # TODO: Check the links everytime the variables are accessed or
