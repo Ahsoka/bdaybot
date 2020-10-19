@@ -34,21 +34,6 @@ class bdaybot(commands.Bot):
 
     def __init__(self, db_conn, *args, **kwargs):
         self.db_conn = db_conn
-        testing = command_line.testing
-        if testing:
-            try:
-                self.TOKEN = os.environ['testing_token']
-                logger.info("Succesfully accessed the enviroment variable 'testing_token'")
-            except KeyError as error:
-                logger.critical("Failed to access the environment variable 'testing_token'.")
-                raise error
-        else:
-            try:
-                self.TOKEN = os.environ['Bday_Token']
-                logger.info("Succesfully accessed the enviroment variable 'Bday_Token'.")
-            except KeyError as error:
-                logger.critical("Failed to access the environment variable 'Bday_Token'.")
-                raise error
         self.bday_today, self.today_df = andres.get_latest()
         super().__init__(*args, **kwargs)
         self.parsed_command_prefix = self.command_prefix[0] if isinstance(self.command_prefix, (list, tuple)) else self.command_prefix
@@ -112,11 +97,10 @@ class bdaybot(commands.Bot):
                         if "announcement" in channel.name.lower():
                             self.SQL("INSERT INTO guilds(guild_id, announcements_id) VALUES(%s, %s)", (guild.id, channel.id), autocommit=True)
                             channel_mention = f'**#{channel}**' if guild.owner.is_on_mobile() else channel.mention
-                            if not command_line.testing:
-                                logger.info(f"The bot sent a DM message to {guild.owner} confirming the announcements channel was correct, "
-                                            f"since it is the bot's first time in {guild}.")
-                                await guild.owner.send((f"In **{guild}**, the announcement channel was automatically set to {channel_mention}! "
-                                                        f"If you think this is a mistake use `{self.parsed_command_prefix}setannouncements` to change it."))
+                            logger.info(f"The bot sent a DM message to {guild.owner} confirming the announcements channel was correct, "
+                                        f"since it is the bot's first time in {guild}.")
+                            await guild.owner.send((f"In **{guild}**, the announcement channel was automatically set to {channel_mention}! "
+                                                    f"If you think this is a mistake use `{self.parsed_command_prefix}setannouncements` to change it."))
                             logger.info(f"The bot detected '{channel}' as the announcements channel in {guild}.")
                             break
                         elif iteration == len(guild.text_channels) - 1:
@@ -406,8 +390,6 @@ class bdaybot(commands.Bot):
             return getattr(perms, permissions)
 
     def run(self, *args, token=None, **kwargs):
-        if token is None:
-            token = self.TOKEN
         super().run(token, *args, **kwargs)
 
     async def close(self):
@@ -440,7 +422,11 @@ class bdaybot(commands.Bot):
 bdaybot_commands.SQL = bdaybot.SQL
 
 if __name__ == '__main__':
-    connection = sqlite3.connect(command_line.database) if command_line.testing else psycopg2.connect(dbname='botsdb')
+    try:
+        connection, token = sqlite3.connect(command_line.database), os.environ['testing_token'] if command_line.testing else psycopg2.connect(dbname='botsdb'), os.environ['Bday_token']
+    except KeyError:
+        logger.critical('Failed to access the token in environment variables')
+        raise
     bot = bdaybot(connection, command_prefix=('+', 'b.'), case_insensitive=True)
-    bot.run()
+    bot.run(token=token)
     connection.close()
