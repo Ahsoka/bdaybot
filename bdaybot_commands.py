@@ -524,7 +524,7 @@ class bdaybot_commands(commands.Cog):
             logger.debug(f"{ctx.author} tried to use the upcoming command in a DM.")
             await ctx.send(f"The `{ctx.prefix}upcoming` command is currently unavailable in DMs. Please try using it in a server with me.")
         else:
-            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}upcoming` command. {await self.ping_devs(error, self.upcoming, ctx)}")
+            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}upcoming` command.{await self.ping_devs(error, self.upcoming, ctx)}")
 
     @commands.command(aliases=['setann'])
     @commands.has_guild_permissions(administrator=True)
@@ -560,7 +560,7 @@ class bdaybot_commands(commands.Cog):
             await ctx.send(f"The `{ctx.prefix}setannouncements` command is unavailable in DMs. Please try using it in a server with me.")
             logger.debug(f"{ctx.author} tried to used the setannouncements command in a DM.")
         else:
-            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}setannouncements` command! {await self.ping_devs(error, self.setannouncements, ctx=ctx)}")
+            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}setannouncements` command!{await self.ping_devs(error, self.setannouncements, ctx=ctx)}")
 
     @commands.command(aliases=['getann'])
     @commands.guild_only()
@@ -581,7 +581,7 @@ class bdaybot_commands(commands.Cog):
             await ctx.send(f"The `{ctx.prefix}getannouncements` command is unavailable in DMs. Please try using it in server with me.")
             logger.debug(f"{ctx.author} tried to use the getannouncements command in a DM.")
         else:
-            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}getannouncements` command! {await self.ping_devs(error, self.getannouncements, ctx=ctx)}")
+            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}getannouncements` command!{await self.ping_devs(error, self.getannouncements, ctx=ctx)}")
 
     # @commands.command(hidden=True)
     # async def check(self, ctx):
