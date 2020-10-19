@@ -294,8 +294,9 @@ class bdaybot(commands.Bot):
 
     @tasks.loop(hours=24)
     async def change_roles(self):
-        await self.run_update_role()
-        logger.info(f"The 'change_roles()' coroutine was run.")
+        if not args.testing:
+            await self.run_update_role()
+            logger.info(f"The 'change_roles()' coroutine was run.")
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
         logger.info(f"The next iteration is scheduled for {format(self.change_roles.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
