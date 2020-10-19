@@ -90,10 +90,11 @@ class bdaybot(commands.Bot):
                         if "announcement" in channel.name.lower():
                             SQL("INSERT INTO guilds(guild_id, announcements_id) VALUES(%s, %s)", (guild.id, channel.id), autocommit=True)
                             channel_mention = f'**#{channel}**' if guild.owner.is_on_mobile() else channel.mention
-                            logger.info(f"The bot sent a DM message to {guild.owner} confirming the announcements channel was correct, "
-                                        f"since it is the bot's first time in {guild}.")
-                            await guild.owner.send((f"In **{guild}**, the announcement channel was automatically set to {channel_mention}! "
-                                                    f"If you think this is a mistake use `{self.parsed_command_prefix}setannouncements` to change it."))
+                            if not command_line.testing:
+                                logger.info(f"The bot sent a DM message to {guild.owner} confirming the announcements channel was correct, "
+                                            f"since it is the bot's first time in {guild}.")
+                                await guild.owner.send((f"In **{guild}**, the announcement channel was automatically set to {channel_mention}! "
+                                                        f"If you think this is a mistake use `{self.parsed_command_prefix}setannouncements` to change it."))
                             logger.info(f"The bot detected '{channel}' as the announcements channel in {guild}.")
                             break
                         elif iteration == len(guild.text_channels) - 1:
