@@ -432,13 +432,17 @@ class bdaybot_commands(commands.Cog):
                                                     name=role_name, hoist=True, color=color)
             SQL("UPDATE guilds SET role_id=%s WHERE guild_id=%s", (bday_role.id, ctx.guild.id), autocommit=True)
         else:
-            bday_role = ctx.guild.get_role(role_id)
+            try:
+                bday_role = ctx.guild.get_role(role_id)
+                await bday_role.edit(name=role_name, color=color)
+            except (discord.NotFound, commands.RoleNotFound) if tuple(map(lambda str_digit: int(str_digit), discord.__version__.split('.'))) \
+                                                                >= (1, 5, 0) else discord.NotFound:
+                bday_role = None
+
             if bday_role is None:
                 SQL("UPDATE guilds SET role_id=NULL WHERE guild_id=%s", (ctx.guild.id,), autocommit=True)
                 await self.bot.invoke(self.bot.fake_ctx('update_role', ctx.guild))
                 return
-
-            await bday_role.edit(name=role_name, color=color)
 
         await ctx.guild.me.add_roles(bday_role)
 

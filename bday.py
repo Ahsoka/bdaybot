@@ -59,7 +59,6 @@ class bdaybot(commands.Bot):
 
     async def on_ready(self):
         if not self.init_connection:
-            self.add_cog(bdaybot_commands(self))
             self.help_command = bdaybot_helpcommand()
 
             for guild in self.guilds:
@@ -103,6 +102,7 @@ class bdaybot(commands.Bot):
                                                     f"I was unable to find your announcements channel. Please use `{self.parsed_command_prefix}setannouncements` "
                                                     "to set the announcements channel."))
 
+            self.add_cog(bdaybot_commands(self))
 
             self.tasks_running = {'send_bdays': True, 'change_nicknames': True, 'change_roles': True}
             # ALWAYS start send_bdays before any other coroutine!
