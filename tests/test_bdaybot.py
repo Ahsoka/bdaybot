@@ -5,6 +5,7 @@ sys.path.insert(0, str(two_levels_up))
 
 import unittest
 import argparse
+import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from create_database import create_guilds_table, create_discord_users_table
 
@@ -21,6 +22,14 @@ class TestBdaybot(unittest.TestCase):
     STARSHIP_SERVER_ROLE_ID = 767552973948583966
 
     TESTING_CHANNEL_ID = 769671372963971072
+
+    @classmethod
+    async def send_message(cls, message):
+        await cls.bdaybot.get_guild(cls.BDAY_SERVER_ID) \
+                         .get_channel(cls.TESTING_CHANNEL_ID) \
+                         .send(message)
+
+    speak = classmethod(lambda cls, message: asyncio.run(cls.send_message(message)))
 
     @classmethod
     def setUpClass(cls):
