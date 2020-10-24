@@ -12,13 +12,13 @@ class TestBdaybot(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        connection = sqlite3.connect(args.database, detect_types=sqlite3.PARSE_DECLTYPES)
+        cls.connection = sqlite3.connect(args.database, detect_types=sqlite3.PARSE_DECLTYPES)
         # Automatically convert 0 or 1 to bool
         sqlite3.register_converter("BOOLEAN", lambda val: bool(int(val)))
         # DEBUG: **MUST** include this line in order to use
         # FOREIGN KEYS, by default they are **DISABLED**
-        connection.execute("PRAGMA foreign_keys = 1")
-        cursor = connection.cursor()
-        with connection:
+        cls.connection.execute("PRAGMA foreign_keys = 1")
+        cursor = cls.connection.cursor()
+        with cls.connection:
             cursor.execute('\n'.join(create_discord_users_table.splitlines()[:-2])[:-1] + ')')
             cursor.execute(create_guilds_table)
