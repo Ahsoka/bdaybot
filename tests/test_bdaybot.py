@@ -5,6 +5,7 @@ sys.path.insert(0, str(two_levels_up))
 
 import unittest
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 from create_database import create_guilds_table, create_discord_users_table
 
 parser = argparse.ArgumentParser(description="Use this to set unit-test settings")
@@ -37,6 +38,11 @@ class TestBdaybot(unittest.TestCase):
                 cursor.execute("INSERT INTO guilds(guild_id, role_id) VALUES(?, ?)",
                               (getattr(cls, f'{server_name}_SERVER_ID'),
                                getattr(cls, f'{server_name}_SERVER_ROLE_ID')))
+
+        with ThreadPoolExecutor() as executor:
+            from bday import bdaybot
+            cls.bdaybot = bdaybot(cls.connection)
+            executor.submit(bdaybot.run, cls.bdaybot, token=os.environ['testing_token'])
 
 if __name__ == '__main__':
     unittest.main()
