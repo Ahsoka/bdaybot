@@ -5,6 +5,7 @@ sys.path.insert(0, str(two_levels_up))
 
 import unittest
 import argparse
+import logging
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from create_database import create_guilds_table, create_discord_users_table
@@ -47,6 +48,13 @@ class TestBdaybot(unittest.TestCase):
                 cursor.execute("INSERT INTO guilds(guild_id, role_id) VALUES(?, ?)",
                               (getattr(cls, f'{server_name}_SERVER_ID'),
                                getattr(cls, f'{server_name}_SERVER_ROLE_ID')))
+
+        class MuteLogger:
+            def filter(self, record): return False
+        # This is to mute the loggers
+        logging.getLogger('data').addFilter(MuteLogger())
+        logging.getLogger('bdaybot_commands').addFilter(MuteLogger())
+        logging.getLogger('bday').addFilter(MuteLogger())
 
         with ThreadPoolExecutor() as executor:
             from bday import bdaybot
