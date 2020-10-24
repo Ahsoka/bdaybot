@@ -4,7 +4,13 @@ two_levels_up = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(two_levels_up))
 
 import unittest
+import argparse
 from create_database import create_guilds_table, create_discord_users_table
+
+parser = argparse.ArgumentParser(description="Use this to set unit-test settings")
+
+parser.add_argument('-db', '--database', default=':memory:',
+                    help="Use this to set the SQLite3 database location. (default: %(default)s)")
 
 class TestBdaybot(unittest.TestCase):
     BDAY_SERVER_ROLE_ID = 767587634796429374
