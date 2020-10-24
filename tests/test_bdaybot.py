@@ -33,3 +33,7 @@ class TestBdaybot(unittest.TestCase):
         with cls.connection:
             cursor.execute('\n'.join(create_discord_users_table.splitlines()[:-2])[:-1] + ')')
             cursor.execute(create_guilds_table)
+            for server_name in ['BDAY', 'STARSHIP']:
+                cursor.execute("INSERT INTO guilds(guild_id, role_id) VALUES(?, ?)",
+                              (getattr(cls, f'{server_name}_SERVER_ID'),
+                               getattr(cls, f'{server_name}_SERVER_ROLE_ID')))
