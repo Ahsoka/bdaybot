@@ -61,5 +61,7 @@ class TestBdaybot(unittest.TestCase):
             cls.bdaybot = bdaybot(cls.connection)
             executor.submit(bdaybot.run, cls.bdaybot, token=os.environ['testing_token'])
 
+        cls.speak(f"{'-' * 5} **Beginning Unit Test** {'-' * 5}")
+
 if __name__ == '__main__':
     unittest.main()
