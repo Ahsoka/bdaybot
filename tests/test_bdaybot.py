@@ -37,3 +37,6 @@ class TestBdaybot(unittest.TestCase):
                 cursor.execute("INSERT INTO guilds(guild_id, role_id) VALUES(?, ?)",
                               (getattr(cls, f'{server_name}_SERVER_ID'),
                                getattr(cls, f'{server_name}_SERVER_ROLE_ID')))
+
+if __name__ == '__main__':
+    unittest.main()
