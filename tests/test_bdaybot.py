@@ -16,6 +16,8 @@ parser = argparse.ArgumentParser(description="Use this to set unit-test settings
 parser.add_argument('-db', '--database', default=':memory:',
                     help="Use this to set the SQLite3 database location. (default: %(default)s)")
 
+command_line = parser.parse_args()
+
 class TestBdaybot(unittest.TestCase):
     BDAY_SERVER_ID = 713095060652163113
     STARSHIP_SERVER_ID = 675806001231822863
@@ -35,7 +37,7 @@ class TestBdaybot(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.connection = sqlite3.connect(args.database, detect_types=sqlite3.PARSE_DECLTYPES)
+        cls.connection = sqlite3.connect(command_line.database, detect_types=sqlite3.PARSE_DECLTYPES)
         # Automatically convert 0 or 1 to bool
         sqlite3.register_converter("BOOLEAN", lambda val: bool(int(val)))
         # DEBUG: **MUST** include this line in order to use
