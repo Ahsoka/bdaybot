@@ -62,7 +62,7 @@ class TestBdaybot(unittest.TestCase):
 
         with ThreadPoolExecutor() as executor:
             from bday import bdaybot
-            cls.bdaybot = bdaybot(cls.connection)
+            cls.bdaybot = bdaybot(cls.connection, command_prefix=('b.',))
             executor.submit(bdaybot.run, cls.bdaybot, token=os.environ['testing_token'])
 
         cls.speak(f"{'-' * 5} **Beginning Unit Test** {'-' * 5}")
