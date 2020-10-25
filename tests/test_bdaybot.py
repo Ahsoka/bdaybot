@@ -8,6 +8,7 @@ import argparse
 import logging
 import asyncio
 import sqlite3
+import os
 from concurrent.futures import ThreadPoolExecutor
 from create_database import create_guilds_table, create_discord_users_table
 
