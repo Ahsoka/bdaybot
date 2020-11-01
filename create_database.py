@@ -117,18 +117,18 @@ if __name__ == '__main__' and confirm:
     print(f"Succesfully created '{default_database_name}'")
 elif __name__ == '__main__':
     print("Cancelling database creation!")
-else:
-    from argparser import args
-    if not os.path.isfile(args.database):
-        connection = sqlite3.connect(args.database)
-        cursor = connection.cursor()
-        cursor.execute(create_guilds_table)
-        cursor.execute(create_student_data_table)
-        cursor.execute(create_discord_users_table)
-        official_student_df = pandas.concat([pandas.read_csv('Student Locator Spring 2020.csv',
-                                            usecols=['StuID', 'LastName', 'FirstName', 'Grd']),
-                                            pandas.DataFrame({'StuID': [123456], 'LastName': ['Neat'], 'FirstName': ['Dr.'], 'Grd': [-1]})])
-        official_student_df.to_sql('student_data', connection, index=False, if_exists='append')
+# else:
+#     from argparser import args
+#     if not os.path.isfile(args.database):
+#         connection = sqlite3.connect(args.database)
+#         cursor = connection.cursor()
+#         cursor.execute(create_guilds_table)
+#         cursor.execute(create_student_data_table)
+#         cursor.execute(create_discord_users_table)
+#         official_student_df = pandas.concat([pandas.read_csv('Student Locator Spring 2020.csv',
+#                                             usecols=['StuID', 'LastName', 'FirstName', 'Grd']),
+#                                             pandas.DataFrame({'StuID': [123456], 'LastName': ['Neat'], 'FirstName': ['Dr.'], 'Grd': [-1]})])
+#         official_student_df.to_sql('student_data', connection, index=False, if_exists='append')
 
 
 
