@@ -71,10 +71,10 @@ class TestBdaybot(unittest.TestCase):
         logging.getLogger('data').addFilter(MuteLogger())
         logging.getLogger('bdaybot_commands').addFilter(MuteLogger())
         logging.getLogger('bday').addFilter(MuteLogger())
-        with ThreadPoolExecutor() as executor:
-            from bday import bdaybot
-            cls.bdaybot = bdaybot(cls.connection, command_prefix=('b.',))
-            executor.submit(bdaybot.run, cls.bdaybot, token=os.environ['testing_token'])
+        executor = ThreadPoolExecutor()
+        from bday import bdaybot
+        cls.bdaybot = bdaybot(cls.connection, command_prefix=('b.',))
+        executor.submit(bdaybot.run, cls.bdaybot, token=os.environ['testing_token'])
 
         cls.speak(f"{'-' * 5} **Beginning Unit Test** {'-' * 5}")
 
@@ -86,9 +86,6 @@ class TestBdaybot(unittest.TestCase):
 
     def test_getID(self):
         pass
-
-
-
 
 if __name__ == '__main__':
     unittest.main()
