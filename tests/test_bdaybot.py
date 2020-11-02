@@ -3,6 +3,8 @@ import sys
 two_levels_up = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(two_levels_up))
 
+import discord
+from discord.ext import commands, tasks
 import unittest
 import argparse
 import logging
@@ -18,6 +20,15 @@ parser.add_argument('-db', '--database', default=':memory:',
                     help="Use this to set the SQLite3 database location. (default: %(default)s)")
 
 command_line = parser.parse_args()
+
+class fakebday(commands.Bot):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.parsed_command_prefix = self.command_prefix[0] if isinstance(self.command_prefix, (list, tuple)) else self.command_prefix
+
+    async def on_ready(self):
+        print('Test bot is ready')
 
 class TestBdaybot(unittest.TestCase):
     BDAY_SERVER_ID = 713095060652163113
@@ -38,6 +49,8 @@ class TestBdaybot(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        bot = fakebday(command_prefix=('t.'), case_insensitive=True)
+        bot.run(token=token)
         cls.connection = sqlite3.connect(command_line.database, detect_types=sqlite3.PARSE_DECLTYPES)
         # Automatically convert 0 or 1 to bool
         sqlite3.register_converter("BOOLEAN", lambda val: bool(int(val)))
@@ -52,20 +65,30 @@ class TestBdaybot(unittest.TestCase):
                 cursor.execute("INSERT INTO guilds(guild_id, role_id) VALUES(?, ?)",
                               (getattr(cls, f'{server_name}_SERVER_ID'),
                                getattr(cls, f'{server_name}_SERVER_ROLE_ID')))
-
         class MuteLogger:
             def filter(self, record): return False
         # This is to mute the loggers
         logging.getLogger('data').addFilter(MuteLogger())
         logging.getLogger('bdaybot_commands').addFilter(MuteLogger())
         logging.getLogger('bday').addFilter(MuteLogger())
-
         with ThreadPoolExecutor() as executor:
             from bday import bdaybot
             cls.bdaybot = bdaybot(cls.connection, command_prefix=('b.',))
             executor.submit(bdaybot.run, cls.bdaybot, token=os.environ['testing_token'])
 
         cls.speak(f"{'-' * 5} **Beginning Unit Test** {'-' * 5}")
+
+    def test_wish(self):
+        pass
+
+    def test_setID(self):
+        pass
+
+    def test_getID(self):
+        pass
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
