@@ -45,12 +45,12 @@ class TestBdaybot(unittest.TestCase):
                          .get_channel(cls.TESTING_CHANNEL_ID) \
                          .send(message)
 
-    speak = classmethod(lambda cls, message: asyncio.run(cls.send_message(message)))
+    speak = classmethod(lambda cls, message: cls.bdaybot.loop.create_task(cls.send_message(message)))
 
     @classmethod
     def setUpClass(cls):
-        bot = fakebday(command_prefix=('t.'), case_insensitive=True)
-        bot.run(token=token)
+        #bot = fakebday(command_prefix=('t.'), case_insensitive=True)
+        #bot.run(token=token)
         cls.connection = sqlite3.connect(command_line.database, detect_types=sqlite3.PARSE_DECLTYPES)
         # Automatically convert 0 or 1 to bool
         sqlite3.register_converter("BOOLEAN", lambda val: bool(int(val)))
