@@ -48,7 +48,7 @@ class bdaybot(commands.Bot):
         cursor = self.db_conn.cursor()
         advance = kwargs.pop('next', False)
         if autocommit:
-            with connection:
+            with self.db_conn:
                 cursor.execute(*args, **kwargs)
                 return
         else:
