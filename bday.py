@@ -7,7 +7,6 @@ import data as andres
 import psycopg2
 import sqlite3
 import logs
-from argparser import args as command_line
 from dotenv import load_dotenv
 from bdaybot_commands import emoji_urls, bdaybot_commands, \
                              bdaybot_helpcommand, dev_discord_ping
@@ -422,6 +421,7 @@ class bdaybot(commands.Bot):
 bdaybot_commands.SQL = bdaybot.SQL
 
 if __name__ == '__main__':
+    from argparser import args as command_line
     try:
         connection, token = sqlite3.connect(command_line.database), os.environ['testing_token'] if command_line.testing else psycopg2.connect(dbname='botsdb'), os.environ['Bday_token']
     except KeyError:
