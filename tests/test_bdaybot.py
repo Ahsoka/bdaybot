@@ -110,7 +110,7 @@ class TestBdaybot(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.speak('test.quit')
+        cls.speak(f'{cls.command_prefix}quit')
         cls.executor.shutdown()
         cls.conn.close()
 
