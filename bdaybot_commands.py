@@ -9,7 +9,10 @@ import pandas
 import pickle
 import data as andres
 
-dev_discord_ping = {'Andres':388899325885022211, 'Elliot':349319578419068940, 'Ryan':262676325846876161}
+dev_discord_ping = {'Andres': 388899325885022211,
+                    'Elliot': 349319578419068940,
+                    'Ryan': 262676325846876161,
+                    'Testbot': 722961456311697510}
 
 logger = logs.createLogger(__name__, fmt='[%(levelname)s] %(name)s.py: %(asctime)s - [%(funcName)s()] %(message)s')
 
