@@ -79,10 +79,10 @@ except psycopg2.OperationalError:
                                        password=os.environ['password'])
 
 official_student_df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
+logger.info(f"Sucessfully accessed TABLE student_data in the botsdb database (PostgreSQL)")
 temp_connection.close()
 official_student_df.rename(columns={'stuid':'StuID', 'firstname':'FirstName', 'lastname':'LastName', 'grd':'Grd'}, inplace=True)
 # print(official_student_df)
-logger.info(f"Sucessfully accessed TABLE student_data in the botsdb database (PostgresSQL)")
 bday_df = bday_df[bday_df['StuID'].isin(official_student_df['StuID'])]
 bday_df.drop_duplicates(['StuID'], inplace=True)
 bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
