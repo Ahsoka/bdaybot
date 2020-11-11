@@ -85,8 +85,8 @@ class TestBdaybot(unittest.TestCase):
                                eval(f'{server_name}_SERVER_ANNOUNCEMENTS_ID'),
                                eval(f'{server_name}_SERVER_ROLE_ID')))
 
-        cls.command_prefix = 'test.'
-        cls.bot = bdaybot(command_prefix=cls.command_prefix)
+        cls.command_prefix = 'test'
+        cls.bot = bdaybot(command_prefix=cls.command_prefix + '.')
         cls.executor = ThreadPoolExecutor()
         bot_thread = cls.executor.submit(cls.run_bot, cls.bot, token=os.environ['testing_token'])
         cls.speak('-'*5 +  'Starting Unit Tests!' + '-'*5)
@@ -110,7 +110,7 @@ class TestBdaybot(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.speak(f'{cls.command_prefix}quit')
+        cls.speak(f'{cls.command_prefix}.quit')
         cls.executor.shutdown()
         cls.conn.close()
 
