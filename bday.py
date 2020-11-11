@@ -32,8 +32,7 @@ class bdaybot(commands.Bot):
                     'mention_everyone':False, 'tts':False}
     cushion_delay = 5
 
-    def __init__(self, db_conn, *args, **kwargs):
-        self.db_conn = db_conn
+    def __init__(self, *args, **kwargs):
         self.bday_today, self.today_df = andres.get_latest()
         super().__init__(*args, **kwargs)
         self.parsed_command_prefix = self.command_prefix[0] if isinstance(self.command_prefix, (list, tuple)) else self.command_prefix
@@ -389,7 +388,8 @@ class bdaybot(commands.Bot):
         else:
             return getattr(perms, permissions)
 
-    def run(self, *args, token=None, **kwargs):
+    def run(self, db_conn, *args, token=None, **kwargs):
+        self.db_conn = db_conn
         super().run(token, *args, **kwargs)
 
     async def close(self):
@@ -427,6 +427,6 @@ if __name__ == '__main__':
     except KeyError:
         logger.critical('Failed to access the token in environment variables')
         raise
-    bot = bdaybot(connection, command_prefix=('+', 'b.'), case_insensitive=True)
-    bot.run(token=token)
+    bot = bdaybot(command_prefix=('+', 'b.'), case_insensitive=True)
+    bot.run(connection, token=token)
     connection.close()
