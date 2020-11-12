@@ -225,7 +225,7 @@ class bdaybot_commands(commands.Cog):
                 self.SQL("INSERT INTO {} VALUES(%s, %s)".format(table_name),
                     (ctx.author.id, datetime.date.today().year), autocommit=True)
             except (psycopg2.errors.UniqueViolation, sqlite3.IntegrityError):
-                connection.rollback()
+                self.db_conn.rollback()
                 wish_embed.description = f"You cannot wish **{proper_name}** a happy birthday more than once!\nTry wishing someone else a happy birthday!"
                 await ctx.send(ctx.author.mention, embed=wish_embed)
                 logger.debug(f"{ctx.author} tried to wish {proper_name} a happy birthday even though they already wished them before.")
@@ -322,7 +322,7 @@ class bdaybot_commands(commands.Cog):
             else:
                 logger.info(f"{ctx.author} succesfully set their ID to {id}.")
         except (psycopg2.errors.UniqueViolation, sqlite3.IntegrityError):
-            connection.rollback()
+            self.db_conn.rollback()
             await self.send(ctx, f"**{id}** is already in use. Please use another ID.")
             logger.debug(f"{ctx.author} tried to set their ID to an ID already in use.")
 
