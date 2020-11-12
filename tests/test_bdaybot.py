@@ -158,6 +158,19 @@ class TestBdaybot(unittest.TestCase):
     def test_getID(self):
         pass
 
+    def test_upcoming(self):
+        pass
+
+    def test_getannouncements(self):
+        self.speak(f'{self.command_prefix}.getannouncements')
+        time.sleep(4)
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT announcements_id FROM guilds WHERE guild_id=713095060652163113')
+        self.assertIn(str(cursor.fetchone()[0]), self.get_latest_message().content)
+
+    def test_setannouncments(self):
+        pass
+
     def tearDown(self):
         with self.conn:
             cursor = self.conn.cursor()
