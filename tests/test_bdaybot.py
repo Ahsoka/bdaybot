@@ -125,9 +125,6 @@ class TestBdaybot(unittest.TestCase):
             result = fetch_message_task.result()
         return result
 
-    def test_wish(self):
-        pass
-
     def setUp(self):
         cursor = self.postgres_db.cursor()
         cursor.execute('SELECT stuid FROM student_data')
@@ -173,19 +170,12 @@ class TestBdaybot(unittest.TestCase):
         time.sleep(4)
         self.assertIn(str(valid_id), self.get_latest_message().content)
 
-
-    def test_upcoming(self):
-        pass
-
     def test_getannouncements(self):
         self.speak(f'{self.command_prefix}.getannouncements')
         time.sleep(4)
         cursor = self.conn.cursor()
         cursor.execute('SELECT announcements_id FROM guilds WHERE guild_id=713095060652163113')
         self.assertIn(str(cursor.fetchone()[0]), self.get_latest_message().content)
-
-    def test_setannouncments(self):
-        pass
 
     def tearDown(self):
         with self.conn:
