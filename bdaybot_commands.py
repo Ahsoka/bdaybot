@@ -261,7 +261,7 @@ class bdaybot_commands(commands.Cog):
     async def getID(self, ctx, *message):
         try:
             id = self.SQL("SELECT student_id FROM discord_users WHERE discord_user_id=%s", (ctx.author.id,), first_item=True)
-            await ctx.author.send(f"Your ID is **{id}**.  If this is a mistake use `{ctx.prefix}setID` to change it.")
+            await self.send(ctx, f"Your ID is **{id}**.  If this is a mistake use `{ctx.prefix}setID` to change it.")
             logger.info(f"{ctx.author} succesfully used the getID command.")
         except StopIteration:
              # Might want to edit this so that it does not tell ppl to use setID if it does not have the required permission
@@ -288,23 +288,27 @@ class bdaybot_commands(commands.Cog):
 
         return commands.check(predicate)
 
+    async def send(ctx, message):
+        await ctx.send(message) if ctx.author.bot else ctx.author.send(message)
+
     @commands.command()
     @dm_bot_has_guild_permissions(manage_messages=True)
     async def setID(self, ctx, id: int):
         # TODO: Unlikely, however, if someone CHANGES their ID (from one that has been set in the past)
         # to another ID we should also transfer any of their wishes with the new id
+
         if ctx.guild:
             await ctx.message.delete()
         try:
             self.SQL("SELECT * FROM student_data WHERE StuID=%s", (id,), first_item=True)
         except StopIteration:
-            await ctx.author.send(f"**{id}** is not a valid ID. Please use a valid 6-digit ID.")
+            await self.send(ctx, f"**{id}** is not a valid ID. Please use a valid 6-digit ID.")
             logger.debug(f"{ctx.author} tried to set their ID to an invalid ID.")
             return
         try:
             current_id = self.SQL("SELECT student_id FROM discord_users WHERE discord_user_id=%s", (ctx.author.id,), first_item=True)
             if current_id == id:
-                await ctx.author.send(f"**{id}** is already your current ID. Use `{ctx.prefix}getID` to view your current ID.")
+                await self.send(ctx, f"**{id}** is already your current ID. Use `{ctx.prefix}getID` to view your current ID.")
                 logger.debug(f"{ctx.author} tried to set their ID to the ID they already have.")
                 return
         except StopIteration:
@@ -313,14 +317,14 @@ class bdaybot_commands(commands.Cog):
         self.SQL("DELETE FROM discord_users WHERE discord_user_id=%s", (ctx.author.id,), autocommit=True)
         try:
             self.SQL("INSERT INTO discord_users VALUES(%s, %s)", (ctx.author.id, id), autocommit=True)
-            await ctx.author.send(f"Your ID has now been set to **{id}**!")
+            await self.send(ctx, f"Your ID has now been set to **{id}**!")
             if current_id is not None:
                 logger.info(f"{ctx.author} succesfully updated their ID from {current_id} to {id}.")
             else:
                 logger.info(f"{ctx.author} succesfully set their ID to {id}.")
         except psycopg2.errors.UniqueViolation:
             connection.rollback()
-            await ctx.author.send(f"**{id}** is already in use. Please use another ID.")
+            await self.send(ctx, f"**{id}** is already in use. Please use another ID.")
             logger.debug(f"{ctx.author} tried to set their ID to an ID already in use.")
 
     @setID.error
@@ -342,7 +346,7 @@ class bdaybot_commands(commands.Cog):
     async def valid_author(self, ctx, command, send=True, devs=False):
         # TODO: Might want to change this so it only recognizes itself as a valid_author as opposed to any bot user
         # Extremely unlikely that a bot will end up using the hidden commands however if u have time fix this.
-        if hasattr(ctx, 'author') and not ctx.author.bot:
+        if hasattr(ctx, 'author'):
             if devs:
                 for dev_name in dev_discord_ping:
                     if ctx.author.id == dev_discord_ping[dev_name]:
@@ -445,7 +449,7 @@ class bdaybot_commands(commands.Cog):
     async def quit(self, ctx, *messages):
         if not await self.valid_author(ctx, self.quit, devs=True):
             return
-        await ctx.author.send("Shutting down the bdaybot!")
+        await self.send(ctx, "Shutting down the bdaybot!")
         logger.info(f"{ctx.author} accessed the quit commmand!")
         await self.bot.loop.stop()
 
