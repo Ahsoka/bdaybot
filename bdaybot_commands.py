@@ -216,7 +216,6 @@ class bdaybot_commands(commands.Cog):
                                 ON DELETE CASCADE
                                 )""".format(table_name)
             self.SQL(create_id_table, autocommit=True)
-            logger.info(f"SQL Table {table_name} was created to store wishes")
 
             try:
                 # Same warning applies to this line as above
