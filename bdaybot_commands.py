@@ -1,5 +1,4 @@
 import discord
-from discord.ext import commands
 import logs
 import warnings
 import requests
@@ -8,6 +7,8 @@ import itertools
 import pandas
 import pickle
 import data as andres
+import psycopg2, sqlite3
+from discord.ext import commands
 
 dev_discord_ping = {'Andres': 388899325885022211,
                     'Elliot': 349319578419068940,
