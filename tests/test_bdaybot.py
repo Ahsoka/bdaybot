@@ -3,15 +3,13 @@ import sys
 two_levels_up = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(two_levels_up))
 
-import discord
-from discord.ext import commands, tasks
 import unittest
 import argparse
 import logging
 import asyncio
-import sqlite3, psycopg2
 import os
 import time
+import sqlite3, psycopg2
 from concurrent.futures import ThreadPoolExecutor
 
 parser = argparse.ArgumentParser(description="Use this to set unit-test settings")
