@@ -173,8 +173,34 @@ class TestBdaybot(unittest.TestCase):
         self.speak(f'{self.command_prefix}.getannouncements')
         time.sleep(4)
         cursor = self.conn.cursor()
-        cursor.execute('SELECT announcements_id FROM guilds WHERE guild_id=713095060652163113')
+        cursor.execute('SELECT announcements_id FROM guilds WHERE guild_id=?', [BDAY_SERVER_ID])
         self.assertIn(str(cursor.fetchone()[0]), self.get_latest_message().content)
+
+    def test_setannouncments(self):
+        #invalid ann id
+        invalid = "<#001>"
+        self.speak(f'{self.command_prefix}.setannouncements {invalid}')
+        time.sleep(4)
+        self.assertIn('I know your tricks', self.get_latest_message().content)
+        #voice channel
+        invalid ="<#713095061180776501>"
+        self.speak(f'{self.command_prefix}.setannouncements {invalid}')
+        time.sleep(4)
+        self.assertIn('Holy cow', self.get_latest_message().content)
+        #set announcements
+        self.speak(f'{self.command_prefix}.setannouncements <#{TESTING_CHANNEL_ID}>')
+        time.sleep(4)
+        cursor =  self.conn.cursor()
+        cursor.execute('SELECT announcements_id FROM guilds WHERE guild_id=?',[BDAY_SERVER_ID])
+        self.assertEqual(TESTING_CHANNEL_ID, cursor.fetchone()[0])
+        #reset
+        self.speak(f'{self.command_prefix}.setannouncements <#{BDAY_SERVER_ANNOUNCEMENTS_ID}>')
+        time.sleep(4)
+        #set blank annoucnements
+        self.speak(f'{self.command_prefix}.setannouncements')
+        time.sleep(4)
+        cursor.execute('SELECT announcements_id FROM guilds WHERE guild_id=?',[BDAY_SERVER_ID])
+        self.assertEqual(TESTING_CHANNEL_ID, cursor.fetchone()[0])
 
     def tearDown(self):
         with self.conn:
