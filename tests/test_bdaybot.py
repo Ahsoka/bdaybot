@@ -6,6 +6,7 @@ sys.path.insert(0, str(two_levels_up))
 import os
 import time
 import atexit
+import random
 import unittest
 import argparse
 import logging
@@ -128,7 +129,31 @@ class TestBdaybot(unittest.TestCase):
         pass
 
     def test_setID(self):
-        pass
+        # Test that the bot does not accept invalid IDs
+        invalid_id = 1_000_000
+        self.speak(f'{self.command_prefix}.setID {invalid_id}')
+        time.sleep(4)
+        self.assertIn('not a valid ID', self.get_latest_message().content)
+
+        # Test that the bot accepts valid IDs
+        cursor = self.postgres_db.cursor()
+        cursor.execute('SELECT stuid FROM student_data')
+        all_valid_ids = list(map(lambda tup: tup[0], cursor.fetchall()))
+        valid_id = random.choice(all_valid_ids); all_valid_ids.remove(valid_id)
+        self.speak(f'{self.command_prefix}.setID {valid_id}')
+        time.sleep(4)
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT * FROM discord_users WHERE student_id=?', (valid_id,))
+        self.assertTupleEqual((self.bot.user.id, valid_id), cursor.fetchone())
+
+        # Test that the bot rejects IDs already in use
+        another_valid_id = random.choice(all_valid_ids)
+        with self.conn:
+            cursor.execute("INSERT INTO discord_users VALUES(?, ?)", (1, another_valid_id))
+        self.speak(f'{self.command_prefix}.setID {another_valid_id}')
+        time.sleep(4)
+        self.assertIn('is already in use. Please use another ID.',
+                      self.get_latest_message().content)
 
     def test_getID(self):
         pass
