@@ -60,6 +60,7 @@ class TestBdaybot(unittest.TestCase):
     def run_bot(bot, token):
         db_conn = sqlite3.connect("file::memory:?cache=shared",
                                   detect_types=sqlite3.PARSE_DECLTYPES,
+                                  check_same_thread=False,
                                   uri=True)
         # DEBUG: **MUST** include this line in order to use
         # FOREIGN KEYS, by default they are **DISABLED**
