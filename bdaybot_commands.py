@@ -89,7 +89,7 @@ class bdaybot_commands(commands.Cog):
                 logger.error(f"[{command.name}] {ctx.author} caused the following error in {parsed_ctx_guild}:\n{repr(error)}")
             elif not isinstance(error, commands.CommandInvokeError):
                 logger.error(f"The following error occured with the {command.name} command in {parsed_ctx_guild}\n{repr(error)}")
-        for iteration, dev_name in enumerate(dev_discord_ping):
+        for iteration, dev_name in list(enumerate(dev_discord_ping))[:-1]:
             dev = self.bot.get_user(dev_discord_ping[dev_name])
             ok_log = (iteration == len(dev_discord_ping) - 1)
             try:
