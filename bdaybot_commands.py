@@ -288,6 +288,7 @@ class bdaybot_commands(commands.Cog):
 
         return commands.check(predicate)
 
+    @staticmethod
     async def send(ctx, message):
         await ctx.send(message) if ctx.author.bot else ctx.author.send(message)
 
