@@ -203,22 +203,19 @@ class bdaybot_commands(commands.Cog):
                 proper_name = wishee_series['FirstName'] + " " + wishee_series['LastName']
 
             table_name = f"id_{wishee_id}"
-            try:
-                # Generally this line below is **BAD** pratice due to the possibility
-                # of an SQL injection attack, however, since the input we are receiving is
-                # sanitized and can only result in an integer then it is IMPOSSIBLE to do
-                # an SQL injection attack with this input method
-                create_id_table = """CREATE TABLE {}(
-                                    discord_user_id BIGINT,
-                                    year INT,
-                                    PRIMARY KEY(discord_user_id, year),
-                                    FOREIGN KEY(discord_user_id) REFERENCES discord_users(discord_user_id)
-                                    ON DELETE CASCADE
-                                    )""".format(table_name)
-                self.SQL(create_id_table, autocommit=True)
-                logger.info(f"SQL Table {table_name} was created to store wishes")
-            except psycopg2.errors.DuplicateTable:
-                connection.rollback()
+            # Generally this line below is **BAD** pratice due to the possibility
+            # of an SQL injection attack, however, since the input we are receiving is
+            # sanitized and can only result in an integer then it is IMPOSSIBLE to do
+            # an SQL injection attack with this input method
+            create_id_table = """CREATE TABLE IF NOT EXISTS {}(
+                                discord_user_id BIGINT,
+                                year INT,
+                                PRIMARY KEY(discord_user_id, year),
+                                FOREIGN KEY(discord_user_id) REFERENCES discord_users(discord_user_id)
+                                ON DELETE CASCADE
+                                )""".format(table_name)
+            self.SQL(create_id_table, autocommit=True)
+            logger.info(f"SQL Table {table_name} was created to store wishes")
 
             try:
                 # Same warning applies to this line as above
@@ -226,7 +223,7 @@ class bdaybot_commands(commands.Cog):
                 # because of the sanitized input
                 self.SQL("INSERT INTO {} VALUES(%s, %s)".format(table_name),
                     (ctx.author.id, datetime.date.today().year), autocommit=True)
-            except psycopg2.errors.UniqueViolation:
+            except (psycopg2.errors.UniqueViolation, sqlite3.IntegrityError):
                 connection.rollback()
                 wish_embed.description = f"You cannot wish **{proper_name}** a happy birthday more than once!\nTry wishing someone else a happy birthday!"
                 await ctx.send(ctx.author.mention, embed=wish_embed)
@@ -323,7 +320,7 @@ class bdaybot_commands(commands.Cog):
                 logger.info(f"{ctx.author} succesfully updated their ID from {current_id} to {id}.")
             else:
                 logger.info(f"{ctx.author} succesfully set their ID to {id}.")
-        except psycopg2.errors.UniqueViolation:
+        except (psycopg2.errors.UniqueViolation, sqlite3.IntegrityError):
             connection.rollback()
             await self.send(ctx, f"**{id}** is already in use. Please use another ID.")
             logger.debug(f"{ctx.author} tried to set their ID to an ID already in use.")
