@@ -176,8 +176,8 @@ class TestBdaybot(unittest.TestCase):
 
     def test_getID(self):
         # Test the situation when there is no ID set
-        self.speak(f'{self.command_prefix}.getID')
-        time.sleep(4)
+        self.speak(f'{self.command_prefix}.getID', wait=True)
+        time.sleep(1)
         self.assertIn("You do not currently have a registered ID.",
                    self.get_latest_message().content)
 
@@ -186,13 +186,13 @@ class TestBdaybot(unittest.TestCase):
             valid_id = random.choice(self.all_valid_ids)
             cursor = self.conn.cursor()
             cursor.execute("INSERT INTO discord_users VALUES(?, ?)", (self.bot.user.id, valid_id))
-        self.speak(f'{self.command_prefix}.getID')
-        time.sleep(4)
+        self.speak(f'{self.command_prefix}.getID', wait=True)
+        time.sleep(1)
         self.assertIn(str(valid_id), self.get_latest_message().content)
 
     def test_getannouncements(self):
-        self.speak(f'{self.command_prefix}.getannouncements')
-        time.sleep(4)
+        self.speak(f'{self.command_prefix}.getannouncements', wait=True)
+        time.sleep(1)
         cursor = self.conn.cursor()
         cursor.execute('SELECT announcements_id FROM guilds WHERE guild_id=?', [BDAY_SERVER_ID])
         self.assertIn(str(cursor.fetchone()[0]), self.get_latest_message().content)
@@ -200,26 +200,26 @@ class TestBdaybot(unittest.TestCase):
     def test_setannouncments(self):
         #invalid ann id
         invalid = "<#001>"
-        self.speak(f'{self.command_prefix}.setannouncements {invalid}')
-        time.sleep(4)
+        self.speak(f'{self.command_prefix}.setannouncements {invalid}', wait=True)
+        time.sleep(1)
         self.assertIn('I know your tricks', self.get_latest_message().content)
         #voice channel
         invalid ="<#713095061180776501>"
-        self.speak(f'{self.command_prefix}.setannouncements {invalid}')
-        time.sleep(4)
+        self.speak(f'{self.command_prefix}.setannouncements {invalid}', wait=True)
+        time.sleep(1)
         self.assertIn('Holy cow', self.get_latest_message().content)
         #set announcements
-        self.speak(f'{self.command_prefix}.setannouncements <#{TESTING_CHANNEL_ID}>')
-        time.sleep(4)
+        self.speak(f'{self.command_prefix}.setannouncements <#{TESTING_CHANNEL_ID}>', wait=True)
+        time.sleep(1)
         cursor =  self.conn.cursor()
         cursor.execute('SELECT announcements_id FROM guilds WHERE guild_id=?',[BDAY_SERVER_ID])
         self.assertEqual(TESTING_CHANNEL_ID, cursor.fetchone()[0])
         #reset
-        self.speak(f'{self.command_prefix}.setannouncements <#{BDAY_SERVER_ANNOUNCEMENTS_ID}>')
-        time.sleep(4)
+        self.speak(f'{self.command_prefix}.setannouncements <#{BDAY_SERVER_ANNOUNCEMENTS_ID}>', wait=True)
+        time.sleep(1)
         #set blank annoucnements
-        self.speak(f'{self.command_prefix}.setannouncements')
-        time.sleep(4)
+        self.speak(f'{self.command_prefix}.setannouncements', wait=True)
+        time.sleep(1)
         cursor.execute('SELECT announcements_id FROM guilds WHERE guild_id=?',[BDAY_SERVER_ID])
         self.assertEqual(TESTING_CHANNEL_ID, cursor.fetchone()[0])
 
