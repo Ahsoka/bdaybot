@@ -7,6 +7,7 @@ import os
 import time
 import atexit
 import random
+import discord
 import unittest
 import argparse
 import logging
@@ -100,6 +101,15 @@ class TestBdaybot(unittest.TestCase):
         return result
 
     @classmethod
+    def delete_message(cls, message):
+        async def delete(message):
+            await message.delete()
+        task = cls.bot.loop.create_task(delete(message))
+        while not task.done(): pass
+        if task.exception() is not None:
+            raise task.exception()
+
+    @classmethod
     def setUpClass(cls):
         cls.postgres_db = psycopg2.connect(dbname='botsdb',
                                            host=os.environ['host'],
@@ -134,14 +144,20 @@ class TestBdaybot(unittest.TestCase):
     def test_setID(self):
         # Test that the bot does not accept invalid IDs
         invalid_id = 1_000_000
-        self.speak(f'{self.command_prefix}.setID {invalid_id}')
-        time.sleep(4)
+        message = self.speak(f'{self.command_prefix}.setID {invalid_id}', wait=True)
+        time.sleep(1)
+        # Make sure the message was deleted
+        with self.assertRaises(discord.NotFound):
+            self.delete_message(message)
         self.assertIn('not a valid ID', self.get_latest_message().content)
 
         # Test that the bot accepts valid IDs
         valid_id = random.choice(self.all_valid_ids); self.all_valid_ids.remove(valid_id)
-        self.speak(f'{self.command_prefix}.setID {valid_id}')
-        time.sleep(4)
+        message = self.speak(f'{self.command_prefix}.setID {valid_id}', wait=True)
+        time.sleep(1)
+        # Make sure the message was deleted
+        with self.assertRaises(discord.NotFound):
+            self.delete_message(message)
         cursor = self.conn.cursor()
         cursor.execute('SELECT * FROM discord_users WHERE student_id=?', (valid_id,))
         self.assertTupleEqual((self.bot.user.id, valid_id), cursor.fetchone())
@@ -150,8 +166,11 @@ class TestBdaybot(unittest.TestCase):
         another_valid_id = random.choice(self.all_valid_ids)
         with self.conn:
             cursor.execute("INSERT INTO discord_users VALUES(?, ?)", (1, another_valid_id))
-        self.speak(f'{self.command_prefix}.setID {another_valid_id}')
-        time.sleep(4)
+        message = self.speak(f'{self.command_prefix}.setID {another_valid_id}', wait=True)
+        time.sleep(1)
+        # Make sure the message was deleted
+        with self.assertRaises(discord.NotFound):
+            self.delete_message(message)
         self.assertIn('is already in use. Please use another ID.',
                       self.get_latest_message().content)
 
