@@ -450,7 +450,10 @@ class bdaybot_commands(commands.Cog):
     async def quit(self, ctx, *messages):
         if not await self.valid_author(ctx, self.quit, devs=True):
             return
-        await self.send(ctx, "Shutting down the bdaybot!")
+        if ctx.author.bot:
+            await ctx.send(f"**{'-'*5} Ending Unit Tests {'-'*5}**")
+        else:
+            await ctx.author.send("Shutting down the bdaybot!")
         logger.info(f"{ctx.author} accessed the quit commmand!")
         await self.bot.loop.stop()
 
