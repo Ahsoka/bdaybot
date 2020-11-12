@@ -128,6 +128,11 @@ class TestBdaybot(unittest.TestCase):
     def test_wish(self):
         pass
 
+    def setUp(self):
+        cursor = self.postgres_db.cursor()
+        cursor.execute('SELECT stuid FROM student_data')
+        self.all_valid_ids = list(map(lambda tup: tup[0], cursor.fetchall()))
+
     def test_setID(self):
         # Test that the bot does not accept invalid IDs
         invalid_id = 1_000_000
@@ -136,10 +141,7 @@ class TestBdaybot(unittest.TestCase):
         self.assertIn('not a valid ID', self.get_latest_message().content)
 
         # Test that the bot accepts valid IDs
-        cursor = self.postgres_db.cursor()
-        cursor.execute('SELECT stuid FROM student_data')
-        all_valid_ids = list(map(lambda tup: tup[0], cursor.fetchall()))
-        valid_id = random.choice(all_valid_ids); all_valid_ids.remove(valid_id)
+        valid_id = random.choice(self.all_valid_ids); self.all_valid_ids.remove(valid_id)
         self.speak(f'{self.command_prefix}.setID {valid_id}')
         time.sleep(4)
         cursor = self.conn.cursor()
@@ -147,7 +149,7 @@ class TestBdaybot(unittest.TestCase):
         self.assertTupleEqual((self.bot.user.id, valid_id), cursor.fetchone())
 
         # Test that the bot rejects IDs already in use
-        another_valid_id = random.choice(all_valid_ids)
+        another_valid_id = random.choice(self.all_valid_ids)
         with self.conn:
             cursor.execute("INSERT INTO discord_users VALUES(?, ?)", (1, another_valid_id))
         self.speak(f'{self.command_prefix}.setID {another_valid_id}')
