@@ -9,7 +9,7 @@ import unittest
 import argparse
 import logging
 import asyncio
-import sqlite3
+import sqlite3, psycopg2
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -71,6 +71,10 @@ class TestBdaybot(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.postgres_db = psycopg2.connect(dbname='botsdb',
+                                           host=os.environ['host'],
+                                           user=os.environ['dbuser'],
+                                           password=os.environ['password'])
         cls.conn = sqlite3.connect("file::memory:?cache=shared",
                                    detect_types=sqlite3.PARSE_DECLTYPES,
                                    uri=True)
@@ -113,6 +117,7 @@ class TestBdaybot(unittest.TestCase):
         cls.speak(f'{cls.command_prefix}.quit')
         cls.executor.shutdown()
         cls.conn.close()
+        cls.postgres_db.close()
 
 if __name__ == '__main__':
     sys.argv[1:] = command_line.unittest_args
