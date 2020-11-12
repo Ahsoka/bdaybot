@@ -141,4 +141,7 @@ class TestBdaybot(unittest.TestCase):
 
 if __name__ == '__main__':
     sys.argv[1:] = command_line.unittest_args
-    unittest.main()
+    try:
+        unittest.main(exit=False)
+    except RuntimeError:
+        print('RuntimeError ¯\_(ツ)_/¯')
