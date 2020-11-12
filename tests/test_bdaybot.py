@@ -158,7 +158,21 @@ class TestBdaybot(unittest.TestCase):
                       self.get_latest_message().content)
 
     def test_getID(self):
-        pass
+        # Test the situation when there is no ID set
+        self.speak(f'{self.command_prefix}.getID')
+        time.sleep(4)
+        self.assertIn("You do not currently have a registered ID.",
+                   self.get_latest_message().content)
+
+        # Test the situation with a preset ID
+        with self.conn:
+            valid_id = random.choice(self.all_valid_ids)
+            cursor = self.conn.cursor()
+            cursor.execute("INSERT INTO discord_users VALUES(?, ?)", (self.bot.user.id, valid_id))
+        self.speak(f'{self.command_prefix}.getID')
+        time.sleep(4)
+        self.assertIn(str(valid_id), self.get_latest_message().content)
+
 
     def test_upcoming(self):
         pass
