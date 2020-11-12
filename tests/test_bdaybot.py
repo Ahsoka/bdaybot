@@ -5,6 +5,7 @@ sys.path.insert(0, str(two_levels_up))
 
 import os
 import time
+import atexit
 import unittest
 import argparse
 import logging
@@ -135,7 +136,7 @@ class TestBdaybot(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.speak(f'{cls.command_prefix}.quit')
-        cls.executor.shutdown()
+        atexit._clear()
         cls.conn.close()
         cls.postgres_db.close()
 
