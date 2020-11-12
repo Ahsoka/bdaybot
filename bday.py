@@ -40,10 +40,21 @@ class bdaybot(commands.Bot):
 
     # Makes SQL queries shorter and more obvious
     def SQL(self, *args, autocommit=False, first_item=False, **kwargs):
-        if isinstance(self.db_conn, sqlite3.Connection) and args:
-            args = list(args)
-            args[0] = args[0].replace('%s', '?')
         cursor = self.db_conn.cursor()
+        if isinstance(self.db_conn, sqlite3.Connection) and args:
+            if 'student_data' in args[0]:
+                if not hasattr(self, 'postgres_db'):
+                    try:
+                        self.postgres_db = psycopg2.connect(dbname='botsdb')
+                    except psycopg2.OperationalError:
+                        self.postgres_db = psycopg2.connect(dbname='botsdb',
+                                                            host=os.environ['host'],
+                                                            user=os.environ['dbuser'],
+                                                            password=os.environ['password'])
+                cursor = self.postgres_db.cursor()
+            else:
+                args = list(args)
+                args[0] = args[0].replace('%s', '?')
         advance = kwargs.pop('next', False)
         if autocommit:
             with self.db_conn:
@@ -403,6 +414,11 @@ class bdaybot(commands.Bot):
 
         self.change_roles.stop()
         logger.info("The 'change_roles()' task was gracefully ended.")
+        if hasattr(self, 'postgres_db'):
+            self.postgres_db.close()
+        if hasattr(self.cogs['bdaybot_commands'], 'postgres_db'):
+            self.cogs['bdaybot_commands'].postgres_db.close()
+
         await super().close()
 
     async def on_command_error(self, ctx, error):
