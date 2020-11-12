@@ -10,7 +10,6 @@ import random
 import unittest
 import argparse
 import logging
-import asyncio
 import warnings
 import sqlite3, psycopg2
 from concurrent.futures import ThreadPoolExecutor
