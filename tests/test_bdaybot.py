@@ -103,6 +103,21 @@ class TestBdaybot(unittest.TestCase):
                      .get_channel(TESTING_CHANNEL_ID) \
                      .send(message)
 
+    @classmethod
+    def get_latest_message(cls):
+        async def fetch_latest_message(cls):
+            await cls.bot.wait_until_ready()
+            return cls.bot.get_guild(BDAY_SERVER_ID) \
+                          .get_channel(TESTING_CHANNEL_ID) \
+                          .last_message
+
+        fetch_message_task = cls.bot.loop.create_task(fetch_latest_message(cls))
+        result = None
+        while result is None:
+            while not fetch_message_task.done(): pass
+            result = fetch_message_task.result()
+        return result
+
     def test_wish(self):
         pass
 
