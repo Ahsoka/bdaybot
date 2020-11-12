@@ -54,6 +54,7 @@ class TestBdaybot(unittest.TestCase):
         task = cls.bot.loop.create_task(cls.send_message(message))
         if wait:
             while not task.done(): pass
+            return task.result()
         return task
 
     @staticmethod
@@ -106,9 +107,9 @@ class TestBdaybot(unittest.TestCase):
     async def send_message(cls, message):
         await cls.bot.wait_until_ready()
         # cls.bot._skip_check = lambda id1, id2: False
-        await cls.bot.get_guild(BDAY_SERVER_ID) \
-                     .get_channel(TESTING_CHANNEL_ID) \
-                     .send(message)
+        return await cls.bot.get_guild(BDAY_SERVER_ID) \
+                            .get_channel(TESTING_CHANNEL_ID) \
+                            .send(message)
 
     @classmethod
     def get_latest_message(cls):
