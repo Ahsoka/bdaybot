@@ -49,7 +49,12 @@ STARSHIP_SERVER_ANNOUNCEMENTS_ID = 675806642696093759
 TESTING_CHANNEL_ID = 769671372963971072
 
 class TestBdaybot(unittest.TestCase):
-    speak = classmethod(lambda cls, message: cls.bot.loop.create_task(cls.send_message(message)))
+    @classmethod
+    def speak(cls, message, wait=False):
+        task = cls.bot.loop.create_task(cls.send_message(message))
+        if wait:
+            while not task.done(): pass
+        return task
 
     @staticmethod
     def run_bot(bot, token):
