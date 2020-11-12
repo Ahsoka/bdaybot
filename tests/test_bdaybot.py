@@ -196,7 +196,7 @@ class TestBdaybot(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.speak(f'{cls.command_prefix}.quit')
+        cls.speak(f'{cls.command_prefix}.quit', wait=True)
         atexit._clear()
         cls.conn.close()
         cls.postgres_db.close()
