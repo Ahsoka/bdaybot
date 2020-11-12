@@ -93,7 +93,7 @@ class TestBdaybot(unittest.TestCase):
         cls.bot = bdaybot(command_prefix=cls.command_prefix + '.')
         cls.executor = ThreadPoolExecutor()
         bot_thread = cls.executor.submit(cls.run_bot, cls.bot, token=os.environ['testing_token'])
-        cls.speak('-'*5 +  'Starting Unit Tests!' + '-'*5)
+        cls.speak(f"**{'-'*5} Starting Unit Tests! {'-'*5}**")
 
     @classmethod
     async def send_message(cls, message):
