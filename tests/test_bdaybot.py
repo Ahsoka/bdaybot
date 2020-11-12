@@ -3,12 +3,13 @@ import sys
 two_levels_up = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(two_levels_up))
 
+import os
+import time
 import unittest
 import argparse
 import logging
 import asyncio
-import os
-import time
+import warnings
 import sqlite3, psycopg2
 from concurrent.futures import ThreadPoolExecutor
 
@@ -96,6 +97,7 @@ class TestBdaybot(unittest.TestCase):
         cls.bot = bdaybot(command_prefix=cls.command_prefix + '.')
         cls.executor = ThreadPoolExecutor()
         bot_thread = cls.executor.submit(cls.run_bot, cls.bot, token=os.environ['testing_token'])
+        warnings.simplefilter('ignore', category=DeprecationWarning)
         cls.speak(f"**{'-'*5} Starting Unit Tests! {'-'*5}**")
 
     @classmethod
