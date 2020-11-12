@@ -158,6 +158,13 @@ class TestBdaybot(unittest.TestCase):
     def test_getID(self):
         pass
 
+    def tearDown(self):
+        with self.conn:
+            cursor = self.conn.cursor()
+            # Delete all the data from the discord_users table
+            # but not the table itself
+            cursor.execute("DELETE FROM discord_users")
+
     @classmethod
     def tearDownClass(cls):
         cls.speak(f'{cls.command_prefix}.quit')
