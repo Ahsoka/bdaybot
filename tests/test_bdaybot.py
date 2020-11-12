@@ -77,6 +77,29 @@ class TestBdaybot(unittest.TestCase):
         db_conn.close()
 
     @classmethod
+    async def send_message(cls, message):
+        await cls.bot.wait_until_ready()
+        # cls.bot._skip_check = lambda id1, id2: False
+        return await cls.bot.get_guild(BDAY_SERVER_ID) \
+                            .get_channel(TESTING_CHANNEL_ID) \
+                            .send(message)
+
+    @classmethod
+    def get_latest_message(cls):
+        async def fetch_latest_message(cls):
+            await cls.bot.wait_until_ready()
+            return cls.bot.get_guild(BDAY_SERVER_ID) \
+                          .get_channel(TESTING_CHANNEL_ID) \
+                          .last_message
+
+        fetch_message_task = cls.bot.loop.create_task(fetch_latest_message(cls))
+        result = None
+        while result is None:
+            while not fetch_message_task.done(): pass
+            result = fetch_message_task.result()
+        return result
+
+    @classmethod
     def setUpClass(cls):
         cls.postgres_db = psycopg2.connect(dbname='botsdb',
                                            host=os.environ['host'],
@@ -102,29 +125,6 @@ class TestBdaybot(unittest.TestCase):
         bot_thread = cls.executor.submit(cls.run_bot, cls.bot, token=os.environ['testing_token'])
         warnings.simplefilter('ignore', category=DeprecationWarning)
         cls.speak(f"**{'-'*5} Starting Unit Tests! {'-'*5}**")
-
-    @classmethod
-    async def send_message(cls, message):
-        await cls.bot.wait_until_ready()
-        # cls.bot._skip_check = lambda id1, id2: False
-        return await cls.bot.get_guild(BDAY_SERVER_ID) \
-                            .get_channel(TESTING_CHANNEL_ID) \
-                            .send(message)
-
-    @classmethod
-    def get_latest_message(cls):
-        async def fetch_latest_message(cls):
-            await cls.bot.wait_until_ready()
-            return cls.bot.get_guild(BDAY_SERVER_ID) \
-                          .get_channel(TESTING_CHANNEL_ID) \
-                          .last_message
-
-        fetch_message_task = cls.bot.loop.create_task(fetch_latest_message(cls))
-        result = None
-        while result is None:
-            while not fetch_message_task.done(): pass
-            result = fetch_message_task.result()
-        return result
 
     def setUp(self):
         cursor = self.postgres_db.cursor()
