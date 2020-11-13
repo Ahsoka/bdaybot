@@ -51,7 +51,7 @@ TESTING_CHANNEL_ID = 769671372963971072
 
 class TestBdaybot(unittest.TestCase):
     @classmethod
-    def speak(cls, message, wait=False):
+    def speak(cls, message, wait=True):
         task = cls.bot.loop.create_task(cls.send_message(message))
         if wait:
             while not task.done(): pass
