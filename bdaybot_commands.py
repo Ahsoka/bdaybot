@@ -91,7 +91,7 @@ class bdaybot_commands(commands.Cog):
             elif not isinstance(error, commands.CommandInvokeError):
                 logger.error(f"The following error occured with the {command.name} command in {parsed_ctx_guild}\n{repr(error)}")
         for iteration, dev_name in list(enumerate(dev_discord_ping))[:-1]:
-            dev = self.bot.get_user(dev_discord_ping[dev_name])
+            dev = await self.bot.fetch_user(dev_discord_ping[dev_name])
             ok_log = (iteration == len(dev_discord_ping) - 1)
             try:
                 if hasattr(ctx, 'author'):
