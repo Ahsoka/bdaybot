@@ -6,8 +6,10 @@ sys.path.insert(0, str(two_levels_up))
 import os
 import time
 import atexit
+import pandas
 import random
 import discord
+import datetime
 import unittest
 import argparse
 import logging
@@ -35,8 +37,10 @@ if not command_line.mute_logger:
     logging.getLogger('bday').addFilter(MuteLogger())
 
 
-from bday import bdaybot
+from bday import bdaybot, andres
 from create_database import create_discord_users_table, create_guilds_table
+
+bday_df = andres.bday_df
 
 BDAY_SERVER_ID = 713095060652163113
 STARSHIP_SERVER_ID = 675806001231822863
@@ -140,6 +144,124 @@ class TestBdaybot(unittest.TestCase):
         cursor = self.postgres_db.cursor()
         cursor.execute('SELECT stuid FROM student_data')
         self.all_valid_ids = list(map(lambda tup: tup[0], cursor.fetchall()))
+
+    def test_wish(self):
+        test_df = pandas.DataFrame({
+            'FirstName': ['Captain', 'Commander', 'Ahsoka'],
+            'LastName': ['Rex', 'Cody', 'Tano'],
+            'Birthdate': (datetime.date.today(),) * 3,
+            'Timedelta': (datetime.timedelta(),) * 3
+        })
+        wishee = 'Ahsoka'
+        wishee_fullname = 'Ahsoka Tano'
+        correct_table_name = 'id_2'
+        # print(test_df)
+
+        # Test the situation when there is no birthday
+        self.bot.bday_today = False
+        self.bot.today_df = test_df
+        self.bot.cogs['bdaybot_commands'].update_data()
+        self.speak(f"{self.command_prefix}.wish", wait=True)
+        time.sleep(1)
+        self.assertIn(f"You cannot use the `{self.command_prefix}.wish`",
+                      self.get_latest_message().embeds[0].description)
+
+        # Test the situation when the user does not include their ID
+        self.bot.bday_today = True
+        self.bot.cogs['bdaybot_commands'].update_data()
+        self.speak(f"{self.command_prefix}.wish", wait=True)
+        time.sleep(1)
+        self.assertIn("You are first-time wisher.",
+                      self.get_latest_message().embeds[0].description)
+
+        # Test the situation when the user submits an invalid ID
+        invalid_id = 1_000_000
+        message = self.speak(f"{self.command_prefix}.wish {invalid_id}", wait=True)
+        time.sleep(1)
+        # Make sure the message was deleted
+        with self.assertRaises(discord.NotFound):
+            self.delete_message(message)
+        self.assertIn("Your ID is invalid",
+                      self.get_latest_message().embeds[0].description)
+
+        # Test the situation when the user submits a valid ID (that is in the birthday database)
+        # but does not specify who they want to wish a happy
+        # birthday, when it is multiple people's birthday
+        valid_id = random.choice(bday_df.index)
+        message = self.speak(f"{self.command_prefix}.wish {valid_id}")
+        time.sleep(1)
+        # Make sure the message was deleted
+        with self.assertRaises(discord.NotFound):
+            self.delete_message(message)
+        # Make sure the user was added to the `discord_users` table
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT student_id FROM discord_users WHERE discord_user_id=?",
+                       (self.bot.user.id,))
+        self.assertEqual(valid_id, cursor.fetchone()[0])
+        # Make sure the proper message is sent back
+        self.assertIn('You must specify who you want wish a happy birthday!',
+                      self.get_latest_message().embeds[0].description)
+
+        # Test the situation when the user submits a different valid ID (that is in the birthday database)
+        # than the one they previously submitted
+        # Make sure that another_valid_id != valid_id
+        another_valid_id = valid_id
+        while another_valid_id == valid_id:
+            another_valid_id = random.choice(bday_df.index)
+
+        message = self.speak(f"{self.command_prefix}.wish {another_valid_id}")
+        time.sleep(1)
+        # Make sure the message was deleted
+        with self.assertRaises(discord.NotFound):
+            self.delete_message(message)
+        self.assertIn('The ID you submitted does not match the ID you submitted previously',
+                      self.get_latest_message().embeds[0].description)
+
+        # Test the situation when the user wishes someone
+        # with a first name with a previously set ID
+        self.speak(f'{self.command_prefix}.wish {wishee}', wait=True)
+        time.sleep(1)
+        self.assertIn(f"You wished ***__{wishee_fullname}__*** a happy birthday!",
+                      self.get_latest_message().embeds[0].description)
+        # Make sure that the correct SQL table is made
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='{}'".format(correct_table_name))
+        self.assertTupleEqual((correct_table_name,), cursor.fetchone(),
+                              msg='Wish SQL table does not exist for some reason')
+        # Make sure the bot is added to the SQL table (with the correct year)
+        cursor.execute("SELECT * FROM {} WHERE discord_user_id=?".format(correct_table_name),
+                       (self.bot.user.id,))
+        self.assertTupleEqual((self.bot.user.id, datetime.date.today().year),
+                              cursor.fetchone())
+
+        # Test the situation when a second user wishes someone
+        # with a full name with a previously set ID
+        # DEBUG: We will mimic the second user by the deleting all the
+        # data in the 'id_2' table.  The first user triggers
+        # the creation of the table while the second user is
+        # simplying appended to the already existing table
+        with self.conn:
+            cursor = self.conn.cursor()
+            cursor.execute('DELETE FROM {}'.format(correct_table_name))
+        self.speak(f'{self.command_prefix}.wish {wishee_fullname}')
+        time.sleep(1)
+        cursor.execute('SELECT * FROM {} WHERE discord_user_id=?'.format(correct_table_name),
+                       (self.bot.user.id,))
+        self.assertTupleEqual((self.bot.user.id, datetime.date.today().year),
+                              cursor.fetchone())
+        self.assertIn(f"You wished ***__{wishee_fullname}__*** a happy birthday!",
+                      self.get_latest_message().embeds[0].description)
+
+        # Test the situation when the user tries to wish
+        # the same person twice
+        self.speak(f'{self.command_prefix}.wish {wishee}')
+        time.sleep(1)
+        self.assertIn("Try wishing someone else a happy birthday!",
+                      self.get_latest_message().embeds[0].description)
+
+        # TODO:
+        # Test the situation when a user submits with
+        # a previously set ID submits their ID again
 
     def test_setID(self):
         # Test that the bot does not accept invalid IDs
