@@ -226,9 +226,21 @@ class TestBdaybot(unittest.TestCase):
     def tearDown(self):
         with self.conn:
             cursor = self.conn.cursor()
-            # Delete all the data from the discord_users table
-            # but not the table itself
-            cursor.execute("DELETE FROM discord_users")
+            # This loop is try to execute
+            # the given SQL query a maximum
+            # of 10 times before raising an error
+            # This loop is needed because the table
+            # might be 'locked' because another
+            # connection is using it.
+            for iterr in range(10):
+                try:
+                    # Delete all the data from the discord_users table
+                    # but not the table itself
+                    cursor.execute("DELETE FROM discord_users")
+                    break
+                except sqlite3.OperationalError as error:
+                    if 'database table is locked' != str(error) or iterr == 9:
+                        raise
 
     @classmethod
     def tearDownClass(cls):
