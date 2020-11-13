@@ -4,12 +4,12 @@ import os
 import datetime
 import asyncio
 import data as andres
+import psycopg2
+import sqlite3
 import logs
-from argparser import args as command_line
 from dotenv import load_dotenv
 from bdaybot_commands import emoji_urls, bdaybot_commands, \
-                             bdaybot_helpcommand, dev_discord_ping, \
-                             connection, cursor, SQL
+                             bdaybot_helpcommand, dev_discord_ping
 
 # Check here for any issues relating to the API ➡ https://status.discord.com/
 # Tested with discord.__version__ == 1.3.4
@@ -32,26 +32,42 @@ class bdaybot(commands.Bot):
     cushion_delay = 5
 
     def __init__(self, *args, **kwargs):
-        testing = command_line.testing
-        if testing:
-            try:
-                self.TOKEN = os.environ['testing_token']
-                logger.info("Succesfully accessed the enviroment variable 'testing_token'")
-            except KeyError as error:
-                logger.critical("Failed to access the environment variable 'testing_token'.")
-                raise error
-        else:
-            try:
-                self.TOKEN = os.environ['Bday_Token']
-                logger.info("Succesfully accessed the enviroment variable 'Bday_Token'.")
-            except KeyError as error:
-                logger.critical("Failed to access the environment variable 'Bday_Token'.")
-                raise error
         self.bday_today, self.today_df = andres.get_latest()
         super().__init__(*args, **kwargs)
         self.parsed_command_prefix = self.command_prefix[0] if isinstance(self.command_prefix, (list, tuple)) else self.command_prefix
         self.new_day = True
         self.init_connection = False
+
+    # Makes SQL queries shorter and more obvious
+    def SQL(self, *args, autocommit=False, first_item=False, **kwargs):
+        cursor = self.db_conn.cursor()
+        if isinstance(self.db_conn, sqlite3.Connection) and args:
+            if 'student_data' in args[0]:
+                if not hasattr(self, 'postgres_db'):
+                    try:
+                        self.postgres_db = psycopg2.connect(dbname='botsdb')
+                    except psycopg2.OperationalError:
+                        self.postgres_db = psycopg2.connect(dbname='botsdb',
+                                                            host=os.environ['host'],
+                                                            user=os.environ['dbuser'],
+                                                            password=os.environ['password'])
+                cursor = self.postgres_db.cursor()
+            else:
+                args = list(args)
+                args[0] = args[0].replace('%s', '?')
+        advance = kwargs.pop('next', False)
+        if autocommit:
+            with self.db_conn:
+                cursor.execute(*args, **kwargs)
+                return
+        else:
+            cursor.execute(*args, **kwargs)
+        if first_item or advance:
+            returning = cursor.fetchone()
+            if returning is None:
+                raise StopIteration
+            return returning[0] if first_item else returning
+        return cursor.fetchall()
 
     async def on_connect(self):
         if self.init_connection:
@@ -59,21 +75,20 @@ class bdaybot(commands.Bot):
 
     async def on_ready(self):
         if not self.init_connection:
-            self.add_cog(bdaybot_commands(self))
             self.help_command = bdaybot_helpcommand()
 
             for guild in self.guilds:
                 try:
-                    channel_id = SQL("SELECT announcements_id FROM guilds WHERE guild_id=%s", (guild.id,), first_item=True)
+                    channel_id = self.SQL("SELECT announcements_id FROM guilds WHERE guild_id=%s", (guild.id,), first_item=True)
                     channel = guild.get_channel(channel_id)
                     if channel is None:
                         logger.warning(f"The bot detect the announcements channel in {guild} was deleted. "
                                         "The owner has been sent a message prompting them to set a new announcements channel.")
                         guild.owner.send((f"In **{guild}**, the announcements channel appears to have been deleted. Please use "
                                             f"`{self.parsed_command_prefix}setannouncements` to set a new announcements channel."))
-                        SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=%s", (guild.id,), autocommit=True)
+                        self.SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=%s", (guild.id,), autocommit=True)
                     elif not self.permissions(channel, guild.get_member(self.user.id), 'send_messages'):
-                        SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=%s", (guild.id,), autocommit=True)
+                        self.SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=%s", (guild.id,), autocommit=True)
                         # TODO: Keep an eye on Discord mobile because they might change it so it does not always say '#invalid-channel' and actually shows the channel
                         channel_mention = f'**#{channel}**' if guild.owner.is_on_mobile() else channel.mention
                         logger.warning((f"The bot detected '{channel}' as the announcements channel, however, "
@@ -89,7 +104,7 @@ class bdaybot(commands.Bot):
                 except StopIteration:
                     for iteration, channel in enumerate(guild.text_channels):
                         if "announcement" in channel.name.lower():
-                            SQL("INSERT INTO guilds(guild_id, announcements_id) VALUES(%s, %s)", (guild.id, channel.id), autocommit=True)
+                            self.SQL("INSERT INTO guilds(guild_id, announcements_id) VALUES(%s, %s)", (guild.id, channel.id), autocommit=True)
                             channel_mention = f'**#{channel}**' if guild.owner.is_on_mobile() else channel.mention
                             logger.info(f"The bot sent a DM message to {guild.owner} confirming the announcements channel was correct, "
                                         f"since it is the bot's first time in {guild}.")
@@ -103,6 +118,7 @@ class bdaybot(commands.Bot):
                                                     f"I was unable to find your announcements channel. Please use `{self.parsed_command_prefix}setannouncements` "
                                                     "to set the announcements channel."))
 
+            self.add_cog(bdaybot_commands(self, self.db_conn))
 
             self.tasks_running = {'send_bdays': True, 'change_nicknames': True, 'change_roles': True}
             # ALWAYS start send_bdays before any other coroutine!
@@ -142,7 +158,7 @@ class bdaybot(commands.Bot):
 
     async def on_guild_channel_update(self, before, after):
         relevant_channel = False
-        for guild_id, channel_id in SQL("SELECT guild_id, announcements_id FROM guilds"):
+        for guild_id, channel_id in self.SQL("SELECT guild_id, announcements_id FROM guilds"):
             if after.id == channel_id:
                 relevant_channel = True
                 break
@@ -157,7 +173,7 @@ class bdaybot(commands.Bot):
         if after == self.user and before.roles != after.roles:
             guild = after.guild
             missing_manage_roles = False
-            channel_id, role_id = SQL("SELECT announcements_id, role_id FROM guilds WHERE guild_id=%s", (guild.id,), next=True)
+            channel_id, role_id = self.SQL("SELECT announcements_id, role_id FROM guilds WHERE guild_id=%s", (guild.id,), next=True)
             try:
                 await self.cogs['bdaybot_commands'].update_role.can_run(self.fake_ctx('update_role', guild))
                 if role_id not in map(lambda role: role.id, after.roles):
@@ -172,7 +188,7 @@ class bdaybot(commands.Bot):
             if channel is not None and not self.permissions(channel, after, 'send_messages'):
                 channel_mention = f'**#{channel}**' if after.guild.owner.is_on_mobile() else channel.mention
                 beginning = "Additionally," if missing_manage_roles else f"While changing my roles you or someone in **{guild}** made it so"
-                SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=%s", (guild.id,), autocommit=True)
+                self.SQL("UPDATE guilds SET announcements_id=NULL WHERE guild_id=%s", (guild.id,), autocommit=True)
                 await guild.owner.send((f"{beginning} I can no longer send messages in {channel_mention}. "
                                         f"Therefore, {channel_mention} is no longer the announcements channel. "
                                         f"If you want to set a new announcements channel please use `{self.parsed_command_prefix}setannouncements`."))
@@ -194,15 +210,15 @@ class bdaybot(commands.Bot):
         self.new_day = True
 
         if self.bday_today:
-            delete_guilds = [guild_id[0] for guild_id in SQL("SELECT guild_id FROM guilds") if guild_id[0] not in map(lambda guild: guild.id, self.guilds)]
+            delete_guilds = [guild_id[0] for guild_id in self.SQL("SELECT guild_id FROM guilds") if guild_id[0] not in map(lambda guild: guild.id, self.guilds)]
             for guild_id in delete_guilds:
-                SQL("DELETE FROM guilds WHERE guild_id=%s", (guild_id,), autocommit=True)
+                self.SQL("DELETE FROM guilds WHERE guild_id=%s", (guild_id,), autocommit=True)
             if len(delete_guilds) >= 1:
                 optional_s = '' if len(delete_guilds) == 1 else 's'
                 logger.info(f"Deleted {len(delete_guilds)} guild{optional_s} the bot was no longer in from the SQL database")
 
             for guild in self.guilds:
-                channel = guild.get_channel(SQL("SELECT announcements_id FROM guilds WHERE guild_id=%s", (guild.id,), first_item=True))
+                channel = guild.get_channel(self.SQL("SELECT announcements_id FROM guilds WHERE guild_id=%s", (guild.id,), first_item=True))
                 print(guild, channel)
                 if channel is None:
                     await guild.owner.send((f"While trying to send the birthday message, I failed to find the announcements channel in **{guild}**. "
@@ -259,7 +275,7 @@ class bdaybot(commands.Bot):
     async def change_nicknames(self):
         # print(f"Next iteration is at {format(self.change_nicknames.next_iteration.astimezone(), '%I:%M:%S %p (%x)')}")
         if self.new_day:
-            SQL("UPDATE guilds SET nickname_notice=false", autocommit=True)
+            self.SQL("UPDATE guilds SET nickname_notice=false", autocommit=True)
             self.new_day = False
             for guild in self.guilds:
                 await self.invoke(self.fake_ctx('update_nickname', guild))
@@ -304,7 +320,7 @@ class bdaybot(commands.Bot):
         # f"Upcoming Birthday for {full_name}{mention} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
         for iteration, (id, series) in enumerate(self.today_df.iterrows()):
             try:
-                user = self.get_user(SQL("SELECT discord_user_id FROM discord_users WHERE student_id=%s", (id,), first_item=True))
+                user = self.get_user(self.SQL("SELECT discord_user_id FROM discord_users WHERE student_id=%s", (id,), first_item=True))
                 # TODO: Delete users if self.get_user(...) returns None
                 if iteration == 0 and user is not None:
                     await user.send(f"Happy birthday from me {self.user.mention} and all the developers of the bdaybot! Hope you have an awesome birthday!")
@@ -381,9 +397,8 @@ class bdaybot(commands.Bot):
         else:
             return getattr(perms, permissions)
 
-    def run(self, *args, token=None, **kwargs):
-        if token is None:
-            token = self.TOKEN
+    def run(self, db_conn, *args, token=None, **kwargs):
+        self.db_conn = db_conn
         super().run(token, *args, **kwargs)
 
     async def close(self):
@@ -398,6 +413,11 @@ class bdaybot(commands.Bot):
 
         self.change_roles.stop()
         logger.info("The 'change_roles()' task was gracefully ended.")
+        if hasattr(self, 'postgres_db'):
+            self.postgres_db.close()
+        if hasattr(self.cogs['bdaybot_commands'], 'postgres_db'):
+            self.cogs['bdaybot_commands'].postgres_db.close()
+
         await super().close()
 
     async def on_command_error(self, ctx, error):
@@ -413,7 +433,15 @@ class bdaybot(commands.Bot):
             logger.debug(f"{ctx.author} tried to invoke the invalid command '{ctx.message.content}'.")
             # TODO maybe: Add a did you mean 'X' command, if u want.
 
-bot = bdaybot(command_prefix=('+', 'b.'), case_insensitive=True)
-bot.run()
+bdaybot_commands.SQL = bdaybot.SQL
 
-connection.close()
+if __name__ == '__main__':
+    from argparser import args as command_line
+    try:
+        connection, token = (sqlite3.connect(command_line.database), os.environ['testing_token']) if command_line.testing else (psycopg2.connect(dbname='botsdb'), os.environ['Bday_token'])
+    except KeyError:
+        logger.critical('Failed to access the token in environment variables')
+        raise
+    bot = bdaybot(command_prefix=('+', 'b.'), case_insensitive=True)
+    bot.run(connection, token=token)
+    connection.close()
