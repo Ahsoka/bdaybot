@@ -81,13 +81,12 @@ except psycopg2.OperationalError:
 official_student_df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
 logger.info(f"Sucessfully accessed TABLE student_data in the botsdb database (PostgreSQL)")
 temp_connection.close()
-official_student_df.rename(columns={'stuid':'StuID', 'firstname':'FirstName', 'lastname':'LastName', 'grd':'Grd'}, inplace=True)
 # print(official_student_df)
-bday_df = bday_df[bday_df['StuID'].isin(official_student_df['StuID'])]
+bday_df = bday_df[bday_df['StuID'].isin(official_student_df['stuid'])]
 bday_df.drop_duplicates(['StuID'], inplace=True)
 bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
-bday_df.set_index('StuID', inplace=True); official_student_df.set_index('StuID', inplace=True)
-bday_df[['FirstName', 'LastName']] = official_student_df[['FirstName', 'LastName']]
+bday_df.set_index('StuID', inplace=True); official_student_df.set_index('stuid', inplace=True)
+bday_df[['AddrLine1', 'AddrLine2', 'City', 'State', 'Zipcode', 'FirstName', 'LastName']] = official_student_df[['addrline1', 'addrline2', 'city', 'state', 'zipcode', 'firstname', 'lastname']]
 bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
 logger.info("Sucessfully created and modified the 'bday_df' DataFrame")
 
