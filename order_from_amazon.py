@@ -1,7 +1,6 @@
 import os
 import time
 import json
-import click
 import pathlib
 import itertools
 from selenium import webdriver
