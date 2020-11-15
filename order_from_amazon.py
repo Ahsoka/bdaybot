@@ -24,7 +24,9 @@ def fill_password(driver, password, timeout=2):
 def format_address(address):
     return address.upper() \
                   .replace('AVENUE', 'AVE') \
-                  .replace('LANE', 'LN')
+                  .replace('LANE', 'LN') \
+                  .replace('DRIVE', 'DR') \
+                  .replace('BOULEVARD', 'BLVD')
                   # Add more here as you encounter more addresses
 
 def order_product(ASIN,
