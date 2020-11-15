@@ -668,7 +668,7 @@ class bdaybot_helpcommand(commands.HelpCommand):
                             "By default it will show you the next 5 upcoming birthdays. "
                             "However, you can choose the number of birthday you would like, by using this format "
                             f"`{ctx.prefix}upcoming " "{number}`" f" e.g. To see the next 3 birthdays use `{ctx.prefix}upcoming 3`\n"
-                            "\nValid numbers are between 1 and 8.  If you use a number larger than 8 only the first 8 upcoming birthdays will be shown.")
+                            "\nValid numbers are between 1 and 10.  If you use a number larger than 10 only the first 10 upcoming birthdays will be shown.")
             command_embed = discord.Embed(description=description).set_author(name="Upcoming Command", icon_url=emoji_urls.calendar) \
                             .set_footer(text=f"{ctx.prefix}up is an alias")
         elif command.name == 'help':
