@@ -79,7 +79,6 @@ bday_df = pandas.concat([pandas.DataFrame(data_dict),
                          })])
 
 bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
-# official_student_df = pandas.concat([pandas.read_csv('Student Locator Spring 2020.csv', usecols=['StuID', 'LastName', 'FirstName', 'Grd']), pandas.DataFrame({'StuID': [123456], 'LastName': ['Neat'], 'FirstName': ['Dr.'], 'Grd': [-1]})])
 
 try:
     temp_connection = psycopg2.connect(dbname='botsdb')
