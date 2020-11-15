@@ -39,6 +39,7 @@ def order_product(ASIN,
                   remove_address=True,
                   quit=True):
     try:
+        driver = None
         added_address = False
         if os.name == 'posix':
             chrome_options = webdriver.ChromeOptions()
@@ -192,27 +193,28 @@ def order_product(ASIN,
             place_order_button.click()
             WebDriverWait(driver, 10).until(EC.invisibility_of_element((By.ID, 'loading-spinner-img')))
     finally:
-        if remove_address and added_address:
-            driver.get("https://amazon.com/")
-            account_button = WebDriverWait(driver, 10) \
-                             .until(EC.presence_of_element_located((By.ID, 'nav-link-accountList')))
-            account_button.click()
-            addresses_button = WebDriverWait(driver, 10) \
-                               .until(EC.presence_of_element_located((By.LINK_TEXT, 'Your addresses')))
-            addresses_button.click()
-            fill_password(driver, os.environ['AMAZON_PASSWORD'])
-            for number in itertools.count():
-                if number == 0:
-                    address_tile = WebDriverWait(driver, 10) \
-                                   .until(EC.presence_of_element_located((By.ID, f'ya-myab-display-address-block-{number}')))
-                else:
-                    address_tile = driver.find_element_by_id(f'ya-myab-display-address-block-{number}')
-                address_text = address_tile.find_element_by_id('address-ui-widgets-AddressLineOne').text
-                if address_text == format_address(ADDRESS_LINE_ONE):
-                    delete_address_button = driver.find_element_by_id(f'ya-myab-address-delete-btn-{number}')
-                    delete_address_button.click()
-                    confirm_delete_address_form = driver.find_element_by_css_selector('.a-column.a-span8>form')
-                    confirm_delete_address_form.submit()
-                    break
-        if quit:
-            driver.quit()
+        if driver:
+            if remove_address and added_address:
+                driver.get("https://amazon.com/")
+                account_button = WebDriverWait(driver, 10) \
+                                 .until(EC.presence_of_element_located((By.ID, 'nav-link-accountList')))
+                account_button.click()
+                addresses_button = WebDriverWait(driver, 10) \
+                                   .until(EC.presence_of_element_located((By.LINK_TEXT, 'Your addresses')))
+                addresses_button.click()
+                fill_password(driver, os.environ['AMAZON_PASSWORD'])
+                for number in itertools.count():
+                    if number == 0:
+                        address_tile = WebDriverWait(driver, 10) \
+                                       .until(EC.presence_of_element_located((By.ID, f'ya-myab-display-address-block-{number}')))
+                    else:
+                        address_tile = driver.find_element_by_id(f'ya-myab-display-address-block-{number}')
+                    address_text = address_tile.find_element_by_id('address-ui-widgets-AddressLineOne').text
+                    if address_text == format_address(ADDRESS_LINE_ONE):
+                        delete_address_button = driver.find_element_by_id(f'ya-myab-address-delete-btn-{number}')
+                        delete_address_button.click()
+                        confirm_delete_address_form = driver.find_element_by_css_selector('.a-column.a-span8>form')
+                        confirm_delete_address_form.submit()
+                        break
+            if quit:
+                driver.quit()
