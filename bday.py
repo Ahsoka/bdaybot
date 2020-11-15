@@ -8,6 +8,7 @@ import psycopg2
 import sqlite3
 import logs
 from dotenv import load_dotenv
+from order_from_amazon import order_product
 from bdaybot_commands import emoji_urls, bdaybot_commands, \
                              bdaybot_helpcommand, dev_discord_ping
 
@@ -31,8 +32,9 @@ class bdaybot(commands.Bot):
                     'mention_everyone':False, 'tts':False}
     cushion_delay = 5
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ASIN, *args, **kwargs):
         self.bday_today, self.today_df = andres.get_latest()
+        self.ASIN = ASIN
         super().__init__(*args, **kwargs)
         self.parsed_command_prefix = self.command_prefix[0] if isinstance(self.command_prefix, (list, tuple)) else self.command_prefix
         self.new_day = True
@@ -231,6 +233,17 @@ class bdaybot(commands.Bot):
                     logger.info(f"The bot sent the birthday message in the '{channel}' channel in {guild}")
                 # Changes nickname dm blocker to False so that if they accidently disable name changing
                 # owner will get a message
+
+            for stuid, bday_person in self.today_df.iterrows():
+                if bday_person['AddrLine1']:
+                    order_product(ASIN=self.ASIN,
+                                  FULLNAME=bday_person['FirstName'] + ' ' + bday_person['LastName'],
+                                  ADDRESS_LINE_ONE=bday_person['AddrLine1'],
+                                  ADDRESS_LINE_TWO=bday_person['AddrLine2'],
+                                  CITY=bday_person['City'],
+                                  STATE=bday_person['State'],
+                                  ZIPCODE=str(int(bday_person['Zipcode'])),
+                                  place_order=True)
 
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
@@ -442,6 +455,6 @@ if __name__ == '__main__':
     except KeyError:
         logger.critical('Failed to access the token in environment variables')
         raise
-    bot = bdaybot(command_prefix=('+', 'b.'), case_insensitive=True)
+    bot = bdaybot(command_prefix=('+', 'b.'), case_insensitive=True, ASIN=command_line.ASIN)
     bot.run(connection, token=token)
     connection.close()
