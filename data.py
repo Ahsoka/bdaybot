@@ -66,7 +66,18 @@ def timedelta_today(date):
     # delta = date - datetime.date.today().replace(day=20)
     return delta if delta >= datetime.timedelta() else delta + datetime.timedelta(days=365)
 
-bday_df = pandas.DataFrame(data_dict)
+bday_df = pandas.concat([pandas.DataFrame(data_dict),
+                         pandas.DataFrame({
+                            'PeriodNumber': [-1],
+                            'Birthdate': ['2020-11-15'],
+                            'Birthyear': [2020], # Use 2020 since we don't know her birthyear
+                            'Radio': [None],
+                            'Question #1': [None],
+                            'Question #2': [None],
+                            'Question #3': [None],
+                            'StuID': [1]
+                         })])
+
 bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
 # official_student_df = pandas.concat([pandas.read_csv('Student Locator Spring 2020.csv', usecols=['StuID', 'LastName', 'FirstName', 'Grd']), pandas.DataFrame({'StuID': [123456], 'LastName': ['Neat'], 'FirstName': ['Dr.'], 'Grd': [-1]})])
 
