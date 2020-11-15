@@ -1,8 +1,9 @@
 import os
 import time
 import json
-import itertools
 import click
+import pathlib
+import itertools
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.common.by import By
@@ -40,7 +41,14 @@ def order_product(ASIN,
                   quit=True):
     try:
         added_address = False
-        driver = webdriver.Chrome('chrome86-driver.exe')
+        if os.name == 'posix':
+            chrome_options = webdriver.ChromeOptions()
+            chrome_options.add_argument('--headless'); # chrome_options.add_argument('--no-sandbox')
+            driver = webdriver.Chrome(executable_path='chrome86-driver',
+                                      chrome_options=chrome_options,
+                                      service_args=['--verbose', f'--log-path={pathlib.Path('logs/chrome-logs')}'])
+        else:
+            driver = webdriver.Chrome('chrome86-driver.exe')
 
         driver.get("https://amazon.com/")
 
