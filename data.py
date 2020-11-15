@@ -91,7 +91,7 @@ except psycopg2.OperationalError:
 official_student_df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
 logger.info(f"Sucessfully accessed TABLE student_data in the botsdb database (PostgreSQL)")
 temp_connection.close()
-# print(official_student_df)
+
 bday_df = bday_df[bday_df['StuID'].isin(official_student_df['stuid'])]
 bday_df.drop_duplicates(['StuID'], inplace=True)
 bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
