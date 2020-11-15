@@ -37,6 +37,7 @@ def order_product(ASIN,
                   ADDRESS_LINE_TWO=None,
                   place_order=False,
                   remove_address=True,
+                  screenshot=None,
                   quit=True):
     try:
         driver = None
@@ -194,6 +195,8 @@ def order_product(ASIN,
             WebDriverWait(driver, 10).until(EC.invisibility_of_element((By.ID, 'loading-spinner-img')))
     finally:
         if driver:
+            if screenshot:
+                driver.save_screenshot(str(pathlib.Path(screenshot).resolve()))
             if remove_address and added_address:
                 driver.get("https://amazon.com/")
                 account_button = WebDriverWait(driver, 10) \
