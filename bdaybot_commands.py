@@ -463,19 +463,25 @@ class bdaybot_commands(commands.Cog):
             return
         upcoming_embed = discord.Embed().set_author(name=f"Upcoming Birthday{'s' if num != 1 else ''}", icon_url=emoji_urls.calendar)
         upcoming_df = andres.bday_df.drop(self.today_df.index) if self.bday_today else andres.bday_df
-        if num > 8:
-            upcoming_embed.set_footer(text=f"The input value exceeded 8. Automatically showing the top 8 results.")
-            num = 8
+        # INFO: The maximum without erroring out is 76
+        max_num = 10
+        if num > max_num:
+            upcoming_embed.set_footer(text=f"The input value exceeded max_num. Automatically showing the top max_num results.")
+            num = max_num
 
+        upcoming_bdays = []
         for id, row in upcoming_df.iloc[:num].iterrows():
             try:
                 id = self.SQL("SELECT discord_user_id FROM discord_users WHERE student_id=%s", (id,), first_item=True)
                 mention = self.bot.get_user(id).mention
             except StopIteration:
                 mention = ''
-            upcoming_embed.add_field(name='Name', value=f"{(row['FirstName'] + ' ' + row['LastName'])}{mention}") \
-            .add_field(name='Birthday', value=format(row['Birthdate'], '%b %d')) \
-            .add_field(name='Upcoming In', value=f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}")
+            upcoming_bdays.append([f"{(row['FirstName'] + ' ' + row['LastName'])}{mention}",
+                                   format(row['Birthdate'], '%b %d'),
+                                   f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}"])
+        upcoming_embed.add_field(name='Name', value='\n'.join(map(lambda iterr: iterr[0], upcoming_bdays))) \
+                      .add_field(name='Birthday', value='\n'.join(map(lambda iterr: iterr[1], upcoming_bdays))) \
+                      .add_field(name='Upcoming In', value='\n'.join(map(lambda iterr: iterr[2], upcoming_bdays)))
 
         # Commented out line below is to mention the user when they use upcoming
         # await ctx.send(f"{ctx.author.mention}", embed=upcoming_embed)
