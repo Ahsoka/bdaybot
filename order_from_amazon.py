@@ -46,7 +46,7 @@ def order_product(ASIN,
             chrome_options.add_argument('--headless'); # chrome_options.add_argument('--no-sandbox')
             driver = webdriver.Chrome(executable_path='chrome86-driver',
                                       chrome_options=chrome_options,
-                                      service_args=['--verbose', f'--log-path={pathlib.Path('logs/chrome-logs')}'])
+                                      service_args=['--verbose', f"--log-path={pathlib.Path('logs/chrome-logs')}"])
         else:
             driver = webdriver.Chrome('chrome86-driver.exe')
 
