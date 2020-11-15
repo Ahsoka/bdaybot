@@ -466,7 +466,7 @@ class bdaybot_commands(commands.Cog):
         # INFO: The maximum without erroring out is 76
         max_num = 10
         if num > max_num:
-            upcoming_embed.set_footer(text=f"The input value exceeded max_num. Automatically showing the top max_num results.")
+            upcoming_embed.set_footer(text=f"The input value exceeded {max_num}. Automatically showing the top {max_num} results.")
             num = max_num
 
         upcoming_bdays = []
