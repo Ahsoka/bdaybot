@@ -455,6 +455,6 @@ if __name__ == '__main__':
     except KeyError:
         logger.critical('Failed to access the token in environment variables')
         raise
-    bot = bdaybot(command_prefix=('+', 'b.'), case_insensitive=True, ASIN=command_line.ASIN)
+    bot = bdaybot(command_prefix='test.' if command_line.testing else ('+', 'b.'), case_insensitive=True, ASIN=command_line.ASIN)
     bot.run(connection, token=token)
     connection.close()
