@@ -137,7 +137,7 @@ class TestBdaybot(unittest.TestCase):
                                eval(f'{server_name}_SERVER_ROLE_ID')))
 
         cls.command_prefix = 'test'
-        cls.bot = bdaybot(ASIN=os.environ['ASIN'], command_prefix=cls.command_prefix + '.')
+        cls.bot = bdaybot(command_prefix=cls.command_prefix + '.')
         cls.executor = ThreadPoolExecutor()
         bot_thread = cls.executor.submit(cls.run_bot, cls.bot, token=os.environ['testing_token'])
         warnings.simplefilter('ignore', category=DeprecationWarning)
