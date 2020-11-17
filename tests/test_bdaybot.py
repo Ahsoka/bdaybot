@@ -38,7 +38,9 @@ if not command_line.mute_logger:
 
 
 from bday import bdaybot, andres
-from create_database import create_discord_users_table, create_guilds_table
+from create_database import (create_discord_users_table,
+                             create_guilds_table,
+                             create_wishes_table)
 
 bday_df = andres.bday_df
 
@@ -126,6 +128,7 @@ class TestBdaybot(unittest.TestCase):
         cursor = cls.conn.cursor()
         with cls.conn:
             cursor.execute('\n'.join(create_discord_users_table.splitlines()[:-2])[:-1] + ')')
+            cursor.execute('\n'.join(create_wishes_table.splitlines()[:-3])[:-1] + ')')
             cursor.execute(create_guilds_table)
             for server_name in ['BDAY', 'STARSHIP']:
                 cursor.execute("INSERT INTO guilds(guild_id, announcements_id, role_id) VALUES(?, ?, ?)",
@@ -154,7 +157,7 @@ class TestBdaybot(unittest.TestCase):
         })
         wishee = 'Ahsoka'
         wishee_fullname = 'Ahsoka Tano'
-        correct_table_name = 'id_2'
+        wishee_id = 2
         # print(test_df)
 
         # Test the situation when there is no birthday
@@ -225,29 +228,22 @@ class TestBdaybot(unittest.TestCase):
                       self.get_latest_message().embeds[0].description)
         # Make sure that the correct SQL table is made
         cursor = self.conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='{}'".format(correct_table_name))
-        self.assertTupleEqual((correct_table_name,), cursor.fetchone(),
-                              msg='Wish SQL table does not exist for some reason')
-        # Make sure the bot is added to the SQL table (with the correct year)
-        cursor.execute("SELECT * FROM {} WHERE discord_user_id=?".format(correct_table_name),
-                       (self.bot.user.id,))
-        self.assertTupleEqual((self.bot.user.id, datetime.date.today().year),
+        # Make sure the bot is added to the wishes table (with the correct year)
+        cursor.execute("SELECT * FROM wishes WHERE discord_user_id=?", (self.bot.user.id,))
+        self.assertTupleEqual((self.bot.user.id, datetime.date.today().year, wishee_id),
                               cursor.fetchone())
 
         # Test the situation when a second user wishes someone
         # with a full name with a previously set ID
         # DEBUG: We will mimic the second user by the deleting all the
-        # data in the 'id_2' table.  The first user triggers
-        # the creation of the table while the second user is
-        # simplying appended to the already existing table
+        # data in the 'wishes' table.
         with self.conn:
             cursor = self.conn.cursor()
-            cursor.execute('DELETE FROM {}'.format(correct_table_name))
+            cursor.execute('DELETE FROM wishes')
         self.speak(f'{self.command_prefix}.wish {wishee_fullname}')
         time.sleep(1)
-        cursor.execute('SELECT * FROM {} WHERE discord_user_id=?'.format(correct_table_name),
-                       (self.bot.user.id,))
-        self.assertTupleEqual((self.bot.user.id, datetime.date.today().year),
+        cursor.execute('SELECT * FROM wishes WHERE discord_user_id=?', (self.bot.user.id,))
+        self.assertTupleEqual((self.bot.user.id, datetime.date.today().year, wishee_id),
                               cursor.fetchone())
         self.assertIn(f"You wished ***__{wishee_fullname}__*** a happy birthday!",
                       self.get_latest_message().embeds[0].description)
