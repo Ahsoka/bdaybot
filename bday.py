@@ -32,7 +32,7 @@ class bdaybot(commands.Bot):
                     'mention_everyone':False, 'tts':False}
     cushion_delay = 5
 
-    def __init__(self, ASIN, place_order=False, *args, **kwargs):
+    def __init__(self, ASIN=None, place_order=False, *args, **kwargs):
         self.bday_today, self.today_df = andres.get_latest()
         self.ASIN = ASIN
         self.place_order = place_order
@@ -236,7 +236,7 @@ class bdaybot(commands.Bot):
                 # owner will get a message
 
             for stuid, bday_person in self.today_df.iterrows():
-                if bday_person['AddrLine1']:
+                if bday_person['AddrLine1'] and self.ASIN:
                     order_product(ASIN=self.ASIN,
                                   FULLNAME=bday_person['FirstName'] + ' ' + bday_person['LastName'],
                                   ADDRESS_LINE_ONE=bday_person['AddrLine1'],
