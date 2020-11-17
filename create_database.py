@@ -32,6 +32,16 @@ create_discord_users_table = """CREATE TABLE discord_users(
                                 FOREIGN KEY(student_id) REFERENCES student_data(StuID) ON DELETE CASCADE
                                 )"""
 
+# SQL Command to create TABLE wishes
+create_wishes_table = """CREATE TABLE wishes(
+                         discord_user_id BIGINT,
+                         year INT,
+                         wishee_stuid INT,
+                         PRIMARY KEY(discord_user_id, year, wishee_stuid),
+                         FOREIGN KEY(discord_user_id) REFERENCES discord_users(discord_user_id) ON DELETE CASCADE,
+                         FOREIGN KEY(wishee_stuid) REFERENCES student_data(stuid) ON DELETE CASCADE
+                        )"""
+
 confirm = False
 if __name__ == '__main__':
     if os.path.isfile(default_database_name):
