@@ -203,26 +203,11 @@ class bdaybot_commands(commands.Cog):
                 wishee_id, wishee_series = next(fullname_df[is_in.any(axis='columns')].iterrows())
                 proper_name = wishee_series['FirstName'] + " " + wishee_series['LastName']
 
-            table_name = f"id_{wishee_id}"
-            # Generally this line below is **BAD** pratice due to the possibility
-            # of an SQL injection attack, however, since the input we are receiving is
-            # sanitized and can only result in an integer then it is IMPOSSIBLE to do
-            # an SQL injection attack with this input method
-            create_id_table = """CREATE TABLE IF NOT EXISTS {}(
-                                discord_user_id BIGINT,
-                                year INT,
-                                PRIMARY KEY(discord_user_id, year),
-                                FOREIGN KEY(discord_user_id) REFERENCES discord_users(discord_user_id)
-                                ON DELETE CASCADE
-                                )""".format(table_name)
-            self.SQL(create_id_table, autocommit=True)
-
             try:
                 # Same warning applies to this line as above
                 # This is generally bad practice, however, it is okay here
                 # because of the sanitized input
-                self.SQL("INSERT INTO {} VALUES(%s, %s)".format(table_name),
-                    (ctx.author.id, datetime.date.today().year), autocommit=True)
+                self.SQL("INSERT INTO wishes VALUES(%s, %s, %s)", (ctx.author.id, datetime.date.today().year, wishee_id), autocommit=True)
             except (psycopg2.errors.UniqueViolation, sqlite3.IntegrityError):
                 self.db_conn.rollback()
                 wish_embed.description = f"You cannot wish **{proper_name}** a happy birthday more than once!\nTry wishing someone else a happy birthday!"
