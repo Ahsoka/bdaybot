@@ -203,6 +203,8 @@ class bdaybot_commands(commands.Cog):
                 wishee_id, wishee_series = next(fullname_df[is_in.any(axis='columns')].iterrows())
                 proper_name = wishee_series['FirstName'] + " " + wishee_series['LastName']
 
+            wishee_id = int(wishee_id)
+
             try:
                 # Same warning applies to this line as above
                 # This is generally bad practice, however, it is okay here
