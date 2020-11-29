@@ -272,7 +272,7 @@ class bdaybot_commands(commands.Cog):
 
     @staticmethod
     async def send(ctx, message):
-        await ctx.send(message) if ctx.author.bot else ctx.author.send(message)
+        await ctx.send(message) if ctx.author.bot else await ctx.author.send(message)
 
     @commands.command()
     @dm_bot_has_guild_permissions(manage_messages=True)
