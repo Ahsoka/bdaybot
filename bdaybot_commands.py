@@ -3,6 +3,7 @@ import logs
 import warnings
 import requests
 import datetime
+import traceback
 import itertools
 import pandas
 import pickle
@@ -84,29 +85,30 @@ class bdaybot_commands(commands.Cog):
         self.SQL("UPDATE guilds SET today_names_cycle=%s", (pickle.dumps(cycler),), autocommit=True)
 
     async def ping_devs(self, error, command, ctx=None):
+        full_error_traceback = traceback.format_exc()
         if ctx is not None:
             parsed_ctx_guild = ctx.guild if ctx.guild else 'a DM message'
             if hasattr(ctx, 'author'):
-                logger.error(f"[{command.name}] {ctx.author} caused the following error in {parsed_ctx_guild}:\n{repr(error)}")
+                logger.error(f"[{command.name}] {ctx.author} caused the following error in {parsed_ctx_guild}:\n{full_error_traceback}")
             elif not isinstance(error, commands.CommandInvokeError):
-                logger.error(f"The following error occured with the {command.name} command in {parsed_ctx_guild}\n{repr(error)}")
+                logger.error(f"The following error occured with the {command.name} command in {parsed_ctx_guild}\n{full_error_traceback}")
         for iteration, dev_name in list(enumerate(dev_discord_ping))[:-1]:
             dev = await self.bot.fetch_user(dev_discord_ping[dev_name])
             ok_log = (iteration == len(dev_discord_ping) - 1)
             try:
                 if hasattr(ctx, 'author'):
-                    await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
+                    await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{full_error_traceback}**")
                     await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
                     if ok_log:
-                        logger.error(f"{ctx.author} said '{ctx.message.content}' which caused the following error with {command.name} in {parsed_ctx_guild}. Error message: {repr(error)}")
+                        logger.error(f"{ctx.author} said '{ctx.message.content}' which caused the following error with {command.name} in {parsed_ctx_guild}. Error message: {full_error_traceback}")
                 elif ctx is None:
-                    await dev.send(f"The following error occured with the `{command}` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
+                    await dev.send(f"The following error occured with the `{command}` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{full_error_traceback}**")
                 else:
-                    await dev.send(f"The following error occured with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{repr(error)}**")
+                    await dev.send(f"The following error occured with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{full_error_traceback}**")
                     if ok_log:
-                        logger.error(f"The following error occured with {command.name} in {parsed_ctx_guild}. Error message: {repr(error)}")
+                        logger.error(f"The following error occured with {command.name} in {parsed_ctx_guild}. Error message: {full_error_traceback}")
             except RuntimeError as error:
-                logger.critical(f"The following error occurred unexpectedly while trying to ping {dev_name}\n{repr(error)}")
+                logger.critical(f"The following error occurred unexpectedly while trying to ping {dev_name}\n{full_error_traceback}")
                 if str(error).lower() == 'session is closed':
                     break
         if ctx and ctx.guild and hasattr(ctx, 'author'):
