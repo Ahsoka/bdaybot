@@ -9,6 +9,7 @@ import sqlite3
 import logs
 from dotenv import load_dotenv
 from order_from_amazon import order_product
+from snailmail import print_env_method
 from bdaybot_commands import emoji_urls, bdaybot_commands, \
                              bdaybot_helpcommand, dev_discord_ping
 
@@ -32,10 +33,11 @@ class bdaybot(commands.Bot):
                     'mention_everyone':False, 'tts':False}
     cushion_delay = 5
 
-    def __init__(self, ASIN=None, place_order=False, *args, **kwargs):
+    def __init__(self, ASIN=None, place_order=False, print_env=False, *args, **kwargs):
         self.bday_today, self.today_df = andres.get_latest()
         self.ASIN = ASIN
         self.place_order = place_order
+        self.print_env = print_env
         super().__init__(*args, **kwargs)
         self.parsed_command_prefix = self.command_prefix[0] if isinstance(self.command_prefix, (list, tuple)) else self.command_prefix
         self.new_day = True
@@ -245,6 +247,16 @@ class bdaybot(commands.Bot):
                                   STATE=bday_person['State'],
                                   ZIPCODE=str(int(bday_person['Zipcode'])),
                                   place_order=self.place_order)
+                if bday_person['AddrLine1'] and self.print_env:
+                    # TODO: Change the addresses of sender
+                    print_env_method(sender_name='Dr. Neat',
+                                     sender_addr1=None,
+                                     sender_addr2=None,
+                                     recipient_name=bday_person['FirstName'] + ' ' + bday_person['LastName'],
+                                     recipient_addr1=bday_person['AddrLine1'] + ' ' + bday_person['AddrLine2'],
+                                     recipient_addr2=bday_person['City'] + ' ' + bday_person['State'] + ' ' + str(int(bday_person['Zipcode'])),
+                                     recipient_id=stuid)
+
 
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
@@ -456,6 +468,10 @@ if __name__ == '__main__':
     except KeyError:
         logger.critical('Failed to access the token in environment variables')
         raise
-    bot = bdaybot(command_prefix='test.' if command_line.testing else ('+', 'b.'), case_insensitive=True, ASIN=command_line.ASIN, place_order=command_line.place_order)
+    bot = bdaybot(command_prefix='test.' if command_line.testing else ('+', 'b.'),
+                  case_insensitive=True,
+                  ASIN=command_line.ASIN,
+                  place_order=command_line.place_order,
+                  print_env=command_line.print_envelope)
     bot.run(connection, token=token)
     connection.close()
