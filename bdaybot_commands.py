@@ -97,14 +97,14 @@ class bdaybot_commands(commands.Cog):
             ok_log = (iteration == len(dev_discord_ping) - 1)
             try:
                 if hasattr(ctx, 'author'):
-                    await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{full_error_traceback}**")
+                    await dev.send(f"{ctx.author.mention} caused the following error with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n```\n{full_error_traceback}```")
                     await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
                     if ok_log:
                         logger.error(f"{ctx.author} said '{ctx.message.content}' which caused the following error with {command.name} in {parsed_ctx_guild}. Error message: {full_error_traceback}")
                 elif ctx is None:
-                    await dev.send(f"The following error occured with the `{command}` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{full_error_traceback}**")
+                    await dev.send(f"The following error occured with the `{command}` task, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n```\n{full_error_traceback}```")
                 else:
-                    await dev.send(f"The following error occured with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n**{full_error_traceback}**")
+                    await dev.send(f"The following error occured with `{command.name}` in **{parsed_ctx_guild}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:\n```\n{full_error_traceback}```")
                     if ok_log:
                         logger.error(f"The following error occured with {command.name} in {parsed_ctx_guild}. Error message: {full_error_traceback}")
             except RuntimeError as error:
