@@ -334,12 +334,15 @@ class bdaybot(commands.Bot):
         # f"Upcoming Birthday for {full_name}{mention} on {format(birthdate, '%A, %b %d')}! 💕 ⏳"
         for iteration, (id, series) in enumerate(self.today_df.iterrows()):
             try:
-                user = self.get_user(self.SQL("SELECT discord_user_id FROM discord_users WHERE student_id=%s", (id,), first_item=True))
+                discord_id = self.SQL("SELECT discord_user_id FROM discord_users WHERE student_id=%s", (id,), first_item=True)
+                user = self.get_user(discord_id)
+                if user is None:
+                    user = await self.fetch_user(discord_id)
                 # TODO: Delete users if self.get_user(...) returns None
                 if iteration == 0 and user is not None:
                     await user.send(f"Happy birthday from me {self.user.mention} and all the developers of the bdaybot! Hope you have an awesome birthday!")
                     logger.info(f"The bdaybot sent a message {self.user} wishing them a happy birthday")
-            except StopIteration:
+            except (StopIteration, discord.NotFound, discord.HTTPException):
                 user = None
             full_name = f"***__{series['FirstName']} {series['LastName']}__*** "
             mention = '' if user is None else f"{user.mention} "
