@@ -236,7 +236,7 @@ class bdaybot(commands.Bot):
                 # owner will get a message
 
             for stuid, bday_person in self.today_df.iterrows():
-                if bday_person['AddrLine1'] and self.ASIN:
+                if bday_person['AddrLine1'] and self.ASIN and self.place_order:
                     order_product(ASIN=self.ASIN,
                                   FULLNAME=bday_person['FirstName'] + ' ' + bday_person['LastName'],
                                   ADDRESS_LINE_ONE=bday_person['AddrLine1'],
