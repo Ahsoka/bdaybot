@@ -468,7 +468,7 @@ class bdaybot_commands(commands.Cog):
                 mention = user.mention
             except (StopIteration, discord.NotFound, discord.HTTPException):
                 mention = ''
-            upcoming_bdays.append([f"{(row['FirstName'] + ' ' + row['LastName'])}{mention}",
+            upcoming_bdays.append([f"{(row['FirstName'] + ' ' + row['LastName'])} {mention}",
                                    format(row['Birthdate'], '%b %d'),
                                    f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}"])
         upcoming_embed.add_field(name='Name', value='\n'.join(map(lambda iterr: iterr[0], upcoming_bdays))) \
