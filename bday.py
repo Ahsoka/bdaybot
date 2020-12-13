@@ -452,7 +452,22 @@ bdaybot_commands.SQL = bdaybot.SQL
 if __name__ == '__main__':
     from argparser import args as command_line
     try:
-        connection, token = (sqlite3.connect(command_line.database), os.environ['testing_token']) if command_line.testing else (psycopg2.connect(dbname='botsdb'), os.environ['Bday_Token'])
+        if command_line.testing:
+            connection, token = sqlite3.connect(command_line.database), os.environ['testing_token'], os.environ['testing_token']
+        else:
+            token = os.environ['Bday_Token']
+            import sys
+            # INFO: If the code is running on the Linode
+            # server connect via local Unix socket
+            # but if running on any other computer
+            # connect via the internet
+            if sys.platform.startswith('linux'):
+                connection = psycopg2.connect(dbname='botsdb')
+            else:
+                connection = temp_connection = psycopg2.connect(dbname='botsdb',
+                                                                host=os.environ['host'],
+                                                                user=os.environ['dbuser'],
+                                                                password=os.environ['password'])
     except KeyError:
         logger.critical('Failed to access the token in environment variables')
         raise
