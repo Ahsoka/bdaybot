@@ -453,7 +453,7 @@ if __name__ == '__main__':
     from argparser import args as command_line
     try:
         if command_line.testing:
-            connection, token = sqlite3.connect(command_line.database), os.environ['testing_token'], os.environ['testing_token']
+            connection, token = sqlite3.connect(command_line.database), os.environ['testing_token']
         else:
             token = os.environ['Bday_Token']
             import sys
