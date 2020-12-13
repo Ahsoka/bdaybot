@@ -462,8 +462,11 @@ class bdaybot_commands(commands.Cog):
         for id, row in upcoming_df.iloc[:num].iterrows():
             try:
                 id = self.SQL("SELECT discord_user_id FROM discord_users WHERE student_id=%s", (id,), first_item=True)
-                mention = self.bot.get_user(id).mention
-            except StopIteration:
+                user = self.bot.get_user(id)
+                if user is None:
+                    user = await self.bot.fetch_user(id)
+                mention = user.mention
+            except (StopIteration, discord.NotFound, discord.HTTPException):
                 mention = ''
             upcoming_bdays.append([f"{(row['FirstName'] + ' ' + row['LastName'])}{mention}",
                                    format(row['Birthdate'], '%b %d'),
