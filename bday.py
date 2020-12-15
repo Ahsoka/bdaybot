@@ -345,7 +345,7 @@ class bdaybot(commands.Bot):
             except (StopIteration, discord.NotFound, discord.HTTPException):
                 user = None
             full_name = f"***__{series['FirstName']} {series['LastName']}__*** "
-            mention = '' if user is None else f"{user.mention} "
+            mention = '' if user is None else f" {user.mention} "
             age = datetime.datetime.today().year - series['Birthyear']
             age_portion = ' 🎂 🎉' if age >= 100 or age <= 14  else f'\nCongratulations on turning _**{age}**_ 🎂 🎉'
             yield f"Happy Birthday to {full_name}{mention}🎈 🎊{age_portion}"
