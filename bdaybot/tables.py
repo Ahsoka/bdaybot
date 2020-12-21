@@ -16,9 +16,9 @@ class Guilds(Base):
 
     def __repr__(self):
         return (f'<Guilds(guild_id={self.guild_id}, '
-                f'announcements_id={self.announcements_id} '
-                f'role_id={self.role_id})>'
-                f'today_names_cycle={self.today_names_cycle}'
+                f'announcements_id={self.announcements_id}, '
+                f'role_id={self.role_id}), '
+                f'today_names_cycle={self.today_names_cycle}, '
                 f'nickname_notice={self.nickname_notice}>')
 
 class StudentData(Base):
