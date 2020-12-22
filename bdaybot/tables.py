@@ -5,7 +5,7 @@ from sqlalchemy import (Column,
                         BigInteger,
                         PickleType,
                         ForeignKey)
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship, backref
 
 Base = declarative_base()
 
@@ -43,6 +43,7 @@ class DiscordUser(Base):
     student_id = Column(Integer,
                         ForeignKey('student_data.stuid', ondelete='CASCADE'),
                         unique=True)
+    student_data = relationship(StudentData, backref=backref('discord_user', uselist=False))
 
     def __repr__(self):
         return (f'<DiscordUsers(discord_user_id={self.discord_user_id}, '
@@ -57,6 +58,8 @@ class Wish(Base):
     wishee_stuid = Column(Integer,
                           ForeignKey('student_data.stuid', ondelete='CASCADE'),
                           primary_key=True)
+    discord_user = relationship(DiscordUser, backref='wishes')
+    wishee = relationship(StudentData, backref='wishes')
 
     def __repr__(self):
         return (f'<Wishes(discord_user_id={self.discord_user_id}, '
