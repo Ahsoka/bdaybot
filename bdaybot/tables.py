@@ -5,7 +5,7 @@ from sqlalchemy import (Column,
                         BigInteger,
                         PickleType,
                         ForeignKey)
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
@@ -26,21 +26,23 @@ class Guild(Base):
 
 class StudentData(Base):
     __tablename__ = 'student_data'
-    StuID = Column(Integer, primary_key=True)
-    FirstName = Column(Text)
-    LastName = Column(Text)
-    Grd = Column(Integer)
+    stuid = Column(Integer, primary_key=True)
+    firstname = Column(Text)
+    lastname = Column(Text)
+    grd = Column(Integer)
 
     def __repr__(self):
-        return (f'<StudentData(StuID={self.StuID}, '
-                f'FirstName={self.FirstName}, '
-                f'LastName={self.LastName}), '
-                f'Grd={self.Grd}>')
+        return (f'<StudentData(stuid={self.stuid}, '
+                f'firstname={self.firstname}, '
+                f'lastname={self.lastname}), '
+                f'grd={self.grd}>')
 
 class DiscordUser(Base):
     __tablename__ = 'discord_users'
     discord_user_id = Column(BigInteger, primary_key=True)
-    student_id = Column(Integer, ForeignKey('student_data.StuID', ondelete='CASCADE'), unique=True)
+    student_id = Column(Integer,
+                        ForeignKey('student_data.stuid', ondelete='CASCADE'),
+                        unique=True)
 
     def __repr__(self):
         return (f'<DiscordUsers(discord_user_id={self.discord_user_id}, '
@@ -53,7 +55,7 @@ class Wish(Base):
                              primary_key=True)
     year = Column(Integer, primary_key=True)
     wishee_stuid = Column(Integer,
-                          ForeignKey('student_data.stuid', ondelete='CASCADE')
+                          ForeignKey('student_data.stuid', ondelete='CASCADE'),
                           primary_key=True)
 
     def __repr__(self):
