@@ -5,9 +5,12 @@ from sqlalchemy import (Column,
                         BigInteger,
                         PickleType,
                         ForeignKey)
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 
-class Guilds(Base):
+Base = declarative_base()
+
+class Guild(Base):
+    __tablename__ = 'guilds'
     guild_id = Column(BigInteger, primary_key=True)
     announcements_id = Column(BigInteger)
     role_id = Column(BigInteger)
@@ -34,7 +37,7 @@ class StudentData(Base):
                 f'LastName={self.LastName}), '
                 f'Grd={self.Grd}>')
 
-class DiscordUsers(Base):
+class DiscordUser(Base):
     __tablename__ = 'discord_users'
     discord_user_id = Column(BigInteger, primary_key=True)
     student_id = Column(Integer, ForeignKey('student_data.StuID', ondelete='CASCADE'), unique=True)
@@ -43,7 +46,8 @@ class DiscordUsers(Base):
         return (f'<DiscordUsers(discord_user_id={self.discord_user_id}, '
                 f'student_id={self.student_id})>')
 
-class Wishes(Base):
+class Wish(Base):
+    __tablename__ = 'wishes'
     discord_user_id = Column(BigInteger,
                              ForeignKey('discord_users.discord_user_id', ondelete='CASCADE'),
                              primary_key=True)
