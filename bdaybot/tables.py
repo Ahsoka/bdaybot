@@ -1,3 +1,5 @@
+import itertools
+from . import values
 from sqlalchemy.orm import declarative_base, relationship, backref
 from sqlalchemy import (Column,
                         Text,
@@ -15,7 +17,8 @@ class Guild(Base):
     guild_id = Column(BigInteger, primary_key=True)
     announcements_id = Column(BigInteger)
     role_id = Column(BigInteger)
-    today_names_cycle = Column(PickleType)
+    today_names_cycle = Column(PickleType, nullable=False,
+                               default=itertools.cycle(values.today_df['FirstName'] + " " + values.today_df['LastName']))
     nickname_notice = Column(Boolean, default=True)
 
     @propety
