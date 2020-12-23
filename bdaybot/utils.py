@@ -30,6 +30,15 @@ def apostrophe(name):
 def maybe_mention(ctx):
     return f'{ctx.author.mention} ' if ctx.guild else ''
 
+def find_ann_channel(guild):
+    bday_channels = list(filter(lambda channel: 'bday' in channel.name.lower(), guild.text_channels))
+    ann_channels = list(filter(lambda channel: 'announcement' in channel.name.lower(), guild.text_channels))
+    if bday_channels:
+        return bday_channels[0]
+    elif ann_channels:
+        return ann_channels[0]
+    return None
+
 def permissions(channel, member, permissions, condition='all'):
     if channel is None:
         return True
