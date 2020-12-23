@@ -1,9 +1,12 @@
 import os
 import pandas
+import logging
 import datetime
 import psycopg2
-import urllib.request, urllib.error
 from dotenv import load_dotenv
+import urllib.request, urllib.error
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -26,10 +29,10 @@ class values:
         try:
             return urllib.request.urlopen(os.environ['bday_data_URL']).read().decode('UTF-8')
         except (urllib.error.URLError, urllib.error.HTTPError):
-            # logger.critical("Failed to access the raw data from drneato.com")
+            logger.critical("Failed to access the raw data from drneato.com")
             raise
         except KeyError:
-            # logger.critical("Failed to access environment variable 'bday_data_URL'")
+            logger.critical("Failed to access environment variable 'bday_data_URL'")
             raise
 
     @classproperty
@@ -61,7 +64,7 @@ class values:
                     except ValueError:
                         pass
                     data_dict[keys[index - 1 if index == 1 else index]].append(attr)
-            # logger.info('Sucessfully parsed the raw data from drneato.com')
+            logger.info('Sucessfully parsed the raw data from drneato.com')
 
             bday_df = pandas.concat([pandas.DataFrame(data_dict),
                                      pandas.DataFrame({
@@ -83,7 +86,7 @@ class values:
             columns = ['AddrLine1', 'AddrLine2', 'City', 'State', 'Zipcode', 'FirstName', 'LastName']
             bday_df[columns] = student_df[map(lambda text: text.lower(), columns)]
             bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
-            # logger.info("Sucessfully created and modified the 'bday_df' DataFrame")
+            logger.info("Sucessfully created and modified the 'bday_df' DataFrame")
             cls.og_bday_df = bday_df
         else:
             bday_df = cls.og_bday_df
@@ -123,7 +126,7 @@ class values:
             # are supported.  It might be because we are using an unsupported
             # DBAPI
             df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
-            # logger.info(f"Sucessfully accessed TABLE student_data in the botsdb database (PostgreSQL)")
+            logger.info(f"Sucessfully accessed TABLE student_data in the botsdb database (PostgreSQL)")
             temp_connection.close()
 
             if not cls.store_student_data_df:
