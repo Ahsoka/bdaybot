@@ -170,3 +170,9 @@ class EmojiURLs:
 
     for key in urls:
         exec(f"{key}=classproperty(lambda cls: cls.check_url('{urls[key]}'))")
+
+    @classproperty
+    def missing_urls(cls):
+        urls_mapped_to_result = dict(((click.style(cls.urls[key], fg='yellow'), getattr(cls, key)) for key in cls.urls))
+        return list(filter(lambda key: isinstance(urls_mapped_to_result[key], type(discord.Embed.Empty)),
+                    urls_mapped_to_result))
