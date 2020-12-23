@@ -1,7 +1,10 @@
+import click
 import discord
+import logging
 import datetime
 import traceback
 from discord.ext import commands
+import urllib.request, urllib.error
 
 def fake_ctx(bot, command, guild):
     # Used to so that we can call command
@@ -143,3 +146,27 @@ class classproperty:
 
     def __get__(self, owner_self, owner_cls):
         return self.fget(owner_cls)
+
+class EmojiURLs:
+    urls = {
+        'confetti_ball': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/confetti-ball_1f38a.png",
+        'partying_face': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/partying-face_1f973.png",
+        'wrapped_gift': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/wrapped-gift_1f381.png",
+        'numbers': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/248/input-numbers_1f522.png",
+        'loudspeaker': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/public-address-loudspeaker_1f4e2.png",
+        'calendar' : "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png",
+    }
+
+    @classmethod
+    def check_url(cls, url):
+        try:
+            urllib.request.urlopen(url)
+            return url
+        except (urllib.error.URLError, urllib.error.HTTPError):
+            mapping_reversed_urls = dict(((url, key) for key, url in cls.urls.items()))
+            logger = logging.getLogger('bdaybot.EmojiURLs')
+            logger.warning(f"The {mapping_reversed_urls[url]} url is not working!")
+            return discord.Embed.Empty
+
+    for key in urls:
+        exec(f"{key}=classproperty(lambda cls: cls.check_url('{urls[key]}'))")
