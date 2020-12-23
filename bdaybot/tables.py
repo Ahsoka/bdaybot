@@ -2,6 +2,7 @@ from sqlalchemy import (Column,
                         Text,
                         Integer,
                         Boolean,
+                        String,
                         BigInteger,
                         PickleType,
                         ForeignKey)
@@ -30,6 +31,11 @@ class StudentData(Base):
     firstname = Column(Text)
     lastname = Column(Text)
     grd = Column(Integer)
+    addrline1 = Column(Text)
+    addrline2 = Column(Text)
+    city = Column(Text)
+    state = Column(String(2))
+    zipcode = Column(Integer)
 
     def __repr__(self):
         return (f'<StudentData(stuid={self.stuid}, '
