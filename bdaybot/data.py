@@ -75,7 +75,7 @@ class values:
                                         'StuID': [1]
                                      })])
             bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
-            student_df = cls.student_data_df['stuid']
+            student_df = cls.student_data_df
             bday_df = bday_df[bday_df['StuID'].isin(student_df['stuid'])]
             bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
             bday_df.set_index('StuID', inplace=True); student_df.set_index('stuid', inplace=True)
