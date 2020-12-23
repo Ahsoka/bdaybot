@@ -40,9 +40,8 @@ class StudentData(Base):
 class DiscordUser(Base):
     __tablename__ = 'discord_users'
     discord_user_id = Column(BigInteger, primary_key=True)
-    student_id = Column(Integer,
-                        ForeignKey('student_data.stuid', ondelete='CASCADE'),
-                        unique=True)
+    student_id = Column(Integer, ForeignKey('student_data.stuid', ondelete='CASCADE'),
+                        unique=True, nullable=False)
     student_data = relationship(StudentData, backref=backref('discord_user', uselist=False))
 
     def __repr__(self):
