@@ -225,7 +225,6 @@ class CommandsCog(commands.Cog):
             return
         upcoming_embed = discord.Embed().set_author(name=f"Upcoming Birthday{'s' if num != 1 else ''}", icon_url=EmojiURLs.calendar)
         upcoming_df = values.bday_df.drop(values.today_df.index) if values.bday_today else values.bday_df
-        print(upcoming_df)
         # INFO: The maximum without erroring out is 76
         max_num = 10
         if num > max_num:
