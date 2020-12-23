@@ -49,6 +49,10 @@ class DiscordUser(Base):
     student_id = Column(Integer, ForeignKey('student_data.stuid', ondelete='CASCADE'),
                         unique=True, nullable=False)
     student_data = relationship(StudentData, backref=backref('discord_user', uselist=False))
+    
+    @property
+    def mention(self):
+        return f'<@{self.discord_user_id}>'
 
     def __repr__(self):
         return (f'<DiscordUsers(discord_user_id={self.discord_user_id}, '
