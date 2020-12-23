@@ -4,22 +4,12 @@ import logging
 import datetime
 import psycopg2
 from dotenv import load_dotenv
+from .utils import classproperty
 import urllib.request, urllib.error
 
 logger = logging.getLogger(__name__)
 
 load_dotenv()
-
-class classproperty:
-    # NOTE: The `classproperty` class
-    # is NOT my (@Ahsoka's) code. See reference below
-    # for original source
-    # Reference: https://stackoverflow.com/questions/128573/using-property-on-classmethods/13624858#13624858
-    def __init__(self, fget):
-        self.fget = fget
-
-    def __get__(self, owner_self, owner_cls):
-        return self.fget(owner_cls)
 
 class values:
     store_student_data_df = True

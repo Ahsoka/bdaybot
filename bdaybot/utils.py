@@ -1,5 +1,4 @@
 import discord
-from . import values
 from discord.ext import commands
 
 def fake_ctx(bot, command, guild):
@@ -52,6 +51,9 @@ def format_iterable(iterable,
     return returning
 
 def get_bday_names(apos=True):
+    # DEBUG: DO NOT move this import!
+    # It is here to avoid circular import issues.
+    from . import values
     def df_get_str(iterable, index):
         return iterable.iloc[index]['FirstName'] + ' ' + iterable.iloc[index]['LastName']
     return format_iterable(values.today_df,
@@ -86,3 +88,14 @@ def permissions(channel, member, permissions, condition='all'):
                                "The acceptable conditions are 'all' or 'any'."))
     else:
         return getattr(perms, permissions)
+
+class classproperty:
+    # NOTE: The `classproperty` class
+    # is NOT my (@Ahsoka's) code. See reference below
+    # for original source
+    # Reference: https://stackoverflow.com/questions/128573/using-property-on-classmethods/13624858#13624858
+    def __init__(self, fget):
+        self.fget = fget
+
+    def __get__(self, owner_self, owner_cls):
+        return self.fget(owner_cls)
