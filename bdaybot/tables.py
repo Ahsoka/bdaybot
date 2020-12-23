@@ -19,7 +19,7 @@ class Guild(Base):
     role_id = Column(BigInteger)
     today_names_cycle = Column(PickleType, nullable=False,
                                default=itertools.cycle(values.today_df['FirstName'] + " " + values.today_df['LastName']))
-    nickname_notice = Column(Boolean, default=True)
+    nickname_notice = Column(Boolean, nullable=False, default=True)
 
     @propety
     def mention_role(self):
