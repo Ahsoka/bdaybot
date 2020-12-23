@@ -1,3 +1,4 @@
+from sqlalchemy.orm import declarative_base, relationship, backref
 from sqlalchemy import (Column,
                         Text,
                         Integer,
@@ -6,7 +7,6 @@ from sqlalchemy import (Column,
                         BigInteger,
                         PickleType,
                         ForeignKey)
-from sqlalchemy.orm import declarative_base, relationship, backref
 
 Base = declarative_base()
 
