@@ -1,4 +1,6 @@
 import discord
+import datetime
+import traceback
 from discord.ext import commands
 
 def fake_ctx(bot, command, guild):
@@ -88,6 +90,48 @@ def permissions(channel, member, permissions, condition='all'):
                                "The acceptable conditions are 'all' or 'any'."))
     else:
         return getattr(perms, permissions)
+
+async def ping_devs(error, command, ctx=None, bot=None):
+    # DEBUG: DO NOT move this import!
+    # It is here to avoid circular import issues.
+    from . import config
+    if ctx is None:
+        assert bot is not None, 'bot not be None if ctx is None'
+    else:
+        bot = ctx.bot
+        discord_location = ctx.guild if ctx.guild else 'a DM message'
+    error_message = traceback.format_exc()
+    if error_message == 'NoneType: None\n':
+        error_message = repr(error)
+    devs = {
+        'Andres': [await bot.get_user(388899325885022211), config.andres],
+        'Elliot': [await bot.get_user(349319578419068940), config.elliot],
+        'Ryan': [await bot.get_user(262676325846876161), config.ryan]
+    }
+
+    for name, (dev, sending) in devs.items():
+        if sending:
+
+            if hasattr(ctx, 'author'):
+                await dev.send((f"{ctx.author.mention} caused the following error with `{command.name}` in "
+                                f"**{discord_location}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}"
+                                f":\n```\n{error_message}```"))
+                await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
+            elif ctx is None:
+                await dev.send((f"The following error occured with the `{command}` task, on "
+                                f"{format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
+                                f"\n```\n{error_message}```"))
+            else:
+                await dev.send((f"The following error occured with `{command.name}` in **{discord_location}**, "
+                                f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
+                                f"\n```\n{error_message}```"))
+
+    if ctx and ctx.guild and hasattr(ctx, 'author'):
+        # NOTE: Might want this to conform to config values
+        devs_ping_channel = format_iterable(devs,
+                                            apos=False, conjunction='or',
+                                            get_str=lambda devs, index: devs[list(devs)[index]][0].mention)
+        await ctx.send(f"{devs_ping_channel} fix this!")
 
 class classproperty:
     # NOTE: The `classproperty` class
