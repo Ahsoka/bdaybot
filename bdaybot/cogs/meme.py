@@ -22,8 +22,8 @@ class EasterEggsCog(commands.Cog):
         # by activating the secret messages in a channel that the bot cannot send messages in.
 
         if (inside('what') or inside('wat')) and any(map(inside, valid_purposes)):
-            for message in secret_messages:
-                    await message.channel.send(message)
+            for line in secret_messages:
+                    await message.channel.send(line)
                     await asyncio.sleep(2)
 
             await asyncio.sleep(3)
