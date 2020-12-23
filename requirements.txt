@@ -2,5 +2,6 @@ pandas
 discord.py
 requests
 psycopg2
-python-dotenv
 selenium
+python-dotenv
+SQLAlchemy==1.4.0b1
