@@ -63,8 +63,8 @@ class Wish(Base):
     wishee_stuid = Column(Integer,
                           ForeignKey('student_data.stuid', ondelete='CASCADE'),
                           primary_key=True)
-    discord_user = relationship(DiscordUser, backref='wishes')
-    wishee = relationship(StudentData, backref='wishes')
+    discord_user = relationship(DiscordUser, backref='wishes_given')
+    wishee = relationship(StudentData, backref='wishes_received')
 
     def __repr__(self):
         return (f'<Wishes(discord_user_id={self.discord_user_id}, '
