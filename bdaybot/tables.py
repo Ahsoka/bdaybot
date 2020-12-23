@@ -21,7 +21,7 @@ class Guild(Base):
                                default=itertools.cycle(values.today_df['FirstName'] + " " + values.today_df['LastName']))
     nickname_notice = Column(Boolean, nullable=False, default=True)
 
-    @propety
+    @property
     def mention_role(self):
         return f'<@&{self.role_id}>'
 
