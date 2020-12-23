@@ -18,6 +18,14 @@ class Guild(Base):
     today_names_cycle = Column(PickleType)
     nickname_notice = Column(Boolean, default=True)
 
+    @propety
+    def mention_role(self):
+        return f'<@&{self.role_id}>'
+
+    @property
+    def mention_ann(self):
+        return f'<#{self.announcements_id}>'
+
     def __repr__(self):
         return (f'<Guilds(guild_id={self.guild_id}, '
                 f'announcements_id={self.announcements_id}, '
@@ -49,7 +57,7 @@ class DiscordUser(Base):
     student_id = Column(Integer, ForeignKey('student_data.stuid', ondelete='CASCADE'),
                         unique=True, nullable=False)
     student_data = relationship(StudentData, backref=backref('discord_user', uselist=False))
-    
+
     @property
     def mention(self):
         return f'<@{self.discord_user_id}>'
