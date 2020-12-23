@@ -37,7 +37,7 @@ def file_renamer(filename):
     split = filename.split('.')
     return ".".join(split[:-3] + [split[-1], split[-2]])
 
-def createLogger(name, fmt, datefmt='%I:%M %p', files=True):
+def setUpLogger(name, fmt, datefmt='%I:%M %p', files=True):
     # Init the logger
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
