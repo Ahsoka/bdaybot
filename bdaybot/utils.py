@@ -1,5 +1,6 @@
 import click
 import discord
+import inspect
 import logging
 import datetime
 import traceback
@@ -123,6 +124,7 @@ async def ping_devs(error, command, ctx=None, bot=None):
         devs_packed_info[key] = [await bot.get_user(discord_id),
                                  getattr(config, key.lower())]
 
+    logger = None
     for name, (dev, sending) in devs_packed_info.items():
         if sending:
             if hasattr(ctx, 'author'):
@@ -138,6 +140,9 @@ async def ping_devs(error, command, ctx=None, bot=None):
                 await dev.send((f"The following error occured with `{command.name}` in **{discord_location}**, "
                                 f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
                                 f"\n```\n{error_message}```"))
+            if logger is None:
+                logger = logging.getLogger(inspect.getmodule(inspect.stack()[1].frame).__name__)
+            logger.info(f'{dev} was sent a message notifying them of the situation.')
 
     if ctx and ctx.guild and hasattr(ctx, 'author'):
         # NOTE: Might want this to conform to config values
