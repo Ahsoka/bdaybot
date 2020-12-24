@@ -196,8 +196,8 @@ class EmojiURLs:
                 for dev, sending in devs_send_user:
                     if sending:
                         await dev.send(f"The `{mapping_reversed_urls[url]}` url ({url}) is not working!")
-                        logger.info(f'{dev} was notified of the situation.')
-
+                        if logger:
+                            logger.info(f'{dev} was notified of the situation.')
             return discord.Embed.Empty
 
     for index, key in enumerate(urls):
