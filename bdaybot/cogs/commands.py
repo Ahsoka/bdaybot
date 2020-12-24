@@ -223,7 +223,7 @@ class CommandsCog(commands.Cog):
             await ctx.send(f"{ctx.author.mention} **{num}** is less than 1. Please use a number that is not less than 1.")
             logger.debug(f"{ctx.author} tried to use the upcoming command with a number less than 1.")
             return
-        upcoming_embed = discord.Embed().set_author(name=f"Upcoming Birthday{'s' if num != 1 else ''}", icon_url=EmojiURLs.calendar)
+        upcoming_embed = discord.Embed().set_author(name=f"Upcoming Birthday{'s' if num != 1 else ''}", icon_url=await EmojiURLs.calendar)
         upcoming_df = values.bday_df.drop(values.today_df.index) if values.bday_today else values.bday_df
         # INFO: The maximum without erroring out is 76
         max_num = 10

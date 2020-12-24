@@ -20,7 +20,7 @@ class HelpCommand(commands.HelpCommand):
             end = '\n' if loc != len(filtered_commands) - 1 else '```'
             description += f"{ctx.prefix}{command.name}{end}"
         description += "\n" + f"For help on how to use a command use `{ctx.prefix}help " + "{nameofcommand}`\ne.g. " + f"`{ctx.prefix}help getID`"
-        help_embed = discord.Embed(description=description).set_author(name="Bdaybot's commands:", icon_url=EmojiURLs.partying_face)
+        help_embed = discord.Embed(description=description).set_author(name="Bdaybot's commands:", icon_url=await EmojiURLs.partying_face)
         if not ctx.guild:
             help_embed.set_footer(text=f"Not all available commands are shown above.\nUse {ctx.prefix}help in server with me to see all the available commands!")
         elif len(filtered_commands) < self.num_of_commands:
@@ -52,7 +52,7 @@ class HelpCommand(commands.HelpCommand):
 
             description += "." if values.bday_today else " (like today)."
 
-            command_embed = discord.Embed(description=description).set_author(name="Wish Command", icon_url=EmojiURLs.wrapped_gift) \
+            command_embed = discord.Embed(description=description).set_author(name="Wish Command", icon_url=await EmojiURLs.wrapped_gift) \
                             .set_footer(text="Names are not case sensitive and full names are also acceptable.")
         elif command.name == 'getID':
             description =  ("The getID command allows you to determine the ID that corresponds with your Discord account. "
@@ -61,7 +61,7 @@ class HelpCommand(commands.HelpCommand):
                             "\n\nWhen you activate the getID command I will DM you your currently registered ID.\n\n"
                             "If you do not currently have an ID registered I will let you know in the DM message.\n\n"
                             f"You can use the `{ctx.prefix}setID` command to register your ID.")
-            command_embed = discord.Embed(description=description).set_author(name="getID Command", icon_url=EmojiURLs.numbers)
+            command_embed = discord.Embed(description=description).set_author(name="getID Command", icon_url=await EmojiURLs.numbers)
         elif command.name == 'setID':
             description = ''
             try:
@@ -74,7 +74,7 @@ class HelpCommand(commands.HelpCommand):
                             "\nThe student ID you input is validated against a database of legitimate student IDs, "
                             "so make sure you use your real one.\n"
                             "\nIf you are using this command in a server, your message will be deleted to keep your ID confidental.")
-            command_embed = discord.Embed(description=description).set_author(name="setID Command", icon_url=EmojiURLs.numbers)
+            command_embed = discord.Embed(description=description).set_author(name="setID Command", icon_url=await EmojiURLs.numbers)
         elif command.name == 'setannouncements':
             description = ''
             try:
@@ -89,7 +89,7 @@ class HelpCommand(commands.HelpCommand):
                             f"▶ Type `{ctx.prefix}setannouncements " "{text channel}` to set a certain channel to the announcements channel. ") \
                             + (f"e.g. `{ctx.prefix}setannouncements` {ctx.channel.mention}" if ctx.guild else '') \
                             + ("\n\nYou must have the administrator permission in order to use " f"`{ctx.prefix}setannouncements`")
-            command_embed = discord.Embed(description=description).set_author(name="Setannouncements Command", icon_url=EmojiURLs.loudspeaker) \
+            command_embed = discord.Embed(description=description).set_author(name="Setannouncements Command", icon_url=await EmojiURLs.loudspeaker) \
                             .set_footer(text=f"{ctx.prefix}setann is an alias")
         elif command.name == 'getannouncements':
             description = ''
@@ -100,7 +100,7 @@ class HelpCommand(commands.HelpCommand):
             description += ("The getannouncements command shows you the current channel I use to announce whose birthday it is.\n\n"
                             "By default the announcements channel is the text channel titled 'announcements'.\n\n"
                             f"If you would to change the announcements channel use `{ctx.prefix}setannouncements`")
-            command_embed = discord.Embed(description=description).set_author(name="Getannouncements Command", icon_url=EmojiURLs.loudspeaker) \
+            command_embed = discord.Embed(description=description).set_author(name="Getannouncements Command", icon_url=await EmojiURLs.loudspeaker) \
                             .set_footer(text=f"{ctx.prefix}getann is an alias")
         elif command.name == 'upcoming':
             description = ''
@@ -113,7 +113,7 @@ class HelpCommand(commands.HelpCommand):
                             "However, you can choose the number of birthday you would like, by using this format "
                             f"`{ctx.prefix}upcoming " "{number}`" f" e.g. To see the next 3 birthdays use `{ctx.prefix}upcoming 3`\n"
                             "\nValid numbers are between 1 and 10.  If you use a number larger than 10 only the first 10 upcoming birthdays will be shown.")
-            command_embed = discord.Embed(description=description).set_author(name="Upcoming Command", icon_url=EmojiURLs.calendar) \
+            command_embed = discord.Embed(description=description).set_author(name="Upcoming Command", icon_url=await EmojiURLs.calendar) \
                             .set_footer(text=f"{ctx.prefix}up is an alias")
         elif command.name == 'help':
             await ctx.send("It sounds like your having a personal problem there, please seek a therapist for real help.")
