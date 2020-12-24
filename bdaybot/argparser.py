@@ -1,6 +1,10 @@
 import argparse
 
-parser = argparse.ArgumentParser(description="Use to set various settings of the bdaybot on runtime.")
+class IgnoreUnrecognizedArgs(argparse.ArgumentParser):
+    def parse_args(self, args=None, namespace=None):
+        return self.parse_known_args(args, namespace)[0]
+
+parser = IgnoreUnrecognizedArgs(description="Use to set various settings of the bdaybot on runtime.")
 
 parser.add_argument('-db', '--database', default='sqlite:///:memory:')
 parser.add_argument('-nt', '--not-testing', action='store_false', dest='testing')
