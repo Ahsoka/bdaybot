@@ -3,11 +3,19 @@ import pandas
 import logging
 import datetime
 import psycopg2
+import functools
 from dotenv import load_dotenv
 from .utils import classproperty
 import urllib.request, urllib.error
 
 logger = logging.getLogger(__name__)
+
+if not hasattr(functools, 'cache'):
+    # Function below is copied straight
+    # from Python 3.9 GitHub
+    # Reference: https://github.com/python/cpython/blob/3.9/Lib/functools.py#L650
+    def functools_cache(user_function, /): return functools.lru_cache(maxsize=None)(user_function)
+    functools.cache = functools_cache
 
 load_dotenv()
 
@@ -94,6 +102,7 @@ class values:
         return bday_df.sort_values(['Timedelta', 'LastName', 'FirstName'])
 
     @classproperty
+    @functools.cache
     def student_data_df(cls):
         # NOTE: With the current implementation we are storing
         # A LOT of data in the background, due to the shear size of the
@@ -103,26 +112,21 @@ class values:
 
         # INFO: According the `.info()` method for dataframes, the dataframe
         # takes up roughly 233.1KB of memory
-        if not hasattr(cls, 'stored_student_data_df'):
-            try:
-                temp_connection = psycopg2.connect(dbname='botsdb')
-            except psycopg2.OperationalError:
-                temp_connection = psycopg2.connect(dbname='botsdb',
-                                                   host=os.environ['host'],
-                                                   user=os.environ['dbuser'],
-                                                   password=os.environ['password'])
-            # NOTE: For some reason using the table name only causes
-            # a syntax error even though in the documentation table names
-            # are supported.  It might be because we are using an unsupported
-            # DBAPI
-            df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
-            logger.info(f"Sucessfully accessed TABLE student_data in the botsdb database (PostgreSQL)")
-            temp_connection.close()
-
-            if not cls.store_student_data_df:
-                return df
-            cls.stored_student_data_df = df
-        return cls.stored_student_data_df
+        try:
+            temp_connection = psycopg2.connect(dbname='botsdb')
+        except psycopg2.OperationalError:
+            temp_connection = psycopg2.connect(dbname='botsdb',
+                                               host=os.environ['host'],
+                                               user=os.environ['dbuser'],
+                                               password=os.environ['password'])
+        # NOTE: For some reason using the table name only causes
+        # a syntax error even though in the documentation table names
+        # are supported.  It might be because we are using an unsupported
+        # DBAPI
+        df = pandas.read_sql('SELECT * FROM student_data', temp_connection)
+        logger.info(f"Sucessfully accessed TABLE student_data in the botsdb database (PostgreSQL)")
+        temp_connection.close()
+        return df
 
     @classproperty
     def bday_today(cls):
