@@ -253,3 +253,28 @@ class AutomatedTasksCog(commands.Cog):
             else:
                 logger.error(f'The following error occured with the update_role command: {error!r}')
                 await ping_devs(error, self.update_role, ctx=ctx)
+
+    def cog_unload(self):
+        if self.send_bdays.is_running():
+            self.send_bdays.stop()
+            logger.info("The 'send_bdays()' task was gracefully ended.")
+
+        if self.order_from_amazon.is_running():
+            self.order_from_amazon.stop()
+            logger.info("The 'order_from_amazon()' task was gracefully ended.")
+
+        if self.send_DM_message.is_running():
+            self.send_DM_message.stop()
+            logger.info("The 'send_DM_message()' task was gracefully ended.")
+
+        if self.change_nicknames.is_running():
+            self.change_nicknames.stop()
+            logger.info("The 'change_nicknames()' task was gracefully ended.")
+
+        if self.change_roles.is_running():
+            self.change_roles.stop()
+            logger.info("The 'change_roles()' task was gracefully ended.")
+
+        if self.update_cycler.is_running():
+            self.update_cycler.stop()
+            logger.info("The 'update_cycler()' task was gracefully ended.")
