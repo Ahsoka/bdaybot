@@ -1,8 +1,10 @@
 import click
+import asyncio
 import discord
 import inspect
 import logging
 import datetime
+import functools
 import traceback
 from discord.ext import commands
 import urllib.request, urllib.error
@@ -173,7 +175,7 @@ class EmojiURLs:
     }
 
     @classmethod
-    def check_url(cls, url):
+    async def check_url(cls, url):
         try:
             urllib.request.urlopen(url)
             return url
@@ -186,14 +188,32 @@ class EmojiURLs:
                     logger = logging.getLogger(module.__name__)
                     break
             if logger:
-                logger.warning(f"The '{mapping_reversed_urls[url]}' url is not working!")
+                logger.warning(f"The {mapping_reversed_urls[url]} ({url}) url is not working!")
+            if hasattr(cls, 'bot'):
+                from . import config
+                devs_send_user = [(await cls.bot.get_user(discord_id), getattr(config, key.lower()))
+                                  for key, discord_id in devs.items()]
+                for dev, sending in devs_send_user:
+                    if sending:
+                        await dev.send(f"The `{mapping_reversed_urls[url]}` url ({url}) is not working!")
+                        logger.info(f'{dev} was notified of the situation.')
+
             return discord.Embed.Empty
 
-    for key in urls:
-        exec(f"{key}=classproperty(lambda cls: cls.check_url('{urls[key]}'))")
+    for index, key in enumerate(urls):
+        async def __func(cls, url_key): return await cls.check_url(cls.urls[url_key])
+        # NOTE: Function name gets changed from
+        # __func to _EmojiURLs__func
+        exec(f"{key}=classproperty(functools.partial(_EmojiURLs__func, url_key='{key}'))")
+        del __func
 
     @classproperty
     def missing_urls(cls):
-        urls_mapped_to_result = dict(((click.style(cls.urls[key], fg='yellow'), getattr(cls, key)) for key in cls.urls))
-        return list(filter(lambda key: isinstance(urls_mapped_to_result[key], type(discord.Embed.Empty)),
-                    urls_mapped_to_result))
+        async def get_urls():
+            urls_dict = {}
+            for key in cls.urls:
+                urls_dict[click.style(cls.urls[key])] = await getattr(cls, key)
+            return urls_dict
+        loop = asyncio.get_event_loop()
+        urls = loop.run_until_complete(get_urls())
+        return list(filter(lambda key: isinstance(urls[key], type(discord.Embed.Empty)), urls))
