@@ -41,7 +41,7 @@ class bdaybot(commands.Bot):
                                                   Base.metadata.tables.items())))
         if config.testing:
             self.session.add(Guild(guild_id=713095060652163113,
-                                   role_id=791185599272976396))
+                                   role_id=791804070398132225))
             self.session.add(Guild(guild_id=675806001231822863,
                                    role_id=791186971078033428))
             try:
