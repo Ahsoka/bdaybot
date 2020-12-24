@@ -169,7 +169,7 @@ class EmojiURLs:
         'wrapped_gift': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/wrapped-gift_1f381.png",
         'numbers': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/248/input-numbers_1f522.png",
         'loudspeaker': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/public-address-loudspeaker_1f4e2.png",
-        'calendar' : "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png",
+        'calendar' : "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png"
     }
 
     @classmethod
@@ -179,8 +179,14 @@ class EmojiURLs:
             return url
         except (urllib.error.URLError, urllib.error.HTTPError):
             mapping_reversed_urls = dict(((url, key) for key, url in cls.urls.items()))
-            logger = logging.getLogger('bdaybot.EmojiURLs')
-            logger.warning(f"The {mapping_reversed_urls[url]} url is not working!")
+            logger = None
+            for stack in inspect.stack():
+                module = inspect.getmodule(stack.frame)
+                if module and module.__name__ != __name__ and 'bdaybot.' in module.__name__:
+                    logger = logging.getLogger(module.__name__)
+                    break
+            if logger:
+                logger.warning(f"The '{mapping_reversed_urls[url]}' url is not working!")
             return discord.Embed.Empty
 
     for key in urls:
