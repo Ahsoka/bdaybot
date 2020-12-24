@@ -11,7 +11,6 @@ config.andres = True
 the_bot = bdaybot(command_prefix='test.' if config.testing else ('b.', '+'),
                   case_insensitive=True)
 logger_names = [
-    'bdaybot.EmojiURLs',
     'bdaybot.data',
     'bdaybot.cogs.automated',
     'bdaybot.cogs.commands',
