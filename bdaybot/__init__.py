@@ -10,11 +10,10 @@ load_dotenv()
 
 config = parser.parse_args()
 
-missing_URLs = EmojiURLs.missing_urls
-if missing_URLs:
+if EmojiURLs.missing_urls:
     class MissingURLs(Exception):
         pass
-    raise MissingURLs(f'The following URLs are missing: {format_iterable(missing_URLs, apos=False)}')
+    raise MissingURLs(f'The following URLs are missing: {format_iterable(EmojiURLs.missing_urls, apos=False)}')
 
 engine = create_async_engine(config.database)
 
