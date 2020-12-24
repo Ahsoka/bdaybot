@@ -1,5 +1,6 @@
 import discord
 import logging
+from .utils import EmojiURLs
 from .help import HelpCommand
 from discord.ext import commands
 from sqlalchemy.exc import IntegrityError
@@ -29,6 +30,8 @@ class bdaybot(commands.Bot):
         self.add_cog(self.easter_egg_cog)
 
         self.session = AsyncSession(bind=engine, binds={StudentData: postgres_engine})
+
+        EmojiURLs.bot = self
 
     async def start(self, *args, **kwargs):
         async with engine.begin() as conn:
