@@ -1,6 +1,7 @@
 import logging
 import asyncio
 from discord.ext import commands
+from bdaybot.utils import format_iterable, devs
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +34,15 @@ class EasterEggsCog(commands.Cog):
 
         valid_are_your = ['r ur', 'are your', 'are ur', 'r your']
         if inside('who') and any(map(inside, valid_are_your)) and (inside('creator') or inside('dev')):
-            await message.channel.send("My creators are Andres {}, Elliot {}, and Ryan {}" \
-                                 .format(*map(lambda name: self.get_user(dev_discord_ping[name]).mention, dev_discord_ping)))
-            logger.info(f"{mesage.author} discovered the 'who are ur devs' easter egg!")
+            def get_dev_str(iterr, index):
+                key = list(iterr)[index]
+                return f"{iterr[key].mention} ({key})"
+
+            creators = format_iterable(devs,
+                                       apos=False,
+                                       get_str=get_dev_str)
+            await message.channel.send(f"My creators are {creators}")
+            logger.info(f"{message.author} discovered the 'who are ur devs' easter egg!")
 
         # This feature is probably more annoying than actually entertaining
         # User testimonial: https://discordapp.com/channels/633788616765603870/633799889582817281/736692056491032757
