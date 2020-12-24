@@ -203,7 +203,7 @@ class EmojiURLs:
     for index, key in enumerate(urls):
         async def __func(cls, url_key): return await cls.check_url(cls.urls[url_key])
         # NOTE: Function name gets changed from
-        # __func to _EmojiURLs__func
+        # __func to _EmojiURLs__func in exec function
         exec(f"{key}=classproperty(functools.partial(_EmojiURLs__func, url_key='{key}'))")
         del __func
 
