@@ -6,6 +6,17 @@ import traceback
 from discord.ext import commands
 import urllib.request, urllib.error
 
+class mention_int(int):
+    @property
+    def mention(self):
+        return f'<@{self}>'
+
+devs = {
+    'Andres': mention_int(388899325885022211),
+    'Elliot': mention_int(349319578419068940),
+    'Ryan': mention_int(262676325846876161)
+}
+
 def fake_ctx(bot, command, guild):
     # Used to so that we can call command
     # from within the bot itself
