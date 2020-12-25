@@ -68,3 +68,7 @@ async def test_setID(bot, session, valid_ids, channel, mock_delete, dashes, dela
     latest_message = await channel.fetch_message(channel.last_message_id)
     assert f'Your ID has now been set to **{valid_id}**!' == latest_message.content, \
            f'Message content: {latest_message.content}'
+
+    # Delete all data in DiscordUsers
+    # before moving onto the next test
+    await session.run_sync(lambda sess: sess.query(DiscordUser).delete())
