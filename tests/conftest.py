@@ -88,6 +88,7 @@ async def bot():
     num = NUMBER_OF_DASHES
     await channel.send('** **')
     await channel.send('**' + '-'*num + ' Starting Unit Tests! ' + '-'*num + '**')
+    await channel.send('** **')
     yield bot
     await channel.send('**' + '-'*num + ' Ending Unit Tests ' + '-'*num + '**')
     await channel.send('** **')
@@ -146,7 +147,6 @@ def valid_ids(students):
 async def which_test(channel):
     dashes = UNIT_TEST_NUMBER_OF_DASHES
     unit_test_name = re.search(r'(:{2})([a-zA-z]+)_([a-zA-Z]+)', os.environ.get('PYTEST_CURRENT_TEST')).group(3)
-    await channel.send('** **')
     await channel.send('-'*dashes + f' Testing __{unit_test_name}__ ' + '-'*dashes)
     yield
     await channel.send('-'*(dashes*2 + len(f' Testing {unit_test_name} ')))
