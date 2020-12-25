@@ -51,7 +51,7 @@ class bdaybot(commands.Bot):
             try:
                 await self.session.commit()
             except IntegrityError:
-                await self.sesion.rollback()
+                await self.session.rollback()
 
         await super().start(*args, **kwargs)
 
