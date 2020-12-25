@@ -294,7 +294,7 @@ class CommandsCog(commands.Cog):
     @commands.command(aliases=['getann'])
     @commands.guild_only()
     async def getannouncements(self, ctx, *args):
-        guild = await self.session.run_sync(await self.session.get(Guild, ctx.guild.id))
+        guild = await self.session.run_sync(lambda session: session.get(Guild, ctx.guild.id))
         if guild.announcements_id is None:
             await ctx.send((f"{ctx.author.mention} There is not currently an announcements channel set. "
                             f"Use `{ctx.prefix}setann` to set an announcements channel."))
