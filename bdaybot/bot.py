@@ -24,10 +24,14 @@ class bdaybot(commands.Bot):
         self.commands_cog = CommandsCog()
         self.easter_egg_cog = EasterEggsCog()
 
-        self.add_cog(self.housekeeping_cog)
-        self.add_cog(self.automation_cog)
-        self.add_cog(self.commands_cog)
-        self.add_cog(self.easter_egg_cog)
+        if kwargs.get('housekeeping', True):
+            self.add_cog(self.housekeeping_cog)
+        if kwargs.get('automation', True):
+            self.add_cog(self.automation_cog)
+        if kwargs.get('commands', True):
+            self.add_cog(self.commands_cog)
+        if kwargs.get('easter_egg', True):
+            self.add_cog(self.easter_egg_cog)
 
         self.session = AsyncSession(bind=engine, binds={StudentData: postgres_engine})
 
