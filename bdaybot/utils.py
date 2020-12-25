@@ -200,7 +200,7 @@ class EmojiURLs:
                             logger.info(f'{dev} was notified of the situation.')
             return discord.Embed.Empty
 
-    for index, key in enumerate(urls):
+    for key in urls:
         async def __func(cls, url_key): return await cls.check_url(cls.urls[url_key])
         # NOTE: Function name gets changed from
         # __func to _EmojiURLs__func in exec function
