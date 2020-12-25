@@ -6,13 +6,6 @@ import asyncio
 import discord
 from bdaybot.tables import DiscordUser
 
-# pytestmark = pytest.mark.skip()
-
-@pytest.fixture(scope='module')
-async def bot(bot):
-    bot.add_cog(bot.commands_cog)
-    yield bot
-    bot.remove_cog('CommandsCog')
 
 @pytest.mark.asyncio
 async def test_setID(bot, session, valid_ids, channel, mock_delete, dashes, delay):
