@@ -2,8 +2,8 @@ import logging
 import discord
 import datetime
 from sqlalchemy import or_
-from sqlalchemy.exc import IntegrityError
 from discord.ext import commands
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from bdaybot import values, engine, postgres_engine
 from bdaybot.tables import DiscordUser, StudentData, Guild
@@ -180,23 +180,27 @@ class CommandsCog(commands.Cog):
             logger.debug(f"{ctx.author} tried to set their ID to an invalid ID.")
             return
 
+        exists = False
         discord_user = await self.session.run_sync(lambda session: session.get(DiscordUser, ctx.author.id))
         if discord_user is None:
-            try:
-                discord_user = DiscordUser(discord_user_id=ctx.author.id, student_data=student)
-                self.session.add(discord_user)
-                await self.session.commit()
-                logger.info(f"{ctx.author} succesfully set their ID to {new_id}.")
-            except IntegrityError:
-                await self.session.rollback()
-                await ctx.author.send(f"**{new_id}** is already in use. Please use another ID.")
-                logger.debug(f"{ctx.author} tried to set their ID to an ID already in use.")
+            discord_user = DiscordUser(discord_user_id=ctx.author.id, student_data=student)
+            self.session.add(discord_user)
         else:
             old_id = discord_user.student_id
             discord_user.student_data = student
+            exists = True
+
+        try:
             await self.session.commit()
-            logger.info(f"{ctx.author} succesfully updated their ID from {old_id} to {new_id}.")
-        await ctx.author.send(f"Your ID has now been set to **{new_id}**!")
+            if exists:
+                logger.info(f"{ctx.author} successfully updated their ID from {old_id} to {new_id}.")
+            else:
+                logger.info(f"{ctx.author} successfully set their ID to {new_id}.")
+            await ctx.author.send(f"Your ID has now been set to **{new_id}**!")
+        except IntegrityError:
+            await self.session.rollback()
+            await ctx.author.send(f"**{new_id}** is already in use. Please use another ID.")
+            logger.debug(f"{ctx.author} tried to set their ID to an ID already in use.")
 
     @setID.error
     async def handle_setID_error(self, ctx, error):
