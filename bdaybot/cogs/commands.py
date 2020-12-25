@@ -300,7 +300,7 @@ class CommandsCog(commands.Cog):
                             f"Use `{ctx.prefix}setann` to set an announcements channel."))
         else:
             await ctx.send((f"{ctx.author.mention} The current announcements channel is {guild.mention_ann}. "
-                            f"If you like to change the announcements channel use `{ctx.prefix}setannouncements`"))
+                            f"If you like to change the announcements channel use `{ctx.prefix}setann`."))
 
     @getannouncements.error
     async def handle_getannouncements_error(self, ctx, error):
