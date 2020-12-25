@@ -148,7 +148,7 @@ class CommandsCog(commands.Cog):
             await ctx.send(f"{maybe_mention(ctx)}You do not currently have a registered ID. Use `{ctx.prefix}setID` to set your ID")
             logger.debug(f"{ctx.author} tried to access their ID even though they do not have one.")
         else:
-            await send(ctx, f"Your ID is **{discord_user.student_id}**.  If this is a mistake use `{ctx.prefix}setID` to change it.")
+            await ctx.send(f"Your ID is **{discord_user.student_id}**.  If this is a mistake use `{ctx.prefix}setID` to change it.")
             logger.info(f"{ctx.author} succesfully used the getID command.")
 
     def dm_allowed_bot_has_guild_permissions(**perms):
