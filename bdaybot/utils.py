@@ -21,7 +21,7 @@ devs = {
 }
 
 def fake_ctx(bot, command, guild):
-    # Used to so that we can call command
+    # Used to call commands
     # from within the bot itself
     if isinstance(command, str):
         command = bot.get_command(command)
@@ -189,6 +189,8 @@ class EmojiURLs:
             if logger:
                 logger.warning(f"The {mapping_reversed_urls[url]} ({url}) url is not working!")
             if hasattr(cls, 'bot'):
+                # DEBUG: DO NOT move this import!
+                # It is here to avoid circular import issues.
                 from . import config
                 devs_send_user = [(await cls.bot.get_user(discord_id), getattr(config, key.lower()))
                                   for key, discord_id in devs.items()]
