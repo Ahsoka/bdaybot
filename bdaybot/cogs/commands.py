@@ -7,7 +7,7 @@ from discord.ext import commands
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from bdaybot import values, engine, postgres_engine
-from bdaybot.tables import DiscordUser, StudentData, Guild
+from bdaybot.tables import DiscordUser, StudentData, Guild, Wish
 from bdaybot.utils import get_bday_names, apostrophe, maybe_mention, ping_devs, EmojiURLs
 
 logger = logging.getLogger(__name__)
