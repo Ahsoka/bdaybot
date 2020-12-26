@@ -118,9 +118,9 @@ class CommandsCog(commands.Cog):
                 logger.info(f"{ctx.author} succesfully wished {wish.wishee.fullname} a happy birthday!")
             except IntegrityError:
                 await self.session.rollback()
-                wish_embed.description = (f"You cannot wish **{proper_name}** a happy birthday more than once!"
+                wish_embed.description = (f"You cannot wish **{wish.wishee.fullname}** a happy birthday more than once!"
                                            "\nTry wishing someone else a happy birthday!")
-                logger.debug(f"{ctx.author} tried to wish {proper_name} a happy birthday even though they already wished them before.")
+                logger.debug(f"{ctx.author} tried to wish {wish.wishee.fullname} a happy birthday even though they already wished them before.")
             await ctx.send(ctx.author.mention, embed=wish_embed)
         else:
             wish_embed.description = (f"You cannot use the `{ctx.prefix}wish` command if it is no one's birthday today.\n"
