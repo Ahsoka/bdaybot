@@ -77,8 +77,9 @@ class CommandsCog(commands.Cog):
             elif len(message) >= 1:
                 name = " ".join(message)
                 # Can use first name, last name, or first and last name together to wish someone
-                fullname_df = pandas.concat([self.today_df[['FirstName', 'LastName']],
-                                            (self.today_df['FirstName'] + " " + self.today_df['LastName'])], axis='columns')
+                today_df = values.today_df
+                fullname_df = pandas.concat([today_df[['FirstName', 'LastName']],
+                                            (today_df['FirstName'] + " " + today_df['LastName'])], axis='columns')
                 is_in = fullname_df.isin([name.title()])
                 if not is_in.any(axis=None):
                     if len(message) == 1:
