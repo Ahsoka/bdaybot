@@ -17,11 +17,11 @@ if EmojiURLs.missing_urls:
 
 engine = create_async_engine(config.database)
 
-postgres_URL = URL('postgresql',
-                   database=os.environ['database'],
-                   username=os.environ['dbuser'],
-                   password=os.environ['password'],
-                   host=os.environ['host'])
+postgres_URL = URL.create('postgresql',
+                          database=os.environ['database'],
+                          username=os.environ['dbuser'],
+                          password=os.environ['password'],
+                          host=os.environ['host'])
 if not config.testing:
     engine = create_async_engine(postgres_URL)
     config.DM_owner = True
