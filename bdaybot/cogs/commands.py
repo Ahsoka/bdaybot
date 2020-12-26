@@ -50,7 +50,7 @@ class CommandsCog(commands.Cog):
                                 "you do not need to submitted it again to send wishes!"))
 
             if input_id is not None:
-                if student_user.stuid != input_id:
+                if discord_user.student_data.stuid != input_id:
                     wish_embed.description = ("The ID you submitted does not match the ID you submitted previously.\n"
                                               "Please use the same ID you have used in the past or don't use an ID at all")
                     await ctx.send(ctx.author.mention, embed=wish_embed)
