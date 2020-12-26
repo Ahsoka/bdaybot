@@ -1,3 +1,4 @@
+import pandas
 import logging
 import discord
 import datetime
