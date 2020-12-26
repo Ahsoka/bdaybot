@@ -20,8 +20,6 @@ if not hasattr(functools, 'cache'):
 load_dotenv()
 
 class values:
-    store_student_data_df = True
-
     @classproperty
     def raw_data(cls):
         try:
