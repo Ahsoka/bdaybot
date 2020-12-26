@@ -77,8 +77,7 @@ def get_bday_names(apos=True):
         return iterable.iloc[index]['FirstName'] + ' ' + iterable.iloc[index]['LastName']
     return format_iterable(values.today_df,
                            apos=apos,
-                           get_str=df_get_str,
-                           iterr_func=lambda df: df.iterrows())
+                           get_str=df_get_str)
 
 def maybe_mention(ctx):
     return f'{ctx.author.mention} ' if ctx.guild else ''
