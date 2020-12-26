@@ -34,7 +34,7 @@ async def test_setID(bot, session, valid_ids, channel, mock_delete, dashes, dela
            f"Bot's ID is {the_bot.student_id} it's supposed to be {valid_id}" if the_bot else \
            "the_bot is None"
     # Check to see if the message sent back is correct
-    latest_message = await channel.fetch_message(channel.last_message_id)
+    latest_message = (await channel.history(limit=1).flatten())[0]
     assert f'Your ID has now been set to **{valid_id}**!' == latest_message.content, \
            f'Message content: {latest_message.content}'
 
