@@ -48,6 +48,10 @@ class StudentData(Base):
     state = Column(String(2))
     zipcode = Column(Integer)
 
+    @property
+    def fullname(self):
+        return f'{self.firstname} {self.lastname}'
+
     def __repr__(self):
         return (f'<StudentData(stuid={self.stuid}, '
                 f'firstname={self.firstname}, '
