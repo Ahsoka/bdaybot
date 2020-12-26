@@ -14,7 +14,7 @@ async def test_setID(bot, session, valid_ids, channel, mock_delete, dashes, dela
     message = await channel.send(f'test.setID {invalid_id}')
     await asyncio.sleep(delay)
     # Make sure the message is attempted to be deleted
-    discord.message.delete_message.assert_awaited_once_with(message)
+    discord.message.delete_message.assert_awaited_with(message)
     # NOTE: For some reason when using fetch_message it doesn't
     # fetch the latest message
     latest_message = (await channel.history(limit=1).flatten())[0]
