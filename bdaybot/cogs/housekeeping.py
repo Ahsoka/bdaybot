@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 def mention(self):
     # NOTE: Keep an eye on Discord mobile because they might change it
     # so it does not always say '#invalid-channel' and actually shows the channel
-    return f'**#{channel}**' if self.guild.owner and self.guild.owner.is_on_mobile() else super().mention
+    return f'**#{channel}**' if self.guild.owner and self.guild.owner.is_on_mobile() \
+           else f'<#{self.id}>'
 
 discord.TextChannel.mention = mention
 
