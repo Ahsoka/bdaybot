@@ -4,7 +4,7 @@ import asyncio
 from bdaybot.tables import Guild
 
 @pytest.mark.asyncio
-async def test_setannouncments(bot, session, channel, delay):
+async def test_setann(bot, session, channel, delay):
     #invalid ann id
     invalid = "<#001>"
     await channel.send(f'test.setannouncements {invalid}')
