@@ -66,7 +66,7 @@ def format_iterable(iterable,
     for counter in range(len(iterable)):
         result = get_str(iterable, counter)
         returning += f"{conjunction} {result}{apostrophe(result) if apos else ''}" if counter == len(iterable) - 1 \
-                     else f'{result}, '
+                     else f'{result}{separator} '
     return returning
 
 def get_bday_names(apos=True):
