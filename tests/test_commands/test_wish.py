@@ -97,6 +97,16 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     assert f"You wished ***__{student.fullname}__*** a happy birthday!" in latest_message.embeds[0].description, \
             f'Message content(embed): {latest_message.embeds[0].description}'
 
+    # NOTE: Initially, @Ahsoka and @Falcons-Royale tried using .get()
+    # to retrieve the wish, however, for some reason when using .get()
+    # to search a table with multiple rows making up the primary key,
+    # .get() is unable to find the item. We can be sure the wish we are
+    # looking for exists because when doing query(Wish).all() the wish
+    # appears in the list returned. It is unclear whether this issue is
+    # due to an error within SQLAlchemy or an issue with our implementation
+    # of the Wish class.
+    # (we are using SQLAlchemy Beta V1.4.0b1 as denoted in requirements.txt)
+
     # Make sure the bot is added to the wishes table (with the correct year)
     wishlist = await session.run_sync(lambda sess: sess.query(Wish).all())
 
