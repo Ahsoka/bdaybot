@@ -114,8 +114,8 @@ class CommandsCog(commands.Cog):
                 self.session.add(wish)
                 await self.session.commit()
                 wish_embed.description = (f"Congrats {discord_user.student_data.firstname}! 🎈 ✨ 🎉\n"
-                                          f"You wished ***__{wish.wishee.firstname} {wish.wishee.lastname}__*** a happy birthday!")
-                logger.info(f"{ctx.author} succesfully wished {wish.wishee.firstname} {wish.wishee.lastname} a happy birthday!")
+                                          f"You wished ***__{wish.wishee.fullname}__*** a happy birthday!")
+                logger.info(f"{ctx.author} succesfully wished {wish.wishee.fullname} a happy birthday!")
             except IntegrityError:
                 await self.sesion.rollback()
                 wish_embed.description = (f"You cannot wish **{proper_name}** a happy birthday more than once!"
