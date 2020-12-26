@@ -106,7 +106,7 @@ class CommandsCog(commands.Cog):
 
                 wishee_id, *_ = next(fullname_df[is_in.any(axis='columns')].iterrows())
 
-            wishee = self.session.run_sync(lambda session: session.get(StudentData, wishee_id))
+            wishee = await self.session.run_sync(lambda session: session.get(StudentData, wishee_id))
             assert wishee is not None, "Some how wishee is None"
 
             try:
