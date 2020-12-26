@@ -113,7 +113,7 @@ class CommandsCog(commands.Cog):
                 wish = Wish(year=datetime.datetime.today().year, wishee=wishee, discord_user=discord_user)
                 self.session.add(wish)
                 await self.session.commit()
-                wish_embed.description = (f"Congrats {first_name}! 🎈 ✨ 🎉\n"
+                wish_embed.description = (f"Congrats {discord_user.student_data.firstname}! 🎈 ✨ 🎉\n"
                                           f"You wished ***__{proper_name}__*** a happy birthday!")
                 logger.info(f"{ctx.author} succesfully wished {proper_name} a happy birthday!")
             except IntegrityError:
