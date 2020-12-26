@@ -20,7 +20,7 @@ async def test_getID(bot, session, channel, valid_ids, delay):
     await session.commit()
     await channel.send('test.getID')
     await asyncio.sleep(delay)
-    latest_message = await channel.fetch_message(channel.last_message_id)
+    latest_message = (await channel.history(limit=1).flatten())[0]
     assert f"Your ID is **{valid_id}**.  If this is a mistake use `test.setID` to change it." \
            == latest_message.content, \
            f'Message content: {latest_message.content}'

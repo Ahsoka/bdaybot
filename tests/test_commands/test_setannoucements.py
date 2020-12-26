@@ -16,7 +16,7 @@ async def test_setannouncments(bot, session, channel, delay):
     invalid ="<#713095061180776501>"
     await channel.send(f'test.setannouncements {invalid}')
     await asyncio.sleep(delay)
-    message = await channel.fetch_message(channel.last_message_id)
+    message = (await channel.history(limit=1).flatten())[0]
     assert 'not a valid TextChannel' in message.content,   \
             f'Message content: {message.content}'
     #set announcements

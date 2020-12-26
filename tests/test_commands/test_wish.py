@@ -40,7 +40,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     mocker.patch.object(values, "bday_today", return_value=True)
     await channel.send(f"test.wish")
     await asyncio.sleep(delay)
-    latest_message = await channel.fetch_message(channel.last_message_id)
+    latest_message = (await channel.history(limit=1).flatten())[0]
     assert "You are first-time wisher." in latest_message.embeds[0].description, \
             f'Message content(embed): {latest_message.embeds[0].description}'
 
@@ -50,7 +50,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     await asyncio.sleep(delay)
     # Make sure the message was deleted
     discord.message.delete_message.assert_awaited_with(message)
-    latest_message = await channel.fetch_message(channel.last_message_id)
+    latest_message = (await channel.history(limit=1).flatten())[0]
     assert "Your ID is invalid" in latest_message.embeds[0].description, \
             f'Message content(embed): {latest_message.embeds[0].description}'
 
@@ -62,7 +62,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     await asyncio.sleep(delay)
     # Make sure the message was deleted
     discord.message.delete_message.assert_awaited_with(message)
-    latest_message = await channel.fetch_message(channel.last_message_id)
+    latest_message = (await channel.history(limit=1).flatten())[0]
     # Make sure the user was added to the `discord_users` table
     the_bot = await session.run_sync(lambda sess: sess.get(DiscordUser, bot.user.id))
     assert the_bot.student_id == valid_id, \
@@ -84,7 +84,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     await asyncio.sleep(delay)
     # Make sure the message was deleted
     discord.message.delete_message.assert_awaited_with(message)
-    latest_message = await channel.fetch_message(channel.last_message_id)
+    latest_message = (await channel.history(limit=1).flatten())[0]
     assert 'The ID you submitted does not match the ID you submitted previously' in latest_message.embeds[0].description, \
             f'Message content(embed): {latest_message.embeds[0].description}'
 
@@ -93,7 +93,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     # with a first name with a previously set ID
     await channel.send(f'test.wish {wishee}')
     await asyncio.sleep(delay)
-    latest_message = await channel.fetch_message(channel.last_message_id)
+    latest_message = (await channel.history(limit=1).flatten())[0]
     assert f"You wished ***__{student.fullname}__*** a happy birthday!" in latest_message.embeds[0].description, \
             f'Message content(embed): {latest_message.embeds[0].description}'
 
@@ -113,7 +113,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     wishlist = await session.run_sync(lambda sess: sess.query(Wish).all())
     assert len(wishlist) == 1, \
             'Wish not Found'
-    latest_message = await channel.fetch_message(channel.last_message_id)
+    latest_message = (await channel.history(limit=1).flatten())[0]
     assert f"You wished ***__{student.fullname}__*** a happy birthday!" in latest_message.embeds[0].description, \
             f'Message content(embed): {latest_message.embeds[0].description}'
 
