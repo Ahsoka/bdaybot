@@ -171,7 +171,6 @@ class AutomatedTasksCog(commands.Cog):
             logger.info(f"The update_cycler coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.")
             await asyncio.sleep(time_until_midnight.total_seconds())
 
-
     @tasks.loop(hours=24)
     async def change_roles(self):
         for guild in self.bot.guilds:
@@ -218,7 +217,9 @@ class AutomatedTasksCog(commands.Cog):
             while no_error:
                 position = next(counter)
                 try:
-                    await bday_role.edit(position=position)
+                    await bday_role.edit(position=position,
+                                         hoist=True,
+                                         reason='Moving role above other roles')
                 except discord.errors.HTTPException:
                     no_error = False
 
