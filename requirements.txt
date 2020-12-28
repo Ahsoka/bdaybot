@@ -5,4 +5,7 @@ psycopg2
 selenium
 python-dotenv
 discord.py>=1.5.0
+# Have to use beta version
+# since it's the only version
+# with asyncio support
 SQLAlchemy==1.4.0b1
