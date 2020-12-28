@@ -1,11 +1,11 @@
 import logging
 import discord
-from bdaybot import config
+from .. import config
 from discord.ext import commands
-from bdaybot.tables import StudentData, Guild
+from ..tables import StudentData, Guild
+from .. import engine, postgres_engine, config
 from sqlalchemy.ext.asyncio import AsyncSession
-from bdaybot import engine, postgres_engine, config
-from bdaybot.utils import find_ann_channel, permissions, fake_ctx
+from ..utils import find_ann_channel, permissions, fake_ctx
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from discord.ext import commands
-from bdaybot.utils import format_iterable, devs
+from ..utils import format_iterable, devs
 
 logger = logging.getLogger(__name__)
 

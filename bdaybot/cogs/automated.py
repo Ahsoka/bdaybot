@@ -4,12 +4,12 @@ import logging
 import datetime
 import itertools
 from discord.ext import commands, tasks
-from bdaybot.utils import fake_ctx, ping_devs
+from ..utils import fake_ctx, ping_devs
+from ..order_from_amazon import order_product
 from sqlalchemy.ext.asyncio import AsyncSession
-from bdaybot.order_from_amazon import order_product
-from bdaybot import values, config, engine, postgres_engine
+from .. import values, config, engine, postgres_engine
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-from bdaybot.tables import Guild as guilds, DiscordUser as discord_users, StudentData as student_data
+from ..tables import Guild as guilds, DiscordUser as discord_users, StudentData as student_data
 
 logger = logging.getLogger(__name__)
 
