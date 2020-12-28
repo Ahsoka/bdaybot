@@ -154,7 +154,6 @@ class AutomatedTasksCog(commands.Cog):
                 guild.nickname_notice = False
                 await self.session.commit()
             else:
-                pass
                 logger.warning(f"Ignoring {error!r}")
 
     @tasks.loop(hours=24)
@@ -173,14 +172,22 @@ class AutomatedTasksCog(commands.Cog):
 
     @tasks.loop(hours=24)
     async def change_roles(self):
-        for guild in self.bot.guilds:
-            await self.bot.invoke(fake_ctx(self.bot, 'update_role', guild))
+        async def change_roles():
+            for guild in self.bot.guilds:
+                await self.bot.invoke(fake_ctx(self.bot, 'update_role', guild))
+            logger.info(f"The 'change_roles()' coroutine was run.")
+        await change_roles()
         if self.change_roles.current_loop == 0:
             time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)) \
                                   .replace(hour=0, minute=0, second=0, microsecond=0) \
                                   - datetime.datetime.today()
             logger.info(f"The change_roles coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.")
             await asyncio.sleep(time_until_midnight.total_seconds() + cushion_delay)
+            await change_roles()
+        else:
+            # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
+            # In the code below it is now converted to the local time zone automatically
+            logger.info(f"The next iteration is scheduled for {format(self.change_roles.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
 
     @commands.command(hidden=True)
     @commands.bot_has_permissions(manage_roles=True)
