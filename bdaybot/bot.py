@@ -1,9 +1,9 @@
 import discord
 import logging
-from .utils import EmojiURLs
 from .help import HelpCommand
 from discord.ext import commands
 from sqlalchemy.exc import IntegrityError
+from .utils import EmojiURLs, maybe_mention
 from . import engine, postgres_engine, config
 from .tables import Base, StudentData, Guild
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -67,14 +67,7 @@ class bdaybot(commands.Bot):
             return None
 
     async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandInvokeError):
-            if isinstance(error.original, RuntimeError) and str(error.original).lower() == 'session is closed':
-                logger.debug((f"Wow, you managed to cause a very rare error with the {ctx.command.name} command while the bot was shutting down. "
-                                "Do not worry though, the error did not cause any issues due to the fact that you are seeing this message."))
-            return
-        if ctx.command and hasattr(self.cogs['bdaybot_commands'], ctx.command.name):
-            return
-        elif isinstance(error, commands.CommandNotFound):
-            await ctx.send(f"{bdaybot_commands.maybe_mention(ctx)}`{ctx.message.content}` is not a valid command.")
+        if isinstance(error, commands.CommandNotFound):
+            await ctx.send(f"{maybe_mention(ctx)}`{ctx.message.content}` is not a valid command.")
             logger.debug(f"{ctx.author} tried to invoke the invalid command '{ctx.message.content}'.")
             # TODO maybe: Add a did you mean 'X' command, if u want.
