@@ -2,11 +2,12 @@ import discord
 import logging
 from .help import HelpCommand
 from discord.ext import commands
+from Levenshtein import distance
 from sqlalchemy.exc import IntegrityError
-from .utils import EmojiURLs, maybe_mention
 from . import engine, postgres_engine, config
 from .tables import Base, StudentData, Guild
 from sqlalchemy.ext.asyncio import AsyncSession
+from .utils import EmojiURLs, maybe_mention, format_iterable
 from .cogs import AutomatedTasksCog, CommandsCog, CosmicHouseKeepingCog, EasterEggsCog
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,26 @@ class bdaybot(commands.Bot):
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
-            await ctx.send(f"{maybe_mention(ctx)}`{ctx.message.content}` is not a valid command.")
-            logger.debug(f"{ctx.author} tried to invoke the invalid command '{ctx.message.content}'.")
-            # TODO maybe: Add a did you mean 'X' command, if u want.
+            command_plus_prefix, *_ = ctx.message.content.split()
+            await ctx.send(f"{maybe_mention(ctx)}`{command_plus_prefix}` is not a valid command.")
+            logger.debug(f"{ctx.author} tried to invoke the invalid command '{command_plus_prefix}'.")
+            if 'CommandsCog' in self.cogs:
+                command_names = ['help']
+                for command in self.cogs['CommandsCog'].get_commands():
+                    command_names.append(command.name)
+                    for alias in command.aliases:
+                        command_names.append(alias)
+                parsed = parsed = command_plus_prefix.removeprefix(ctx.prefix) if hasattr(str, 'removeprefix') \
+                         else command_plus_prefix[len(ctx.prefix):]
+                if parsed.endswith('id'):
+                    parsed = parsed[:-2] + 'ID'
+                possibly_meant = [name for name in command_names \
+                                  if len(name) >= 8 and distance(parsed, name) <= 2 \
+                                     or len(name) < 8 and distance(parsed, name) < 2]
+                if possibly_meant:
+                    await ctx.send(f'Did you mean '
+                                   + format_iterable(possibly_meant,
+                                                     conjunction='or',
+                                                     apos=False,
+                                                     get_str=lambda iterr, index: f'`{ctx.prefix}{iterr[index]}`')
+                                   + '?')
