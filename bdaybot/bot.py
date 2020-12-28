@@ -78,7 +78,7 @@ class bdaybot(commands.Bot):
                     command_names.append(command.name)
                     for alias in command.aliases:
                         command_names.append(alias)
-                parsed = parsed = command_plus_prefix.removeprefix(ctx.prefix) if hasattr(str, 'removeprefix') \
+                parsed = command_plus_prefix.removeprefix(ctx.prefix) if hasattr(str, 'removeprefix') \
                          else command_plus_prefix[len(ctx.prefix):]
                 if parsed.endswith('id'):
                     parsed = parsed[:-2] + 'ID'
