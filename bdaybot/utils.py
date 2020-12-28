@@ -26,7 +26,7 @@ def fake_ctx(bot, command, guild):
     if isinstance(command, str):
         command = bot.get_command(command)
     if not isinstance(command, commands.Command):
-        raise ValueError(f'command must be either a str or Commmand type, not {type(command)}')
+        raise ValueError(f'command must be either a str or Command type, not {type(command)}')
     stringview = commands.view.StringView(f'{bot.parsed_command_prefix}{command.name}')
     message_dict = {
         'id': 0,
