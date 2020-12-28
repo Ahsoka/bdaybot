@@ -1,6 +1,6 @@
 import logging, logging.handlers
 import datetime
-import os
+import pathlib
 
 class PrettyFormatter(logging.Formatter):
     def __init__(self, *args, style='%', **kwargs):
@@ -37,41 +37,43 @@ def file_renamer(filename):
     split = filename.split('.')
     return ".".join(split[:-3] + [split[-1], split[-2]])
 
-def createLogger(name, *, fmt, datefmt='%I:%M %p'):
+def setUpLogger(name, fmt, datefmt='%I:%M %p', files=True):
     # Init the logger
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
 
     # Init the PrettyFormatter
     pretty = PrettyFormatter(fmt=fmt, datefmt=datefmt)
+    if files:
+        logs_dir = pathlib.Path('.').parent / 'logs'
+        logs_dir.mkdir(exist_ok=True)
+        # Create a handler that records all activity
+        everything = logging.handlers.TimedRotatingFileHandler(logs_dir / f'bdaybot.{format(datetime.datetime.today(), "%Y-%m-%d")}.log',
+                                                               when='midnight', encoding='UTF-8')
+        # Do not use loggging.NOTSET, does not work for some reason
+        # use logging.DEBUG if you want the lowest level
+        everything.setLevel(logging.DEBUG)
+        everything.setFormatter(pretty)
 
-    if not os.path.isdir('logs'):
-        os.mkdir('logs')
-    # Create a handler that records all activity
-    everything_save = os.path.join('logs', f'bdaybot.{format(datetime.datetime.today(), "%Y-%m-%d")}.log')
-    everything = logging.handlers.TimedRotatingFileHandler(everything_save, when='midnight', encoding='UTF-8')
-    # Do not use loggging.NOTSET, does not work for some reason
-    # use logging.DEBUG if you want the lowest level
-    everything.setLevel(logging.DEBUG)
-    everything.setFormatter(pretty)
+        # Create a handler that records only ERRORs and CRITICALs
+        errors_only = logging.handlers.TimedRotatingFileHandler(logs_dir / f'ERRORS.bdaybot.{format(datetime.datetime.today(), "%Y-%m-%d")}.log',
+                                                                when='midnight', encoding='UTF-8')
+        errors_only.setLevel(logging.ERROR)
+        errors_only.setFormatter(pretty)
 
-    # Create a handler that records only ERRORs and CRITICALs
-    errors_save = os.path.join('logs', f'ERRORS.bdaybot.{format(datetime.datetime.today(), "%Y-%m-%d")}.log')
-    errors_only = logging.handlers.TimedRotatingFileHandler(errors_save, when='midnight', encoding='UTF-8')
-    errors_only.setLevel(logging.ERROR)
-    errors_only.setFormatter(pretty)
+        # Rename files so .log is the file extension
+        everything.namer, errors_only.namer = (file_renamer,) * 2
 
-    # Rename files so .log is the file extension
-    everything.namer, errors_only.namer = (file_renamer,) * 2
+        # Add handlers to the logger
+        logger.addHandler(everything)
+        logger.addHandler(errors_only)
 
     # Create a handler so we can see the output on the console
     console = logging.StreamHandler()
     console.setLevel(logging.DEBUG)
     console.setFormatter(pretty)
 
-    # Add handlers to the logger
-    logger.addHandler(everything)
-    logger.addHandler(errors_only)
+    # Add handler to the logger
     logger.addHandler(console)
 
     return logger
