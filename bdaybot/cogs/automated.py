@@ -158,17 +158,25 @@ class AutomatedTasksCog(commands.Cog):
 
     @tasks.loop(hours=24)
     async def update_cycler(self):
-        sql_guilds = await self.session.run_sync(lambda session: session.query(guilds).all())
-        new_cycler = itertools.cycle(values.today_df['FirstName'] + ' ' + values.today_df['LastName'])
-        for guild in sql_guilds:
-            guild.today_names_cycle = new_cycler
-        await self.session.commit()
+        async def update_cycler():
+            sql_guilds = await self.session.run_sync(lambda session: session.query(guilds).all())
+            new_cycler = itertools.cycle(values.today_df['FirstName'] + ' ' + values.today_df['LastName'])
+            for guild in sql_guilds:
+                guild.today_names_cycle = new_cycler
+            await self.session.commit()
+            logger.info(f"The 'update_cycler()' coroutine was run.")
+        await update_cycler()
         if self.update_cycler.current_loop == 0:
             time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)) \
                                   .replace(hour=0, minute=0, second=0, microsecond=0) \
                                   - datetime.datetime.today()
             logger.info(f"The update_cycler coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.")
             await asyncio.sleep(time_until_midnight.total_seconds())
+            await update_cycler()
+        else:
+            # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
+            # In the code below it is now converted to the local time zone automatically
+            logger.info(f"The next iteration is scheduled for {format(self.update_cycler.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
 
     @tasks.loop(hours=24)
     async def change_roles(self):
