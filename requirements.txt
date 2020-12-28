@@ -1,6 +1,5 @@
 click
 pandas
-requests
 selenium
 python-dotenv
 python-Levenshtein
