@@ -93,7 +93,10 @@ class values:
             if hasattr(date, 'date'):
                 date = date.date()
             delta = date - datetime.date.today()
-            # delta = date - datetime.date.today().replace(day=20)
+            if delta == datetime.timedelta(days=-365):
+                # Condition for edge case with bdays
+                # on Jan 1st
+                return datetime.timedelta(days=1)
             return delta if delta >= datetime.timedelta() else delta + datetime.timedelta(days=365)
 
         bday_df['Timedelta'] = bday_df['Birthdate'].transform(timedelta_today)
