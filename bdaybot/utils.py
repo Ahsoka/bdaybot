@@ -213,7 +213,7 @@ class EmojiURLs:
         async def get_urls():
             urls_dict = {}
             for key in cls.urls:
-                urls_dict[click.style(cls.urls[key])] = await getattr(cls, key)
+                urls_dict[click.style(cls.urls[key], fg='yellow')] = await getattr(cls, key)
             return urls_dict
         loop = asyncio.get_event_loop()
         urls = loop.run_until_complete(get_urls())
