@@ -112,12 +112,12 @@ class AutomatedTasksCog(commands.Cog):
     @tasks.loop(hours=24)
     async def send_DM_message(self):
         if values.bday_today:
-            for stuid, series in values.today_df.iterrows:
+            for stuid, series in values.today_df.iterrows():
                 student = await self.session.run_sync(lambda session: session.get(student_data, stuid))
                 if student.discord_user is not None:
                     user = await self.bot.get_user(student.discord_user.discord_user_id)
                     await user.send((f"Happy birthday from me, {self.bot.user.mention}, "
-                                    "and all the developers of the bdaybot! Hope you have an awesome birthday!"))
+                                      "and all the developers of the bdaybot! Hope you have an awesome birthday!"))
 
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
