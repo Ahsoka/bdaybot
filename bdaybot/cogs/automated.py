@@ -131,7 +131,9 @@ class AutomatedTasksCog(commands.Cog):
     async def update_nickname(self, ctx):
         if not hasattr(ctx, 'author'):
             guild = await self.session.run_sync(lambda session: session.get(guilds, ctx.guild.id))
-            await ctx.guild.me.edit(nick=next(guild.today_names_cycle))
+            cycler = guild.today_names_cycle
+            await ctx.guild.me.edit(nick=next(cycler))
+            guild.today_names_cycle = cycler
             await self.session.commit()
 
     @update_nickname.error

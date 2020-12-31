@@ -17,7 +17,7 @@ class Guild(Base):
     guild_id = Column(BigInteger, primary_key=True)
     announcements_id = Column(BigInteger)
     role_id = Column(BigInteger)
-    today_names_cycle = Column(PickleType, nullable=False,
+    today_names_cycle = Column(PickleType(comparator=lambda a, b: False), nullable=False,
                                default=itertools.cycle(values.today_df['FirstName'] + " " + values.today_df['LastName']))
     nickname_notice = Column(Boolean, nullable=False, default=True)
 
