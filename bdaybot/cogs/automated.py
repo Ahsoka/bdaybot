@@ -19,6 +19,7 @@ class AutomatedTasksCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.session = AsyncSession(bind=engine, binds={student_data: postgres_engine})
+        self.new_day = True
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -58,7 +59,6 @@ class AutomatedTasksCog(commands.Cog):
 
     @tasks.loop(hours=24)
     async def send_bdays(self):
-        self.new_day = True
         if values.bday_today:
             for guild in self.bot.guilds:
                 sql_guild = await self.session.run_sync(lambda session: session.get(guilds, guild.id))
@@ -121,7 +121,8 @@ class AutomatedTasksCog(commands.Cog):
 
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
-        if len(values.today_df) > 1 or self.change_nicknames.current_loop == 0:
+        if len(values.today_df) > 1 or self.new_day:
+            self.new_day = False
             for guild in self.bot.guilds:
                 await self.bot.invoke(fake_ctx(self.bot, 'update_nickname', guild))
 
@@ -168,6 +169,7 @@ class AutomatedTasksCog(commands.Cog):
             await self.session.commit()
             logger.info(f"The 'update_cycler()' coroutine was run.")
         await update_cycler()
+        self.new_day = True
         if self.update_cycler.current_loop == 0:
             time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)) \
                                   .replace(hour=0, minute=0, second=0, microsecond=0) \
