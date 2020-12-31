@@ -86,7 +86,7 @@ class AutomatedTasksCog(commands.Cog):
                     age = datetime.datetime.today().year - series['Birthyear']
                     age_portion = ' 🎂 🎉' if age >= 100 or age <= 14 \
                                   else f'\nCongratulations on turning _**{age}**_ 🎂 🎉'
-                    embed = discord.Embed(f"Happy Birthday to {full_name}{mention}🎈 🎊{age_portion}") \
+                    embed = discord.Embed(description=f"Happy Birthday to {full_name}{mention}🎈 🎊{age_portion}") \
                             .set_author(name='Happy Birthday! 🎉') # TODO: Add icon url!
                     await channel.send(embed=embed)
 
