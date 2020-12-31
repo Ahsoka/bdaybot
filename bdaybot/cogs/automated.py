@@ -118,6 +118,7 @@ class AutomatedTasksCog(commands.Cog):
                     user = await self.bot.get_user(student.discord_user.discord_user_id)
                     await user.send((f"Happy birthday from me, {self.bot.user.mention}, "
                                       "and all the developers of the bdaybot! Hope you have an awesome birthday!"))
+                    logger.info(f"A happy birthday DM message was sent to {user}.")
 
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
