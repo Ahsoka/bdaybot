@@ -79,7 +79,7 @@ class AutomatedTasksCog(commands.Cog):
 
                 for stuid, series in values.today_df.iterrows():
                     # TODO: Add some different styles for the bday message
-                    full_name = f"***__{series['FirstName']} {series['LastName']}__*** "
+                    full_name = f"***__{series['FirstName']} {series['LastName']}__***"
                     student = await self.session.run_sync(lambda session: session.get(student_data, stuid))
                     mention = f' {student.discord_user.mention}' if student.discord_user else ''
                     age = datetime.datetime.today().year - series['Birthyear']
