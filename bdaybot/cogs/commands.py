@@ -63,9 +63,7 @@ class CommandsCog(commands.Cog):
                                     "Add yourself to database here ⬇\n"
                                     "**http://drneato.com/Bday/Bday2.php**"))
 
-            name_not_included = False
             today_df = values.today_df
-
             if len(message) == 0 and len(today_df) > 1:
                 wish_embed.description = (f"Today is {get_bday_names()} birthday\n"
                                            "You must specify who you want wish a happy birthday!")
@@ -75,22 +73,19 @@ class CommandsCog(commands.Cog):
             elif len(message) == 0:
                 wishee_id = today_df.index.values[0]
             elif len(message) >= 1:
-                name = " ".join(message)
                 # Can use first name, last name, or first and last name together to wish someone
-                today_df = values.today_df
-                fullname_df = pandas.concat([today_df[['FirstName', 'LastName']],
-                                            (today_df['FirstName'] + " " + today_df['LastName'])], axis='columns')
-                is_in = fullname_df.isin([name.title()])
+                is_in = today_df[['FirstName', 'LastName']].isin(map(lambda string: string.capitalize(), message))
                 if not is_in.any(axis=None):
                     if len(message) == 1:
-                        discrim = or_(StudentData.firstname == name.title(),
-                                      StudentData.lastname == name.title())
+                        name = message[0]
+                        discrim = or_(StudentData.firstname == name.capitalize(),
+                                      StudentData.lastname == name.capitalize())
                     else:
-                        firstname, secondname, *rest = name.title().split()
-                        discrim = or_(StudentData.firstname == firstname,
-                                      StudentData.lastname == firstname,
-                                      StudentData.firstname == secondname,
-                                      StudentData.lastname == secondname)
+                        firstname, secondname, *rest = message
+                        discrim = or_(StudentData.firstname == firstname.capitalize(),
+                                      StudentData.lastname == firstname.capitalize(),
+                                      StudentData.firstname == secondname.capitalize(),
+                                      StudentData.lastname == secondname.capitalize())
                     fail_wishee = await self.session.run_sync(lambda session: session.query(StudentData) \
                                                               .filter(discrim).first())
                     if fail_wishee is None:
@@ -104,7 +99,7 @@ class CommandsCog(commands.Cog):
                     await ctx.send(ctx.author.mention, embed=wish_embed)
                     return
 
-                wishee_id, *_ = next(fullname_df[is_in.any(axis='columns')].iterrows())
+                wishee_id, *_ = next(today_df[is_in.any(axis='columns')].iterrows())
 
             wishee = await self.session.run_sync(lambda session: session.get(StudentData, wishee_id))
             assert wishee is not None, "Some how wishee is None"
