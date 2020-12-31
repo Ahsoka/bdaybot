@@ -4,7 +4,7 @@ import logging
 import datetime
 import itertools
 from discord.ext import commands, tasks
-from ..utils import fake_ctx, ping_devs
+from ..utils import fake_ctx, ping_devs, EmojiURLs
 from ..order_from_amazon import order_product
 from sqlalchemy.ext.asyncio import AsyncSession
 from .. import values, config, engine, postgres_engine
@@ -87,7 +87,7 @@ class AutomatedTasksCog(commands.Cog):
                     age_portion = ' 🎂 🎉' if age >= 100 or age <= 14 \
                                   else f'\nCongratulations on turning _**{age}**_ 🎂 🎉'
                     embed = discord.Embed(description=f"Happy Birthday to {full_name}{mention}🎈 🎊{age_portion}") \
-                            .set_author(name='Happy Birthday! 🎉') # TODO: Add icon url!
+                            .set_author(name='Happy Birthday! 🎉', icon_url=await EmojiURLs.partying_face)
                     await channel.send(embed=embed)
 
         logger.info(f"The 'send_bdays()' coroutine was run.")
