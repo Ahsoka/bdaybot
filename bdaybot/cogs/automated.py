@@ -81,8 +81,7 @@ class AutomatedTasksCog(commands.Cog):
                     # TODO: Add some different styles for the bday message
                     full_name = f"***__{series['FirstName']} {series['LastName']}__*** "
                     student = await self.session.run_sync(lambda session: session.get(student_data, stuid))
-                    user = None if student.discord_user is None else student.discord_user.mention
-                    mention = '' if user is None else f' {user.mention}'
+                    mention = f' {student.discord_user.mention}' if student.discord_user else ''
                     age = datetime.datetime.today().year - series['Birthyear']
                     age_portion = ' 🎂 🎉' if age >= 100 or age <= 14 \
                                   else f'\nCongratulations on turning _**{age}**_ 🎂 🎉'
