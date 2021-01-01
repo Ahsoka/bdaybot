@@ -87,6 +87,10 @@ class values:
         else:
             bday_df = cls.og_bday_df
 
+        if bday_df.iloc[0]['Birthdate'].year != datetime.date.today().year:
+            bday_df['Birthdate'] = bday_df['Birthdate'].transform(lambda date: date.replace(year=datetime.date.today().year))
+            cls.og_bday_df = bday_df
+
         def timedelta_today(date):
             if hasattr(date, 'to_pydatetime'):
                 date = date.to_pydatetime()
