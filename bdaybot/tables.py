@@ -1,5 +1,6 @@
 import itertools
 from . import values
+from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.orm import declarative_base, relationship, backref
 from sqlalchemy import (Column,
                         Text,
@@ -17,7 +18,26 @@ class Guild(Base):
     guild_id = Column(BigInteger, primary_key=True)
     announcements_id = Column(BigInteger)
     role_id = Column(BigInteger)
-    today_names_cycle = Column(PickleType(comparator=lambda a, b: False), nullable=False,
+
+    class MutableCycler(Mutable, itertools.cycle):
+        # The MutableCycler Class is NOT MY (@Ahsoka's) code
+        # See this for reference: https://github.com/sqlalchemy/sqlalchemy/issues/5810#issuecomment-753240007
+        def __next__(self):
+            val = super().__next__()
+            self.changed()
+            return val
+
+        @classmethod
+        def coerce(cls, key, value):
+            # receive plain itertools.cycle objects and convert.
+            # only needed if the application works with the itertools.cycle()
+            # class directly instead of MutableCycler
+            if not isinstance(value, cls):
+                value = cls(*value.__reduce__()[1])
+            return value
+
+    today_names_cycle = Column(MutableCycler.as_mutable(PickleType),
+                               nullable=False,
                                default=itertools.cycle(values.today_df['FirstName'] + " " + values.today_df['LastName']))
     nickname_notice = Column(Boolean, nullable=False, default=True)
 
