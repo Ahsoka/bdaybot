@@ -65,8 +65,8 @@ class values:
             bday_df = pandas.concat([pandas.DataFrame(data_dict),
                                      pandas.DataFrame({
                                         'PeriodNumber': [-1],
-                                        'Birthdate': ['2020-11-15'],
-                                        'Birthyear': [2020], # Use 2020 since we don't know her birthyear
+                                        'Birthdate': [datetime.date.today().replace(month=11, day=15)],
+                                        'Birthyear': [0], # Use 0 since we don't know her birthyear
                                         'Radio': [None],
                                         'Question #1': [None],
                                         'Question #2': [None],
