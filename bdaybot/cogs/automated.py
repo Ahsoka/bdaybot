@@ -48,6 +48,7 @@ class AutomatedTasksCog(commands.Cog):
             logger.info("Succesfully started the 'change_roles()' task.")
 
         if not self.update_cycler.is_running():
+            self.update_cycler.before_loop(self.update_cycler_wait_to_run)
             self.update_cycler.start()
             logger.info("Succesfully started the 'update_cycler()' task.")
 
@@ -158,28 +159,25 @@ class AutomatedTasksCog(commands.Cog):
             else:
                 logger.warning(f"Ignoring {error!r}")
 
+    async def update_cyclers(self):
+        sql_guilds = await self.session.run_sync(lambda session: session.query(guilds).all())
+        new_cycler = itertools.cycle(values.today_df['FirstName'] + ' ' + values.today_df['LastName'])
+        for guild in sql_guilds:
+            guild.today_names_cycle = new_cycler
+        await self.session.commit()
+
+    async def update_cycler_wait_to_run(self):
+        await self.update_cyclers()
+        await self.wait_to_run()
+
     @tasks.loop(hours=24)
     async def update_cycler(self):
-        async def update_cycler():
-            sql_guilds = await self.session.run_sync(lambda session: session.query(guilds).all())
-            new_cycler = itertools.cycle(values.today_df['FirstName'] + ' ' + values.today_df['LastName'])
-            for guild in sql_guilds:
-                guild.today_names_cycle = new_cycler
-            await self.session.commit()
-            logger.info(f"The 'update_cycler()' coroutine was run.")
-        await update_cycler()
         self.new_day = True
-        if self.update_cycler.current_loop == 0:
-            time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)) \
-                                  .replace(hour=0, minute=0, second=0, microsecond=0) \
-                                  - datetime.datetime.today()
-            logger.info(f"The update_cycler coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.")
-            await asyncio.sleep(time_until_midnight.total_seconds())
-            await update_cycler()
-        else:
-            # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
-            # In the code below it is now converted to the local time zone automatically
-            logger.info(f"The next iteration is scheduled for {format(self.update_cycler.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
+        await self.update_cyclers()
+        logger.info(f"The 'update_cycler()' coroutine was run.")
+        # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
+        # In the code below it is now converted to the local time zone automatically
+        logger.info(f"The next iteration is scheduled for {format(self.update_cycler.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
 
     async def invoke_update_role(self):
         for guild in self.bot.guilds:
