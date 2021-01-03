@@ -13,7 +13,7 @@ from ..tables import Guild as guilds, DiscordUser as discord_users, StudentData 
 
 logger = logging.getLogger(__name__)
 
-cushion_delay = 5
+cushion_delay = 0.1
 
 class AutomatedTasksCog(commands.Cog):
     def __init__(self, bot):
