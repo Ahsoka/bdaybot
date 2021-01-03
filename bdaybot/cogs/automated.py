@@ -43,6 +43,7 @@ class AutomatedTasksCog(commands.Cog):
             logger.info("Succesfully started the 'change_nicknames()' task.")
 
         if not self.change_roles.is_running():
+            self.change_roles.before_loop(self.change_roles_wait_to_run)
             self.change_roles.start()
             logger.info("Succesfully started the 'change_roles()' task.")
 
@@ -180,24 +181,22 @@ class AutomatedTasksCog(commands.Cog):
             # In the code below it is now converted to the local time zone automatically
             logger.info(f"The next iteration is scheduled for {format(self.update_cycler.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
 
+    async def invoke_update_role(self):
+        for guild in self.bot.guilds:
+            await self.bot.invoke(fake_ctx(self.bot, 'update_role', guild))
+        logger.info(f"The bot updated it's roles for the day.")
+
+    async def change_roles_wait_to_run(self, *args):
+        await self.invoke_update_role()
+        await self.wait_to_run()
+
     @tasks.loop(hours=24)
     async def change_roles(self):
-        async def change_roles():
-            for guild in self.bot.guilds:
-                await self.bot.invoke(fake_ctx(self.bot, 'update_role', guild))
-            logger.info(f"The 'change_roles()' coroutine was run.")
-        await change_roles()
-        if self.change_roles.current_loop == 0:
-            time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)) \
-                                  .replace(hour=0, minute=0, second=0, microsecond=0) \
-                                  - datetime.datetime.today()
-            logger.info(f"The change_roles coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.")
-            await asyncio.sleep(time_until_midnight.total_seconds() + cushion_delay)
-            await change_roles()
-        else:
-            # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
-            # In the code below it is now converted to the local time zone automatically
-            logger.info(f"The next iteration is scheduled for {format(self.change_roles.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
+        await self.invoke_update_role()
+        logger.info(f"The 'change_roles()' coroutine was run.")
+        # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
+        # In the code below it is now converted to the local time zone automatically
+        logger.info(f"The next iteration is scheduled for {format(self.change_roles.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
 
     @commands.command(hidden=True)
     @commands.bot_has_permissions(manage_roles=True)
