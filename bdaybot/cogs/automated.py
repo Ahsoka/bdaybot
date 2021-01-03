@@ -166,7 +166,7 @@ class AutomatedTasksCog(commands.Cog):
             guild.today_names_cycle = new_cycler
         await self.session.commit()
 
-    async def update_cycler_wait_to_run(self):
+    async def update_cycler_wait_to_run(self, *args):
         await self.update_cyclers()
         await self.wait_to_run()
 
