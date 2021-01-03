@@ -95,7 +95,7 @@ class CommandsCog(commands.Cog):
                         wish_embed.description = (f"Today is not **{fail_wishee.firstname} "
                                                   f"{fail_wishee.lastname}{apostrophe(fail_wishee.lastname)}** birthday.\n"
                                                   f"It is {get_bday_names()} birthday today. Wish them a happy birthday!")
-                        logger.debug(f"{ctx.author} unsucessfully used the wish command because they used a name that is not in the birthday database.")
+                        logger.debug(f"{ctx.author} unsuccessfully used the wish command because they used a name that is not in the birthday database.")
                     await ctx.send(ctx.author.mention, embed=wish_embed)
                     return
 
@@ -110,7 +110,7 @@ class CommandsCog(commands.Cog):
                 await self.session.commit()
                 wish_embed.description = (f"Congrats {discord_user.student_data.firstname}! 🎈 ✨ 🎉\n"
                                           f"You wished ***__{wish.wishee.fullname}__*** a happy birthday!")
-                logger.info(f"{ctx.author} succesfully wished {wish.wishee.fullname} a happy birthday!")
+                logger.info(f"{ctx.author} successfully wished {wish.wishee.fullname} a happy birthday!")
             except IntegrityError:
                 await self.session.rollback()
                 wish_embed.description = (f"You cannot wish **{wish.wishee.fullname}** a happy birthday more than once!"
