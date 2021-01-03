@@ -54,7 +54,7 @@ class AutomatedTasksCog(commands.Cog):
         time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)) \
                               .replace(hour=0, minute=0, second=0, microsecond=0) \
                               - datetime.datetime.today()
-        logger.info(f"The send_bdays coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.")
+        logger.info(f"This coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.")
         await asyncio.sleep(time_until_midnight.total_seconds() + cushion_delay)
 
     @tasks.loop(hours=24)
