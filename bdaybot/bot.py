@@ -80,11 +80,9 @@ class bdaybot(commands.Bot):
                         command_names.append(alias)
                 parsed = command_plus_prefix.removeprefix(ctx.prefix) if hasattr(str, 'removeprefix') \
                          else command_plus_prefix[len(ctx.prefix):]
-                if parsed.endswith('id'):
-                    parsed = parsed[:-2] + 'ID'
                 possibly_meant = [name for name in command_names \
-                                  if len(name) >= 8 and distance(parsed, name) <= 2 \
-                                     or len(name) < 8 and distance(parsed, name) < 2]
+                                  if len(name) >= 8 and distance(parsed.lower(), name.lower()) <= 2 \
+                                     or len(name) < 8 and distance(parsed.lower(), name.lower()) < 2]
                 if possibly_meant:
                     await ctx.send(f'Did you mean '
                                    + format_iterable(possibly_meant,
