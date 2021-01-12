@@ -21,12 +21,30 @@ def fill_password(driver, password, timeout=2):
     except (TimeoutException, NoSuchElementException):
         pass
 
+def fill_credit_number(driver, credit_card_number, timeout=5):
+    try:
+        credit_input = WebDriverWait(driver, timeout) \
+                         .until(EC.element_to_be_clickable((By.ID, 'addCreditCardNumber')))
+        credit_input.click()
+        credit_input.send_keys(credit_card_number)
+
+        credit_form = driver.find_element_by_css_selector('div.aok-float-left>span.a-button.a-button-primary.a-padding-none')
+        credit_form.click()
+
+
+        continue_btn =WebDriverWait(driver, timeout) \
+                         .until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'span.a-button.a-button-primary.a-padding-none.a-button-span12')))
+        continue_btn.click()
+    except (TimeoutException, NoSuchElementException):
+        pass
+
 def format_address(address):
     return address.upper() \
                   .replace('AVENUE', 'AVE') \
                   .replace('LANE', 'LN') \
                   .replace('DRIVE', 'DR') \
-                  .replace('BOULEVARD', 'BLVD')
+                  .replace('BOULEVARD', 'BLVD') \
+                  .rstrip('.')
                   # Add more here as you encounter more addresses
 
 def order_product(ASIN,
@@ -61,7 +79,6 @@ def order_product(ASIN,
                 driver.add_cookie(cookie)
 
         driver.refresh()
-
         # Set address
         account_button = WebDriverWait(driver, 10) \
                          .until(EC.presence_of_element_located((By.ID, 'nav-link-accountList')))
@@ -101,6 +118,8 @@ def order_product(ASIN,
         assert len(ADDRESS) == len(input_ids), 'Invalid address data was detected submitted'
         for info, html_id in zip(ADDRESS, input_ids):
             input_field = address_form.find_element_by_id(html_id)
+            if html_id == "address-ui-widgets-enterAddressFullName":
+                input_field.send_keys(Keys.CONTROL + "A" + Keys.BACK_SPACE)
             input_field.send_keys(info)
         state_select = Select(address_form.find_element_by_id('address-ui-widgets-enterAddressStateOrRegion-dropdown-nativeId'))
         state_select.select_by_value(STATE)
@@ -124,11 +143,11 @@ def order_product(ASIN,
         driver.get(f"https://amazon.com/dp/{ASIN}")
 
         amazon_fresh_link = WebDriverWait(driver, 10) \
-                            .until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.a-box.almOffer')))
+                            .until(EC.presence_of_element_located((By.ID, 'freshAddToCartButton')))
         amazon_fresh_link.click()
-        add_to_cart_button = WebDriverWait(driver, 10) \
-                             .until(EC.presence_of_element_located((By.ID, 'freshAddToCartButton')))
-        add_to_cart_button.click()
+        close_button = WebDriverWait(driver, 10) \
+                             .until(EC.presence_of_element_located((By.ID, 'sis-close-div')))
+        close_button.click()
 
         WebDriverWait(driver, 10).until(EC.text_to_be_present_in_element((By.ID, 'nav-cart-count'), '1'))
 
@@ -167,17 +186,36 @@ def order_product(ASIN,
                 confirm_address_button = current_address_option.find_element_by_link_text('Deliver to this address')
                 confirm_address_button.click()
                 break
-
-        first_avaliable_delivery = WebDriverWait(driver, 10) \
-                                   .until(EC.presence_of_element_located((By.CLASS_NAME, 'ufss-slot-container')))
-        first_avaliable_delivery.click()
-
+        day_delivery_classes = "span.a-button.a-button-toggle.ufss-date-select-toggle"
+        try:
+            limited_available_delivery = WebDriverWait(driver, 10) \
+                                       .until(EC.presence_of_element_located((By.CSS_SELECTOR, day_delivery_classes+'.ufss-limited-available')))
+            limited_available_delivery.click()
+        except (TimeoutException, NoSuchElementException):
+            first_avaliable_delivery = WebDriverWait(driver, 10) \
+                                   .until(EC.presence_of_element_located((By.CSS_SELECTOR, day_delivery_classes+'.ufss-available')))
+            first_avaliable_delivery.click()
+        time_slots = "ul.a-unordered-list.a-nostyle.a-vertical.ufss-slot-list.ufss-expanded li"
+        clicked = False
+        for slot in driver.find_elements_by_css_selector(time_slots):
+            if "ufss-available" in slot.find_element_by_css_selector("div.ufss-slot").get_attribute("class"):
+                slot.location_once_scrolled_into_view
+                slot.click()
+                clicked = True
+                break;
+        if not clicked:
+            class NoAvailableDelivery(Exception):
+                pass
+            raise NoAvailableDelivery("There was no available delivery")
         continue_order_button = driver.find_element_by_css_selector('input.a-button-input')
         continue_order_button.click()
+
 
         confirm_order_again = WebDriverWait(driver, 10) \
                               .until(EC.presence_of_element_located((By.ID, 'continue-top')))
         confirm_order_again.click()
+
+        fill_credit_number(driver, os.environ["CREDIT_CARD"])
 
         edit_tip_button = WebDriverWait(driver, 10) \
                           .until(EC.presence_of_element_located((By.CSS_SELECTOR, 'a.a-link-normal.tip-widget--edit-control')))
