@@ -119,7 +119,7 @@ def order_product(ASIN,
         for info, html_id in zip(ADDRESS, input_ids):
             input_field = address_form.find_element_by_id(html_id)
             if html_id == "address-ui-widgets-enterAddressFullName":
-                input_field.send_keys(Keys.CONTROL + "A" + Keys.BACK_SPACE)
+                input_field.clear()
             input_field.send_keys(info)
         state_select = Select(address_form.find_element_by_id('address-ui-widgets-enterAddressStateOrRegion-dropdown-nativeId'))
         state_select.select_by_value(STATE)
