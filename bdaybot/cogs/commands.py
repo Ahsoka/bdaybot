@@ -99,7 +99,7 @@ class CommandsCog(commands.Cog):
                     await ctx.send(ctx.author.mention, embed=wish_embed)
                     return
 
-                wishee_id, *_ = next(today_df[is_in.any(axis='columns')].iterrows())
+                wishee_id = today_df[is_in.any(axis='columns')].index.values[0]
 
             wishee = await self.session.run_sync(lambda session: session.get(StudentData, int(wishee_id)))
             assert wishee is not None, "Some how wishee is None"
