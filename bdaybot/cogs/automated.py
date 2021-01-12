@@ -109,6 +109,9 @@ class AutomatedTasksCog(commands.Cog):
                                   STATE=bday_person['State'],
                                   ZIPCODE=str(int(bday_person['Zipcode'])),
                                   place_order=config.place_order)
+                    logger.info((f"The bot successfully sent candy to {bday_person['AddrLine1']} "
+                                  "for {bday_person['FirstName'] + ' ' + bday_person['LastName']} "
+                                  "via Amazon!"))
 
     @tasks.loop(hours=24)
     async def send_DM_message(self):
