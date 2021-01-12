@@ -195,14 +195,17 @@ def order_product(ASIN,
             first_avaliable_delivery = WebDriverWait(driver, 10) \
                                    .until(EC.presence_of_element_located((By.CSS_SELECTOR, day_delivery_classes+'.ufss-available')))
             first_avaliable_delivery.click()
-        time_slots = "ul.a-unordered-list.a-nostyle.a-vertical.ufss-slot-list.ufss-expanded li"
+        time_slots = "ul.a-unordered-list.a-nostyle.a-vertical.ufss-slot-list.ufss-expanded"
         clicked = False
-        for slot in driver.find_elements_by_css_selector(time_slots):
-            if "ufss-available" in slot.find_element_by_css_selector("div.ufss-slot").get_attribute("class"):
-                slot.location_once_scrolled_into_view
-                slot.click()
-                clicked = True
-                break;
+        for unordered_list in driver.find_elements_by_css_selector(time_slots):
+            for slot in unordered_list.find_elements_by_css_selector("li"):
+                # print(unordered_list)
+                # print(slot)
+                if "ufss-available" in slot.find_element_by_css_selector("div.ufss-slot").get_attribute("class"):
+                    slot.location_once_scrolled_into_view
+                    slot.click()
+                    clicked = True
+                    break;
         if not clicked:
             class NoAvailableDelivery(Exception):
                 pass
