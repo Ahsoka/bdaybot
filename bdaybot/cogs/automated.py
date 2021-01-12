@@ -111,13 +111,13 @@ class AutomatedTasksCog(commands.Cog):
                                   place_order=config.place_order)
                     if config.place_order:
                         logger.info((f"The bot successfully sent candy to {bday_person['AddrLine1']} "
-                                      "for {bday_person['FirstName'] + ' ' + bday_person['LastName']} "
+                                     f"for {bday_person['FirstName'] + ' ' + bday_person['LastName']} "
                                       "via Amazon!"))
                         for name, discord_id in devs.items():
                             if getattr(config, name.lower()):
                                 dev = await self.bot.get_user(discord_id)
                                 await dev.send((f"The bot successfully sent candy to **{bday_person['AddrLine1']}** "
-                                                 "for __{bday_person['FirstName'] + ' ' + bday_person['LastName']}__ "
+                                                f"for __{bday_person['FirstName'] + ' ' + bday_person['LastName']}__ "
                                                  "via Amazon! ✨"))
                     else:
                         logger.info(("The bot successfully accessed Amazon, however it did not order "
