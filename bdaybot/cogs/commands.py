@@ -74,7 +74,14 @@ class CommandsCog(commands.Cog):
                 wishee_id = today_df.index.values[0]
             elif len(message) >= 1:
                 # Can use first name, last name, or first and last name together to wish someone
-                is_in = today_df[['FirstName', 'LastName']].isin(map(lambda string: string.capitalize(), message))
+                # Also firstname and lastname as one word ex: 'ahsokatano'
+                comparing = map(lambda string: string.capitalize(), message)
+                columns = ['FirstName', 'LastName']
+                if len(message) == 1:
+                    today_df['FullNameLower'] = today_df['FirstName'].str.lower() + today_df['LastName'].str.lower()
+                    comparing = [*comparing, message[0].lower()]
+                    columns += ['FullNameLower']
+                is_in = today_df[columns].isin(comparing)
                 if not is_in.any(axis=None):
                     if len(message) == 1:
                         name = message[0]
@@ -87,7 +94,7 @@ class CommandsCog(commands.Cog):
                                       StudentData.firstname == secondname.capitalize(),
                                       StudentData.lastname == secondname.capitalize())
                     fail_wishee = await self.session.run_sync(lambda session: session.query(StudentData) \
-                                                              .filter(discrim).first())
+                                                                                     .filter(discrim).first())
                     if fail_wishee is None:
                         wish_embed.description = f"'{name}' is not a name in the birthday database!"
                         logger.debug(f"{ctx.author} unsucessfully used the wish command because tried to wish someone whose birthday is not today.")
