@@ -4,10 +4,10 @@ import logging
 import datetime
 import itertools
 from discord.ext import commands, tasks
-from ..utils import fake_ctx, ping_devs, EmojiURLs
 from ..order_from_amazon import order_product
 from sqlalchemy.ext.asyncio import AsyncSession
 from .. import values, config, engine, postgres_engine
+from ..utils import fake_ctx, ping_devs, EmojiURLs, devs
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from ..tables import Guild as guilds, DiscordUser as discord_users, StudentData as student_data
 
@@ -112,6 +112,13 @@ class AutomatedTasksCog(commands.Cog):
                     logger.info((f"The bot successfully sent candy to {bday_person['AddrLine1']} "
                                   "for {bday_person['FirstName'] + ' ' + bday_person['LastName']} "
                                   "via Amazon!"))
+                    for name, discord_id in devs.items():
+                        if getattr(config, name.lower()):
+                            dev = await self.bot.get_user(discord_id)
+                            await dev.send((f"The bot successfully sent candy to **{bday_person['AddrLine1']}** "
+                                             "for __{bday_person['FirstName'] + ' ' + bday_person['LastName']}__ "
+                                             "via Amazon! ✨"))
+
 
     @order_from_amazon.error
     async def handle_order_from_amazon_error(self, error):
