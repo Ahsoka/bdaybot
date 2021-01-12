@@ -120,14 +120,10 @@ async def ping_devs(error, command, ctx=None, bot=None):
     if error_message == 'NoneType: None\n':
         error_message = repr(error)
 
-    devs_packed_info = {}
-    for key, discord_id in devs.items():
-        devs_packed_info[key] = [await bot.get_user(discord_id),
-                                 getattr(config, key.lower())]
-
     logger = None
-    for name, (dev, sending) in devs_packed_info.items():
-        if sending:
+    for name, discord_id in devs.items():
+        if getattr(config, name.lower()):
+            dev = await bot.get_user(discord_id)
             if hasattr(ctx, 'author'):
                 await dev.send((f"{ctx.author.mention} caused the following error with `{command.name}` in "
                                 f"**{discord_location}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}"
@@ -147,9 +143,9 @@ async def ping_devs(error, command, ctx=None, bot=None):
 
     if ctx and ctx.guild and hasattr(ctx, 'author'):
         # NOTE: Might want this to conform to config values
-        devs_ping_channel = format_iterable(devs_packed_info,
+        devs_ping_channel = format_iterable(devs,
                                             apos=False, conjunction='or',
-                                            get_str=lambda iterr, index: iterr[list(iterr)[index]][0].mention)
+                                            get_str=lambda iterr, index: iterr[list(iterr)[index]].mention)
         await ctx.send(f"{devs_ping_channel} fix this!")
 
 class classproperty:
