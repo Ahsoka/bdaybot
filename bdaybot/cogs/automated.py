@@ -119,6 +119,9 @@ class AutomatedTasksCog(commands.Cog):
                                 await dev.send((f"The bot successfully sent candy to **{bday_person['AddrLine1']}** "
                                                  "for __{bday_person['FirstName'] + ' ' + bday_person['LastName']}__ "
                                                  "via Amazon! ✨"))
+                    else:
+                        logger.info(("The bot successfully accessed Amazon, however it did not order "
+                                     "candy since this was disabled."))
 
 
     @order_from_amazon.error
