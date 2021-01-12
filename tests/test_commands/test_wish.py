@@ -18,6 +18,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
         'Birthdate': (datetime.date.today(),) * 3,
         'Timedelta': (datetime.timedelta(),) * 3
     }, index=random.sample(valid_ids, k=3))
+    one_row_in_df = test_df.iloc[:1]
     wishee = 'Ahsoka'
     wishee_series = test_df[test_df["FirstName"] == wishee].iloc[0]
     wishee_fullname = f"{wishee_series['FirstName']} {wishee_series['LastName']}"
@@ -89,6 +90,13 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
             f'Message content(embed): {latest_message.embeds[0].description}'
 
 
+    # Test the situation when the user wishes someone without putting the name when it is multiple people's birthdays with a previously set # ID
+    await channel.send(f'test.wish')
+    await asyncio.sleep(delay)
+    latest_message = (await channel.history(limit=1).flatten())[0]
+    assert f"You must specify" in latest_message.embeds[0].description, \
+            f'Message content(embed): {latest_message.embeds[0].description}'
+
     # Test the situation when the user wishes someone
     # with a first name with a previously set ID
     await channel.send(f'test.wish {wishee}')
@@ -134,6 +142,17 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     latest_message = (await channel.history(limit=1).flatten())[0]
     assert f"Try wishing someone else a happy birthday!" in latest_message.embeds[0].description, \
             f'Message content(embed): {latest_message.embeds[0].description}'
+
+    #Test situation where user wishes without specifying name on one person's birthday with a perviously set ID
+    await session.run_sync(lambda sess: sess.query(Wish).delete())
+    mocker.patch("bdaybot.data.values.today_df", new_callable=mocker.PropertyMock, return_value=test_df.loc[test_df['FirstName'] == wishee])
+
+    await channel.send(f'test.wish')
+    await asyncio.sleep(delay)
+    latest_message = (await channel.history(limit=1).flatten())[0]
+    assert f"You wished ***__{student.fullname}__*** a happy birthday!" in latest_message.embeds[0].description, \
+            f'Message content(embed): {latest_message.embeds[0].description}'
+
 
 
     # TODO:
