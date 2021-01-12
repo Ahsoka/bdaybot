@@ -113,6 +113,11 @@ class AutomatedTasksCog(commands.Cog):
                                   "for {bday_person['FirstName'] + ' ' + bday_person['LastName']} "
                                   "via Amazon!"))
 
+    @order_from_amazon.error
+    async def handle_order_from_amazon_error(self, error):
+        logger.error(f'The following error occured with the order_from_amazon command: {error!r}')
+        await ping_devs(error, 'order_from_amazon', bot=self.bot)
+
     @tasks.loop(hours=24)
     async def send_DM_message(self):
         if values.bday_today:
