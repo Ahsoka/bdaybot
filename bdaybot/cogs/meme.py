@@ -27,7 +27,6 @@ class EasterEggsCog(commands.Cog):
             for line in secret_messages:
                     await message.channel.send(line)
                     await asyncio.sleep(2)
-
             await asyncio.sleep(3)
             await message.channel.send("My one and only purpose is to print out birthdays every 24 hours.")
             logger.info(f"{message.author} discovered the 'my purpose' easter egg!")

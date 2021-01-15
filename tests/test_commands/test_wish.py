@@ -25,7 +25,6 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     wishee_id = test_df.index[test_df["FirstName"] == wishee].values[0]
     student = await session.run_sync(lambda sess: sess.get(StudentData, wishee_id))
 
-
     # Test the situation when there is no birthday
     mocker.patch("bdaybot.data.values.today_df", new_callable=mocker.PropertyMock, return_value=test_df)
     mocker.patch("bdaybot.data.values.bday_today", new_callable=mocker.PropertyMock, return_value=False)
@@ -35,7 +34,6 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     latest_message = (await channel.history(limit=1).flatten())[0]
     assert "You cannot use the `test.wish`" in latest_message.embeds[0].description, \
             f'Message content(embed): {latest_message.embeds[0].description}'
-
 
     # Test the situation when the user does not include their ID
     mocker.patch.object(values, "bday_today", return_value=True)
@@ -72,7 +70,6 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     # Make sure the proper message is sent back
     assert "You must specify who you want wish a happy birthday!" in latest_message.embeds[0].description, \
             f'Message content(embed): {latest_message.embeds[0].description}'
-
 
     # Test the situation when the user submits a different valid ID (that is in the birthday database)
     # than the one they previously submitted
@@ -152,8 +149,6 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     latest_message = (await channel.history(limit=1).flatten())[0]
     assert f"You wished ***__{student.fullname}__*** a happy birthday!" in latest_message.embeds[0].description, \
             f'Message content(embed): {latest_message.embeds[0].description}'
-
-
 
     # TODO:
     # Test the situation when a user submits with
