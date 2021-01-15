@@ -120,7 +120,7 @@ async def ping_devs(error, command, ctx=None, bot=None):
     if error_message == 'NoneType: None\n':
         error_message = repr(error)
 
-    logger = None
+    logger = logging.getLogger(inspect.getmodule(inspect.stack()[1].frame).__name__)
     for name, discord_id in devs.items():
         if getattr(config, name.lower()):
             dev = await bot.get_user(discord_id)
@@ -136,9 +136,7 @@ async def ping_devs(error, command, ctx=None, bot=None):
             else:
                 await dev.send((f"The following error occured with `{command.name}` in **{discord_location}**, "
                                 f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
-                                f"\n```\n{error_message}```"))
-            if logger is None:
-                logger = logging.getLogger(inspect.getmodule(inspect.stack()[1].frame).__name__)
+                                f"\n```\n{error_message}```"))                
             logger.info(f'{dev} was sent a message notifying them of the situation.')
 
     if ctx and ctx.guild and hasattr(ctx, 'author'):
