@@ -136,9 +136,13 @@ class AutomatedTasksCog(commands.Cog):
                 student = await self.session.run_sync(lambda session: session.get(student_data, stuid))
                 if student.discord_user is not None:
                     user = await self.bot.get_user(student.discord_user.discord_user_id)
-                    await user.send((f"Happy birthday from me, {self.bot.user.mention}, "
-                                      "and all the developers of the bdaybot! Hope you have an awesome birthday!"))
-                    logger.info(f"A happy birthday DM message was sent to {user}.")
+                    try:
+                        await user.send((f"Happy birthday from me, {self.bot.user.mention}, "
+                                          "and all the developers of the bdaybot! Hope you have an awesome birthday!"))
+                        logger.info(f"A happy birthday DM message was sent to {user}.")
+                    except discord.Forbidden:
+                        logger.debug(("The bdaybot failed to send a happy birthday DM message to "
+                                     f"{user} because the bot and {user} do not have any mutual servers."))
 
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
