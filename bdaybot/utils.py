@@ -136,7 +136,7 @@ async def ping_devs(error, command, ctx=None, bot=None):
             else:
                 await dev.send((f"The following error occured with `{command.name}` in **{discord_location}**, "
                                 f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
-                                f"\n```\n{error_message}```"))                
+                                f"\n```\n{error_message}```"))
             logger.info(f'{dev} was sent a message notifying them of the situation.')
 
     if ctx and ctx.guild and hasattr(ctx, 'author'):
@@ -186,10 +186,9 @@ class EmojiURLs:
                 # DEBUG: DO NOT move this import!
                 # It is here to avoid circular import issues.
                 from . import config
-                devs_send_user = [(await cls.bot.get_user(discord_id), getattr(config, key.lower()))
-                                  for key, discord_id in devs.items()]
-                for dev, sending in devs_send_user:
-                    if sending:
+                for name, discord_id in devs.items():
+                    if getattr(config, name.lower()):
+                        dev = await cls.bot.get_user(discord_id)
                         await dev.send(f"The `{mapping_reversed_urls[url]}` url ({url}) is not working!")
                         if logger:
                             logger.info(f'{dev} was notified of the situation.')
