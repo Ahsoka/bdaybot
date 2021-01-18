@@ -5,6 +5,7 @@ import datetime
 import itertools
 from discord.ext import commands, tasks
 from ..order_from_amazon import order_product
+from ..snailmail import sendmail
 from sqlalchemy.ext.asyncio import AsyncSession
 from .. import values, config, engine, postgres_engine
 from ..utils import fake_ctx, ping_devs, EmojiURLs, devs
@@ -32,6 +33,11 @@ class AutomatedTasksCog(commands.Cog):
             self.order_from_amazon.before_loop(self.wait_to_run)
             self.order_from_amazon.start()
             logger.info("Succesfully started the 'order_from_amazon()' task.")
+
+        if config.print_envelope and not self.snailmail.is_running():
+            self.snailmail.before_loop(self.wait_to_run)
+            self.snailmail.start()
+            logger.info("Succesfully started the 'snailmail()' task.")
 
         if not self.send_DM_message.is_running():
             self.send_DM_message.before_loop(self.wait_to_run)
@@ -128,6 +134,19 @@ class AutomatedTasksCog(commands.Cog):
     async def handle_order_from_amazon_error(self, error):
         logger.error(f'The following error occured with the order_from_amazon command: {error!r}')
         await ping_devs(error, 'order_from_amazon', bot=self.bot)
+
+    @tasks.loop(hours=24)
+    async def snailmail(self):
+        if values.bday_today:
+            for stuid, bday_person in values.today_df.iterrows():
+                if bday_person['AddrLine1']:
+                    sendmail(FULLNAME=bday_person['FirstName'] + ' ' + bday_person['LastName'],
+                                  ADDRESS_LINE_ONE=bday_person['AddrLine1'],
+                                  ADDRESS_LINE_TWO=bday_person['AddrLine2'],
+                                  CITY=bday_person['City'],
+                                  STATE=bday_person['State'],
+                                  ZIPCODE=str(int(bday_person['Zipcode'])),
+                                  PERSON=await self.session.run_sync(lambda sess: sess.get(student_data, 123456)))
 
     @tasks.loop(hours=24)
     async def send_DM_message(self):
