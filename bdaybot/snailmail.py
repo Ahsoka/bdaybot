@@ -45,7 +45,7 @@ def sendmail(FULLNAME,
     pdf.add_page()
     pdf.set_margins(0, 0, 0)
 
-    pdf.text(10, 78, f"Happy Birthday {recipient_name}!")
+    pdf.text(10, 78, f"Happy Birthday {FULLNAME}!")
     pdf.text(10, 82, "Have a wonderful day and enjoy your sweet!")
     pdf.text(10, 86, "-CVHS Bday Team")
 
