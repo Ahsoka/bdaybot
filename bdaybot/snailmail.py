@@ -19,11 +19,11 @@ load_dotenv(find_dotenv())
 
 def sendmail(FULLNAME,
              ADDRESS_LINE_ONE,
-             ADDRESS_LINE_TWO = None,
              CITY,
              STATE,
              ZIPCODE,
-             PERSON = None):
+             PERSON = None,
+             ADDRESS_LINE_TWO = None):
     if PERSON is None:
         sender_name = os.environ['sender_name']
         sender_addr1 = os.environ['sender_addr1']
