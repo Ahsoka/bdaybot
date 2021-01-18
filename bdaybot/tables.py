@@ -75,8 +75,8 @@ class StudentData(Base):
     def __repr__(self):
         return (f'<StudentData(stuid={self.stuid}, '
                 f'firstname={self.firstname}, '
-                f'lastname={self.lastname}), '
-                f'grd={self.grd}>')
+                f'lastname={self.lastname}, '
+                f'grd={self.grd})>')
 
 class DiscordUser(Base):
     __tablename__ = 'discord_users'
