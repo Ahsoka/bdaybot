@@ -19,12 +19,19 @@ load_dotenv(find_dotenv())
 
 def sendmail(FULLNAME,
              ADDRESS_LINE_ONE,
+             ADDRESS_LINE_TWO = None,
              CITY,
              STATE,
-             ZIPCODE):
-    sender_name = os.environ['sender_name']
-    sender_addr1 = os.environ['sender_addr1']
-    sender_addr2 = os.environ['sender_addr2']
+             ZIPCODE,
+             PERSON = None):
+    if PERSON is None:
+        sender_name = os.environ['sender_name']
+        sender_addr1 = os.environ['sender_addr1']
+        sender_addr2 = os.environ['sender_addr2']
+    else:
+        sender_name = PERSON.fullname
+        sender_addr1 = f'{PERSON.addrline1}'
+        sender_addr2 = f'{PERSON.city}, {PERSON.state} {PERSON.zipcode}'
 
     pdf = FPDF('L', 'mm', (110, 145))
     pdf.add_page()
@@ -36,9 +43,14 @@ def sendmail(FULLNAME,
     pdf.text(7, 13.5, sender_addr2)
 
     pdf.set_font('Times', '', 14)
-    pdf.text(44, 78, FULLNAME)
-    pdf.text(44, 82, ADDRESS_LINE_ONE)
-    pdf.text(44, 86, f'{CITY}, {STATE} {ZIPCODE}')
+    if ADDRESS_LINE_TWO is None:
+        pdf.text(44, 78, FULLNAME)
+        pdf.text(44, 82, ADDRESS_LINE_ONE)
+        pdf.text(44, 86, f'{CITY}, {STATE} {ZIPCODE}')
+    else:
+        pdf.text(44, 78, FULLNAME)
+        pdf.text(44, 82, f'{ADDRESS_LINE_ONE}, {ADDRESS_LINE_TWO}')
+        pdf.text(44, 86, f'{CITY}, {STATE} {ZIPCODE}')
 
     # types out message on back fo envelope
 
