@@ -12,3 +12,4 @@ SQLAlchemy==1.4.0b1
 # doesn't work try installing
 # psycopg2-binary instead
 psycopg2
+fpdf
