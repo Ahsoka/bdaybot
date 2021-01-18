@@ -27,36 +27,36 @@ class AutomatedTasksCog(commands.Cog):
         if not self.send_bdays.is_running():
             self.send_bdays.before_loop(self.wait_to_run)
             self.send_bdays.start()
-            logger.info("Succesfully started the 'send_bdays()' task.")
+            logger.info("Successfully started the 'send_bdays()' task.")
 
         if config.ASIN and not self.order_from_amazon.is_running():
             self.order_from_amazon.before_loop(self.wait_to_run)
             self.order_from_amazon.start()
-            logger.info("Succesfully started the 'order_from_amazon()' task.")
+            logger.info("Successfully started the 'order_from_amazon()' task.")
 
         if config.print_envelope and not self.snailmail.is_running():
             self.snailmail.before_loop(self.wait_to_run)
             self.snailmail.start()
-            logger.info("Succesfully started the 'snailmail()' task.")
+            logger.info("Successfully started the 'snailmail()' task.")
 
         if not self.send_DM_message.is_running():
             self.send_DM_message.before_loop(self.wait_to_run)
             self.send_DM_message.start()
-            logger.info("Succesfully started the 'send_DM_message()' task.")
+            logger.info("Successfully started the 'send_DM_message()' task.")
 
         if not self.change_nicknames.is_running():
             self.change_nicknames.start()
-            logger.info("Succesfully started the 'change_nicknames()' task.")
+            logger.info("Successfully started the 'change_nicknames()' task.")
 
         if not self.change_roles.is_running():
             self.change_roles.before_loop(self.change_roles_wait_to_run)
             self.change_roles.start()
-            logger.info("Succesfully started the 'change_roles()' task.")
+            logger.info("Successfully started the 'change_roles()' task.")
 
         if not self.update_cycler.is_running():
             self.update_cycler.before_loop(self.update_cycler_wait_to_run)
             self.update_cycler.start()
-            logger.info("Succesfully started the 'update_cycler()' task.")
+            logger.info("Successfully started the 'update_cycler()' task.")
 
     async def wait_to_run(self, *args):
         time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)) \
