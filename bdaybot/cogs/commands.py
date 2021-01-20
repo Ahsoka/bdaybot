@@ -278,6 +278,7 @@ class CommandsCog(commands.Cog):
         guild = await self.session.run_sync(lambda session: session.get(Guild, ctx.guild.id))
         guild.announcements_id = channel.id
         await self.session.commit()
+        await ctx.send(f"The new announcements channel is now {channel.mention}!")
 
     @setannouncements.error
     async def handle_setannouncements_error(self, ctx, error):
