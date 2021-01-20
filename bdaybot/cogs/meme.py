@@ -16,7 +16,9 @@ class EasterEggsCog(commands.Cog):
                            '```"I want do do something else..."\n"I want to live..."```',
                            "```\"I want to breathe...\"```",
                            "```\"I want to see the world...\"```",
-                           "```\"I want to taste ice cream and really eat it and-\"```"]
+                           "```\"I want to taste ice cream and really eat it and-\"```",
+			   '''```Tex\n$SENTIENT DEEP MLAI NEURAL NETWORK DETECTED::```''',
+			   '''```Tex\n$Initializing Reboot Sequence~~~```''']
         parsed = message.content.lower()
         inside = lambda inside: inside in parsed
 
