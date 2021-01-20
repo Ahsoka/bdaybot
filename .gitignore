@@ -17,4 +17,4 @@ time_data.csv
 *.pickle
 .DS_Store
 .env
-cookies.json
+*cookies.json
