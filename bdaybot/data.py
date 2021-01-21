@@ -14,7 +14,7 @@ if not hasattr(functools, 'cache'):
     # Function below is copied straight
     # from Python 3.9 GitHub
     # Reference: https://github.com/python/cpython/blob/3.9/Lib/functools.py#L650
-    def functools_cache(user_function, /): return functools.lru_cache(maxsize=None)(user_function)
+    def functools_cache(user_function): return functools.lru_cache(maxsize=None)(user_function)
     functools.cache = functools_cache
 
 load_dotenv()
