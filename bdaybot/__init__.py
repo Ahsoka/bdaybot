@@ -26,6 +26,6 @@ if not config.testing:
     engine = create_async_engine(postgres_URL)
     config.DM_owner = True
 
-config.andres, config.elliot, config.ryan = (not config.testing,) * 3
+config.andres, config.elliot, config.ryan, config.peter, config.deelan = (not config.testing,) * 5
 
 postgres_engine = create_async_engine(postgres_URL) if engine.name != 'postgresql' else engine
