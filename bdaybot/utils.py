@@ -17,7 +17,9 @@ class mention_int(int):
 devs = {
     'Andres': mention_int(388899325885022211),
     'Elliot': mention_int(349319578419068940),
-    'Ryan': mention_int(262676325846876161)
+    'Ryan': mention_int(262676325846876161),
+    'Peter': mention_int(250776640681017345),
+    'Deelan': mention_int(274912077985087489)
 }
 
 def fake_ctx(bot, command, guild):
@@ -119,26 +121,36 @@ async def ping_devs(error, command, ctx=None, bot=None):
     error_message = traceback.format_exc()
     if error_message == 'NoneType: None\n':
         error_message = repr(error)
-
+    error_length = len(error_message)
+    amount_of_messages = error_length//1990
+    if not error_length%1990 == 0:
+        amount_of_messages = amount_of_messages + 1
+    error_messages_array = []
+    for c in range(amount_of_messages):
+        if c==amount_of_messages-1:
+            error_messages_array.append(error_message[c*1990:len(error_message)])
+        else:
+            error_messages_array.append(error_message[c*1990:(c+1)*1990])
+        #(:
     logger = logging.getLogger(inspect.getmodule(inspect.stack()[1].frame).__name__)
     for name, discord_id in devs.items():
         if getattr(config, name.lower()):
             dev = await bot.get_user(discord_id)
             if hasattr(ctx, 'author'):
                 await dev.send((f"{ctx.author.mention} caused the following error with `{command.name}` in "
-                                f"**{discord_location}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}"
-                                f":\n```\n{error_message}```"))
-                await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
+                                f"**{discord_location}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}"))
             elif ctx is None:
                 await dev.send((f"The following error occured with the `{command}` task, on "
-                                f"{format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
-                                f"\n```\n{error_message}```"))
+                                f"{format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"))
             else:
                 await dev.send((f"The following error occured with `{command.name}` in **{discord_location}**, "
-                                f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
-                                f"\n```\n{error_message}```"))
+                                f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"))
+            for error_content in error_messages_array:
+                await dev.send((f"```\n{error_content}```"))
+            if hasattr(ctx, 'author'):
+                await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
             logger.info(f'{dev} was sent a message notifying them of the situation.')
-
+            
     if ctx and ctx.guild and hasattr(ctx, 'author'):
         # NOTE: Might want this to conform to config values
         devs_ping_channel = format_iterable(devs,
