@@ -1,5 +1,3 @@
-import os
-import click
 import pytest
 import random
 import asyncio
