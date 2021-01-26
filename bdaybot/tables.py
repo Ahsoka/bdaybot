@@ -93,6 +93,9 @@ class DiscordUser(Base):
         return (f'<DiscordUsers(discord_user_id={self.discord_user_id}, '
                 f'student_id={self.student_id})>')
 
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self.discord_user_id == other.discord_user_id and self.student_id == other.student_id
+
 class Wish(Base):
     __tablename__ = 'wishes'
     discord_user_id = Column(BigInteger,
