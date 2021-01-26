@@ -130,4 +130,6 @@ class HelpCommand(commands.HelpCommand):
 
     async def on_help_command_error(self, ctx, error):
         self.name = 'help'
-        await ctx.send(f"{maybe_mention(ctx)}Congrats you broken the help command!{await ping_devs(error, self, ctx)}")
+        logger.error(f'The following error occured with the help command: {error!r}')
+        await ctx.send(f"{maybe_mention(ctx)}Congrats you broke the help command!")
+        await ping_devs(error, self, ctx=ctx)
