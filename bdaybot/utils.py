@@ -155,7 +155,7 @@ async def ping_devs(error, command, ctx=None, bot=None):
             if hasattr(ctx, 'author'):
                 await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
             logger.info(f'{dev} was sent a message notifying them of the situation.')
-            
+
     if ctx and ctx.guild and hasattr(ctx, 'author'):
         # NOTE: Might want this to conform to config values
         devs_ping_channel = format_iterable(devs,
@@ -181,7 +181,8 @@ class EmojiURLs:
         'wrapped_gift': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/wrapped-gift_1f381.png",
         'numbers': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/248/input-numbers_1f522.png",
         'loudspeaker': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/public-address-loudspeaker_1f4e2.png",
-        'calendar' : "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png"
+        'calendar' : "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png",
+        'party_popper': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/party-popper_1f389.png"
     }
 
     @classmethod
