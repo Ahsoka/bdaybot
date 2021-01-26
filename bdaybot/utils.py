@@ -62,13 +62,18 @@ def format_iterable(iterable,
     elif len(iterable) == 2:
         result1 = get_str(iterable, 0)
         result2 = get_str(iterable, 1)
-        return f"{result1} {conjunction} {result2}{apostrophe(result2) if apos else ''}"
+        if conjunction:
+            return f"{result1} {conjunction} {result2}{apostrophe(result2) if apos else ''}"
+        return f"{result1}{separator} {result2}{apostrophe(result2) if apos else ''}"
 
     returning = ''
     for counter in range(len(iterable)):
         result = get_str(iterable, counter)
-        returning += f"{conjunction} {result}{apostrophe(result) if apos else ''}" if counter == len(iterable) - 1 \
-                     else f'{result}{separator} '
+        if conjunction:
+            returning += f"{conjunction} {result}{apostrophe(result) if apos else ''}" if counter == len(iterable) - 1 \
+                         else f'{result}{separator} '
+        else:
+            returning += str(result) if counter == len(iterable) - 1 else f'{result}{separator} '
     return returning
 
 def get_bday_names(apos=True):
