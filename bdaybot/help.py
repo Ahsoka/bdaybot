@@ -115,6 +115,16 @@ class HelpCommand(commands.HelpCommand):
                             "\nValid numbers are between 1 and 10.  If you use a number larger than 10 only the first 10 upcoming birthdays will be shown.")
             command_embed = discord.Embed(description=description).set_author(name="Upcoming Command", icon_url=await EmojiURLs.calendar) \
                             .set_footer(text=f"{ctx.prefix}up is an alias")
+        elif command.name == 'wishes':
+            description = ''
+            try:
+                await command.can_run(ctx)
+            except commands.NoPrivateMessage:
+                description = '**UNAVAILABLE IN DM MESSAGES**\n\n'
+            description += ("The wishes command shows you all the wishes someone has received.\n\n"
+                            "By default the command shows you all the wishes you have received. \n\n"
+                            f"However, you can see the wishes of someone else like this: `{ctx.prefix}wishes` {ctx.author.mention}")
+            command_embed = discord.Embed(description=description).set_author(name="Wishes Command", icon_url=await EmojiURLs.party_popper)
         elif command.name == 'help':
             await ctx.send("It sounds like your having a personal problem there, please seek a therapist for real help.")
             logger.info(f"{ctx.author} discovered the Mental Illness easter egg!")
