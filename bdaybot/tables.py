@@ -96,6 +96,9 @@ class DiscordUser(Base):
     def __eq__(self, other):
         return isinstance(other, type(self)) and self.discord_user_id == other.discord_user_id and self.student_id == other.student_id
 
+    def __hash__(self):
+        return self.discord_user_id
+
 class Wish(Base):
     __tablename__ = 'wishes'
     discord_user_id = Column(BigInteger,
