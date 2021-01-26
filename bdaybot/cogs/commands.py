@@ -320,33 +320,32 @@ class CommandsCog(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def wishes(self, ctx, person=commands.MemberConverter()):
-        async with ctx.channel.typing():
-            if not isinstance(person, discord.Member):
-                person = ctx.author
-            discord_user = await self.session.run_sync(lambda sess: sess.get(DiscordUser, person.id))
-            embed = discord.Embed().set_author(name=f"{person}'s Wishes Received!", icon_url=person.avatar_url)
-            if discord_user:
-                wishes_received = discord_user.student_data.wishes_received
-                embed.description = (f"{person.mention} currently has {len(wishes_received)} wish"
-                                     f"{'es' if len(wishes_received) != 1 else ''}{'.' if len(wishes_received) < 5 else '!'}")
-                if wishes_received:
-                    wishers_dict = {}
-                    more_than_one = False
-                    for wish in wishes_received:
-                        if wish.discord_user not in wishers_dict:
-                            wishers_dict[wish.discord_user] = [wish]
-                        else:
-                            more_than_one = True
-                            wishers_dict[wish.discord_user].append(wish)
-                    embed.add_field(name='Wishers', value='\n'.join(map(lambda discord_user: discord_user.mention, wishers_dict)))
-                    embed.add_field(name=f"Year{'s' if more_than_one else ''}", \
-                                    value='\n'.join(map(lambda wishes: format_iterable(wishes, get_str=lambda ref, index: ref[index].year, apos=False, conjunction=None), wishers_dict.values())))
-                    if discord_user in map(lambda wish: wish.discord_user, wishes_received):
-                        embed.set_footer(text=f'Hey {person} wished himself/herself! 🤔')
-            else:
-                embed.description = f"{person.mention} currently has 0 wishes."
-                embed.set_footer(text=f"{person} is not in the currently in the database 🙁")
-            await ctx.send(embed=embed)
+        if not isinstance(person, discord.Member):
+            person = ctx.author
+        discord_user = await self.session.run_sync(lambda sess: sess.get(DiscordUser, person.id))
+        embed = discord.Embed().set_author(name=f"{person}'s Wishes Received!", icon_url=person.avatar_url)
+        if discord_user:
+            wishes_received = discord_user.student_data.wishes_received
+            embed.description = (f"{person.mention} currently has {len(wishes_received)} wish"
+                                 f"{'es' if len(wishes_received) != 1 else ''}{'.' if len(wishes_received) < 5 else '!'}")
+            if wishes_received:
+                wishers_dict = {}
+                more_than_one = False
+                for wish in wishes_received:
+                    if wish.discord_user not in wishers_dict:
+                        wishers_dict[wish.discord_user] = [wish]
+                    else:
+                        more_than_one = True
+                        wishers_dict[wish.discord_user].append(wish)
+                embed.add_field(name='Wishers', value='\n'.join(map(lambda discord_user: discord_user.mention, wishers_dict)))
+                embed.add_field(name=f"Year{'s' if more_than_one else ''}", \
+                                value='\n'.join(map(lambda wishes: format_iterable(wishes, get_str=lambda ref, index: ref[index].year, apos=False, conjunction=None), wishers_dict.values())))
+                if discord_user in map(lambda wish: wish.discord_user, wishes_received):
+                    embed.set_footer(text=f'Hey {person} wished himself/herself! 🤔')
+        else:
+            embed.description = f"{person.mention} currently has 0 wishes."
+            embed.set_footer(text=f"{person} is not in the currently in the database 🙁")
+        await ctx.send(embed=embed)
 
     @wishes.error
     async def handle_wishes_error(self, ctx, error):
