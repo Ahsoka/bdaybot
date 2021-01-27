@@ -78,7 +78,8 @@ class values:
             bday_df = bday_df[bday_df['StuID'].isin(student_df['stuid'])]
             bday_df.drop_duplicates(['StuID'], inplace=True)
             bday_df['StuID'] = pandas.to_numeric(bday_df['StuID'])
-            bday_df.set_index('StuID', inplace=True); student_df.set_index('stuid', inplace=True)
+            bday_df.set_index('StuID', inplace=True)
+            student_df = student_df.set_index('stuid')
             columns = ['AddrLine1', 'AddrLine2', 'City', 'State', 'Zipcode', 'FirstName', 'LastName']
             bday_df[columns] = student_df[map(lambda text: text.lower(), columns)]
             bday_df = bday_df[['FirstName', 'LastName'] + list(bday_df.columns)[:-2]]
