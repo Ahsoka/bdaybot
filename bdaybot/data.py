@@ -52,8 +52,12 @@ class values:
                     continue
                 elif index == 2:
                     unparsed_date = attr.split('-')
-                    data_dict[keys[index - 1]].append(datetime.date(*map(int, unparsed_date)).replace(year=datetime.date.today().year))
-                    data_dict[keys[index]].append(int(unparsed_date[0]))
+                    try:
+                        data_dict[keys[index - 1]].append(datetime.date(*map(int, unparsed_date)).replace(year=datetime.date.today().year))
+                        data_dict[keys[index]].append(int(unparsed_date[0]))
+                    except ValueError:
+                        data_dict[keys[index - 1]].append(None)
+                        data_dict[keys[index]].append(0)
                 else:
                     try:
                         attr = int(attr)
