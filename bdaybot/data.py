@@ -36,6 +36,7 @@ class values:
         if not hasattr(cls, 'og_raw_data'):
             cls.og_raw_data = cls.raw_data
         if cls.og_raw_data != cls.raw_data or not hasattr(cls, 'og_bday_df'):
+            cls.og_raw_data = cls.raw_data
             data_dict = dict(((column_name, []) for column_name in ['PeriodNumber',
                                                                     'Birthdate',
                                                                     'Birthyear',
