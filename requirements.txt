@@ -4,6 +4,7 @@ selenium
 python-dotenv
 python-Levenshtein
 discord.py>=1.5.0
+aiohttp
 # Have to use beta version
 # since it's the only version
 # with asyncio support
