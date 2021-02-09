@@ -1,5 +1,6 @@
 import click
 import asyncio
+import aiohttp
 import discord
 import inspect
 import logging
@@ -7,7 +8,6 @@ import datetime
 import functools
 import traceback
 from discord.ext import commands
-import urllib.request, urllib.error
 
 class mention_int(int):
     @property
@@ -186,11 +186,13 @@ class EmojiURLs:
     }
 
     @classmethod
-    async def check_url(cls, url):
+    async def check_url(cls, url, session=None):
         try:
-            urllib.request.urlopen(url)
-            return url
-        except (urllib.error.URLError, urllib.error.HTTPError):
+            if session:
+                async with session.get(url): return url
+            else:
+                async with aiohttp.request('GET', url): return url
+        except aiohttp.ClientConnectorError:
             mapping_reversed_urls = dict(((url, key) for key, url in cls.urls.items()))
             logger = None
             for stack in inspect.stack():
@@ -223,8 +225,9 @@ class EmojiURLs:
     def missing_urls(cls):
         async def get_urls():
             urls_dict = {}
-            for key in cls.urls:
-                urls_dict[click.style(cls.urls[key], fg='yellow')] = await getattr(cls, key)
+            async with aiohttp.ClientSession() as session:
+                results = await asyncio.gather(*map(lambda url: cls.check_url(url, session), cls.urls.values()))
+                urls_dict = {click.style(cls.urls[key], fg='yellow'): result for key, result in zip(cls.urls, results)}
             return urls_dict
         loop = asyncio.get_event_loop()
         urls = loop.run_until_complete(get_urls())
