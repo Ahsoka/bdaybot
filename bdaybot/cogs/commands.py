@@ -358,4 +358,4 @@ class CommandsCog(commands.Cog):
         else:
             logger.error(f'The following error occured with the wishes command: {error!r}')
             await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}wishes` command!")
-            await ping_devs(error, self.getannouncements, ctx=ctx)
+            await ping_devs(error, self.wishes, ctx=ctx)
