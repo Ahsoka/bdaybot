@@ -339,7 +339,8 @@ class CommandsCog(commands.Cog):
                         wishers_dict[wish.discord_user].append(wish)
                 embed.add_field(name='Wishers', value='\n'.join(map(lambda discord_user: discord_user.mention, wishers_dict)))
                 embed.add_field(name=f"Year{'s' if more_than_one else ''}", \
-                                value='\n'.join(map(lambda wishes: format_iterable(wishes, get_str=lambda ref, index: ref[index].year, apos=False, conjunction=None), wishers_dict.values())))
+                                value='\n'.join(map(lambda wishes: format_iterable(wishes, get_str=lambda ref, index: ref[index].year, apos=False, conjunction=None),
+                                                    wishers_dict.values())))
                 if discord_user in map(lambda wish: wish.discord_user, wishes_received):
                     embed.set_footer(text=f'Hey {person} wished himself/herself! 🤔')
         else:
