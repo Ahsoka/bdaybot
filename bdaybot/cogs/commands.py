@@ -344,7 +344,7 @@ class CommandsCog(commands.Cog):
                     embed.set_footer(text=f'Hey {person} wished himself/herself! 🤔')
         else:
             embed.description = f"{person.mention} currently has 0 wishes."
-            embed.set_footer(text=f"{person} is not in the currently in the database 🙁")
+            embed.set_footer(text=f"{person} is not currently in the database 🙁")
         await ctx.send(embed=embed)
 
     @wishes.error
