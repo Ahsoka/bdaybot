@@ -8,7 +8,7 @@ aiohttp
 # Have to use beta version
 # since it's the only version
 # with asyncio support
-SQLAlchemy==1.4.0b1
+SQLAlchemy==1.4.0b2
 # If installing psycopg2
 # doesn't work try installing
 # psycopg2-binary instead
