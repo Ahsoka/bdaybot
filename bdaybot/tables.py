@@ -112,6 +112,6 @@ class Wish(Base):
     wishee = relationship(StudentData, backref='wishes_received')
 
     def __repr__(self):
-        return (f'<Wishes(discord_user_id={self.discord_user_id}, '
+        return (f'<Wish(discord_user_id={self.discord_user_id}, '
                 f'year={self.year}, '
                 f'wishee_stuid={self.wishee_stuid})>')
