@@ -21,7 +21,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     wishee_series = test_df[test_df["FirstName"] == wishee].iloc[0]
     wishee_fullname = f"{wishee_series['FirstName']} {wishee_series['LastName']}"
     wishee_id = int(test_df.index[test_df["FirstName"] == wishee].values[0])
-    student = await session.run_sync(lambda sess: sess.get(StudentData, wishee_id))
+    student = await session.get(StudentData, wishee_id)
 
     # Test the situation when there is no birthday
     mocker.patch("bdaybot.data.values.today_df", new_callable=mocker.PropertyMock, return_value=test_df)
@@ -61,7 +61,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     discord.message.delete_message.assert_awaited_with(message)
     latest_message = (await channel.history(limit=1).flatten())[0]
     # Make sure the user was added to the `discord_users` table
-    the_bot = await session.run_sync(lambda sess: sess.get(DiscordUser, bot.user.id))
+    the_bot = await session.get(DiscordUser, bot.user.id)
     assert the_bot.student_id == valid_id, \
            f"Bot's ID is {the_bot.student_id} it's supposed to be {valid_id}" if the_bot else \
            "the_bot is None"
@@ -101,7 +101,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
             f'Message content(embed): {latest_message.embeds[0].description}'
 
     # Make sure the bot is added to the wishes table (with the correct year)
-    wish = await session.run_sync(lambda sess: sess.get(Wish, (bot.user.id, datetime.date.today().year, wishee_id)))
+    wish = await session.get(Wish, (bot.user.id, datetime.date.today().year, wishee_id))
     assert wish is not None, 'Wish was not added to the database'
 
     # Test the situation when a second user wishes someone

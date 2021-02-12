@@ -22,7 +22,7 @@ async def test_setann(bot, session, channel, delay):
     #set announcements
     await channel.send(f'test.setannouncements {channel.mention}')
     await asyncio.sleep(delay)
-    guild =  await session.run_sync(lambda session: session.get(Guild, channel.guild.id))
+    guild =  await session.get(Guild, channel.guild.id)
     assert channel.id == guild.announcements_id, \
             f'SQLAnnouncments ID: {guild.announcements_id}'
     #reset
@@ -31,6 +31,6 @@ async def test_setann(bot, session, channel, delay):
     #set blank annoucnements
     await channel.send(f'test.setannouncements')
     await asyncio.sleep(delay)
-    guild =  await session.run_sync(lambda session: session.get(Guild, channel.guild.id))
+    guild =  await session.get(Guild, channel.guild.id)
     assert channel.id == guild.announcements_id, \
             f'SQLAnnouncments ID: {guild.announcements_id}'

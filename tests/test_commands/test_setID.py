@@ -29,7 +29,7 @@ async def test_setID(bot, session, valid_ids, channel, mock_delete, dashes, dela
     # Make sure the message is attempted to be deleted
     discord.message.delete_message.assert_awaited_with(message)
     # Check to see if the ID is properly added to the database
-    the_bot = await session.run_sync(lambda sess: sess.get(DiscordUser, bot.user.id))
+    the_bot = await session.get(DiscordUser, bot.user.id)
     assert the_bot.student_id == valid_id, \
            f"Bot's ID is {the_bot.student_id} it's supposed to be {valid_id}" if the_bot else \
            "the_bot is None"
@@ -60,7 +60,7 @@ async def test_setID(bot, session, valid_ids, channel, mock_delete, dashes, dela
     # Make sure the message is attempted to be deleted
     discord.message.delete_message.assert_awaited_with(message)
     # Check to see if the ID is properly added to the database
-    the_bot = await session.run_sync(lambda sess: sess.query(DiscordUser).get(bot.user.id))
+    the_bot = await session.get(DiscordUser, bot.user.id)
     assert the_bot.student_id == valid_id, \
            f"Bot's ID is {the_bot.student_id} it's supposed to be {valid_id}" if the_bot else \
            "the_bot is None"

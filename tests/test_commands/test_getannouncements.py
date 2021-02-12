@@ -6,7 +6,7 @@ from bdaybot.tables import Guild
 async def test_getann(bot, session, channel, delay):
     # Test with situation with no announcements channel
     # Delete preset announcements channel
-    guild = await session.run_sync(lambda sess: sess.get(Guild, channel.guild.id))
+    guild = await session.get(Guild, channel.guild.id)
     guild.announcements_id = None
     await session.commit()
     await channel.send(f'test.getannouncements')
