@@ -26,7 +26,7 @@ class CosmicHouseKeepingCog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         for guild in self.bot.guilds:
-            sql_guild = await self.session.run_sync(lambda session: session.get(Guild, guild.id))
+            sql_guild = await self.session.get(Guild, guild.id)
             if sql_guild is None:
                 channel = find_ann_channel(guild)
                 if channel is None:
@@ -78,7 +78,7 @@ class CosmicHouseKeepingCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_channel_update(self, before, after):
-        guild = await self.session.run_sync(lambda session: session.get(Guild, after.guild.id))
+        guild = await self.session.get(Guild, after.guild.id)
         if guild.announcements_id == before.id and not permissions(after, after.guild.me, 'send_messages'):
             guild.announcements_id = None
             await self.session.commit()
@@ -90,7 +90,7 @@ class CosmicHouseKeepingCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
-        guild = await self.session.run_sync(lambda session: session.get(Guild, channel.guild.id))
+        guild = await self.session.get(Guild, channel.guild.id)
         if channel.id == guild.announcements_id:
             guild.announcements_id = None
             await self.session.commit()
@@ -101,7 +101,7 @@ class CosmicHouseKeepingCog(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         if after == self.bot.user:
-            guild = await self.session.run_sync(lambda session: session.get(Guild, after.guild.id))
+            guild = await self.session.get(Guild, after.guild.id)
             missing_manage_roles = False
             if before.roles != after.roles and guild.role_id not in map(lambda role: role.id, after.roles):
                 try:

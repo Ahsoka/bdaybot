@@ -69,7 +69,7 @@ class AutomatedTasksCog(commands.Cog):
     async def send_bdays(self):
         if values.bday_today:
             for guild in self.bot.guilds:
-                sql_guild = await self.session.run_sync(lambda session: session.get(guilds, guild.id))
+                sql_guild = await self.session.get(guilds, guild.id)
                 if sql_guild is None:
                     # TODO: Call function in housekeeping
                     continue
@@ -88,7 +88,7 @@ class AutomatedTasksCog(commands.Cog):
                 for stuid, series in values.today_df.iterrows():
                     # TODO: Add some different styles for the bday message
                     full_name = f"***__{series['FirstName']} {series['LastName']}__***"
-                    student = await self.session.run_sync(lambda session: session.get(student_data, stuid))
+                    student = await self.session.get(student_data, stuid)
                     mention = f' {student.discord_user.mention}' if student.discord_user else ''
                     age = datetime.datetime.today().year - series['Birthyear']
                     age_portion = ' 🎂 🎉' if age >= 100 or age <= 14 \
@@ -146,13 +146,13 @@ class AutomatedTasksCog(commands.Cog):
                                   CITY=bday_person['City'],
                                   STATE=bday_person['State'],
                                   ZIPCODE=str(int(bday_person['Zipcode'])),
-                                  PERSON=await self.session.run_sync(lambda sess: sess.get(student_data, 123456)))
+                                  PERSON=await self.session.get(student_data, 123456))
 
     @tasks.loop(hours=24)
     async def send_DM_message(self):
         if values.bday_today:
             for stuid, series in values.today_df.iterrows():
-                student = await self.session.run_sync(lambda session: session.get(student_data, stuid))
+                student = await self.session.get(student_data, stuid)
                 if student.discord_user is not None:
                     user = await self.bot.get_user(student.discord_user.discord_user_id)
                     try:
@@ -174,7 +174,7 @@ class AutomatedTasksCog(commands.Cog):
     @commands.bot_has_permissions(change_nickname=True)
     async def update_nickname(self, ctx):
         if not hasattr(ctx, 'author'):
-            guild = await self.session.run_sync(lambda session: session.get(guilds, ctx.guild.id))
+            guild = await self.session.get(guilds, ctx.guild.id)
             await ctx.guild.me.edit(nick=next(guild.today_names_cycle))
             await self.session.commit()
 
@@ -188,7 +188,7 @@ class AutomatedTasksCog(commands.Cog):
                 # TODO: Add logging and dev messaging
                 return
 
-            guild = await self.session.run_sync(lambda session: session.get(guilds, ctx.guild.id))
+            guild = await self.session.get(guilds, ctx.guild.id)
             if isinstance(error, commands.BotMissingPermissions) and guild.nickname_notice:
                 logger_message = f"The bot unsucessfully changed its nickname in '{ctx.guild}'. "
                 if config.DM_owner:
@@ -247,7 +247,7 @@ class AutomatedTasksCog(commands.Cog):
             else:
                 role_name, color = (f"Upcoming Bday-{format(values.today_df.iloc[0]['Birthdate'], '%a %b %d')}",
                                     discord.Color.from_rgb(162, 217, 145))
-            guild = await self.session.run_sync(lambda session: session.get(guilds, ctx.guild.id))
+            guild = await self.session.get(guilds, ctx.guild.id)
             if guild.role_id is not None:
                 try:
                     bday_role = ctx.guild.get_role(guild.role_id)
@@ -294,7 +294,7 @@ class AutomatedTasksCog(commands.Cog):
                 logger.warning(logger_message)
             elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden):
                 # TODO: Have the bot fix this problem on its own if possible
-                guild = await self.session.run_sync(lambda session: session.get(guilds, ctx.guild.id))
+                guild = await self.session.get(guilds, ctx.guild.id)
                 current_role = ctx.guild.get_role(guild.role_id)
                 most_likely = [role for role in ctx.guild.me.roles
                                 if role.id != current_role_id and

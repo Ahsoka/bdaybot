@@ -30,14 +30,14 @@ class CommandsCog(commands.Cog):
             input_id = None
 
         if values.bday_today:
-            discord_user = await self.session.run_sync(lambda session: session.get(DiscordUser, ctx.author.id))
+            discord_user = await self.session.get(DiscordUser, ctx.author.id)
             if discord_user is None:
                 if input_id is None:
                     wish_embed.description = "You are first-time wisher. You must include your 6-digit student ID at the end of the wish command to send a wish."
                     await ctx.send(ctx.author.mention, embed=wish_embed)
                     logger.debug(f"{ctx.author} unsucessfully used the wish command because they forgot to put their student ID.")
                     return
-                student_user = await self.session.run_sync(lambda session: session.get(StudentData, input_id))
+                student_user = await self.session.get(StudentData, input_id)
                 if student_user is None:
                     wish_embed.description = "Your ID is invalid, please use a valid 6-digit ID"
                     await ctx.send(ctx.author.mention, embed=wish_embed)
@@ -108,7 +108,7 @@ class CommandsCog(commands.Cog):
 
                 wishee_id = today_df[is_in.any(axis='columns')].index.values[0]
 
-            wishee = await self.session.run_sync(lambda session: session.get(StudentData, int(wishee_id)))
+            wishee = await self.session.get(StudentData, int(wishee_id))
             assert wishee is not None, "Some how wishee is None"
 
             try:
@@ -147,7 +147,7 @@ class CommandsCog(commands.Cog):
 
     @commands.command()
     async def getID(self, ctx, *message):
-        discord_user = await self.session.run_sync(lambda session: session.get(DiscordUser, ctx.author.id))
+        discord_user = await self.session.get(DiscordUser, ctx.author.id)
         if discord_user is None:
             await ctx.send(f"{maybe_mention(ctx)}You do not currently have a registered ID. Use `{ctx.prefix}setID` to set your ID")
             logger.debug(f"{ctx.author} tried to access their ID even though they do not have one.")
@@ -178,14 +178,14 @@ class CommandsCog(commands.Cog):
         # to another ID we should also transfer any of their wishes with the new id
         if ctx.guild:
             await ctx.message.delete()
-        student = await self.session.run_sync(lambda session: session.get(StudentData, new_id))
+        student = await self.session.get(StudentData, new_id)
         if student is None:
             await ctx.author.send(f"**{new_id}** is not a valid ID. Please use a valid 6-digit ID.")
             logger.debug(f"{ctx.author} tried to set their ID to an invalid ID.")
             return
 
         exists = False
-        discord_user = await self.session.run_sync(lambda session: session.get(DiscordUser, ctx.author.id))
+        discord_user = await self.session.get(DiscordUser, ctx.author.id)
         if discord_user is None:
             discord_user = DiscordUser(discord_user_id=ctx.author.id, student_data=student)
             self.session.add(discord_user)
@@ -275,7 +275,7 @@ class CommandsCog(commands.Cog):
     async def setannouncements(self, ctx, channel=commands.TextChannelConverter()):
         if not isinstance(channel, discord.TextChannel):
             channel = ctx.channel
-        guild = await self.session.run_sync(lambda session: session.get(Guild, ctx.guild.id))
+        guild = await self.session.get(Guild, ctx.guild.id)
         guild.announcements_id = channel.id
         await self.session.commit()
         await ctx.send(f"The new announcements channel is now {channel.mention}!")
@@ -299,7 +299,7 @@ class CommandsCog(commands.Cog):
     @commands.command(aliases=['getann'])
     @commands.guild_only()
     async def getannouncements(self, ctx, *args):
-        guild = await self.session.run_sync(lambda session: session.get(Guild, ctx.guild.id))
+        guild = await self.session.get(Guild, ctx.guild.id)
         if guild.announcements_id is None:
             await ctx.send((f"{ctx.author.mention} There is not currently an announcements channel set. "
                             f"Use `{ctx.prefix}setann` to set an announcements channel."))
@@ -322,7 +322,7 @@ class CommandsCog(commands.Cog):
     async def wishes(self, ctx, person=commands.MemberConverter()):
         if not isinstance(person, discord.Member):
             person = ctx.author
-        discord_user = await self.session.run_sync(lambda sess: sess.get(DiscordUser, person.id))
+        discord_user = await self.session.get(DiscordUser, person.id)
         embed = discord.Embed().set_author(name=f"{person}'s Wishes Received!", icon_url=person.avatar_url)
         if discord_user:
             wishes_received = discord_user.student_data.wishes_received
