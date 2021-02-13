@@ -18,3 +18,5 @@ time_data.csv
 .DS_Store
 .env
 *cookies.json
+# VS Code config
+.vscode
