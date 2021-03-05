@@ -182,7 +182,8 @@ class AutomatedTasksCog(commands.Cog):
     async def handle_update_nickname_error(self, ctx, error):
         if not hasattr(ctx, 'author'):
             if isinstance(error, NoResultFound):
-                # TODO: Add logging and dev messaging
+                logger.warning(f"There is an issue with the database, {error!r}")
+                await ping_devs(error, self.update_nickname, ctx)
                 return
             elif isinstance(error, MultipleResultsFound):
                 # TODO: Add logging and dev messaging
