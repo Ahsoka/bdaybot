@@ -21,6 +21,7 @@ discord.TextChannel.mention = mention
 class CosmicHouseKeepingCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.parsed_command_prefix = self.bot.parsed_command_prefix
         self.session = AsyncSession(bind=engine, binds={StudentData: postgres_engine})
 
     @commands.Cog.listener()
