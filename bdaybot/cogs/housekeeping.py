@@ -84,8 +84,8 @@ class CosmicHouseKeepingCog(commands.Cog):
             guild.announcements_id = None
             await self.session.commit()
             if config.DM_owner:
-                await after.guild.owner.send((f"While changing {channel.mention} you or someone in **{after.guild}** "
-                                              f"accidently made it so I can no longer send messages in {channel.mention}. "
+                await after.guild.owner.send((f"While changing {after.mention} you or someone in **{after.guild}** "
+                                              f"accidently made it so I can no longer send messages in {after.mention}. "
                                               f"Please use `{self.bot.parsed_command_prefix}setann` to set another announcements "
                                                "channel."))
 
