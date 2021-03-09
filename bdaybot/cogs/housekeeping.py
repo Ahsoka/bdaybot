@@ -126,8 +126,8 @@ class CosmicHouseKeepingCog(commands.Cog):
                     logger_message = (f"Someone in {after.guild} accidently made it so that "
                                        "the bot can no longer send messsages in the announcements channel.")
                     if config.DM_owner:
-                        await after.guild.owner.send((f"{beginning} I can no longer send messages in {channel_mention}. "
-                                                      f"Therefore, {channel_mention} is no longer the announcements channel. "
+                        await after.guild.owner.send((f"{beginning} I can no longer send messages in {channel.mention}. "
+                                                      f"Therefore, {channel.mention} is no longer the announcements channel. "
                                                        "If you want to set a new announcements channel please use "
                                                       f"`{self.parsed_command_prefix}setannouncements`."))
                         logger_message += f" A message was sent to {after.guild.owner}."
