@@ -3,39 +3,39 @@ import time
 import json
 import pathlib
 import itertools
-from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait, Select
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from selenium.webdriver.support import expected_conditions as EC
+import asyncio
+import click
+import datetime
+from dotenv import load_dotenv
+from arsenic import get_session, keys, browsers, services, start_session
+from arsenic.errors import ArsenicTimeout, NoSuchElement
+load_dotenv()
 
-def fill_password(driver, password, timeout=2):
+async def fill_password(session, password, timeout=2):
     try:
-        password_input = WebDriverWait(driver, timeout) \
-                         .until(EC.presence_of_element_located((By.ID, 'ap_password')))
-        password_input.send_keys(password)
+        password_input = await session.wait_for_element(timeout,'#ap_password')
+        await password_input.send_keys(password)
 
-        password_form = driver.find_element_by_name('signIn')
-        password_form.submit()
-    except (TimeoutException, NoSuchElementException):
+        await session.execute_script('document.getElementByName("signIn").submit();')
+        # password_form = await session.find_element_by_name('signIn')
+        # password_form.submit()
+    except (ArsenicTimeout, NoSuchElement):
         pass
 
-def fill_credit_number(driver, credit_card_number, timeout=5):
+async def fill_credit_number(session, credit_card_number, timeout=4):
     try:
-        credit_input = WebDriverWait(driver, timeout) \
-                         .until(EC.element_to_be_clickable((By.ID, 'addCreditCardNumber')))
-        credit_input.click()
-        credit_input.send_keys(credit_card_number)
+        await asyncio.sleep(timeout)
+        credit_input = await session.wait_for_element(timeout, '[id="addCreditCardNumber"]')
+        # await credit_input.click()
+        await credit_input.send_keys(credit_card_number)
 
-        credit_form = driver.find_element_by_css_selector('div.aok-float-left>span.a-button.a-button-primary.a-padding-none')
-        credit_form.click()
+        credit_form = await session.get_element('div.aok-float-left>span.a-button.a-button-primary.a-padding-none')
+        await credit_form.click()
 
-
-        continue_btn =WebDriverWait(driver, timeout) \
-                         .until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'span.a-button.a-button-primary.a-padding-none.a-button-span12')))
-        continue_btn.click()
-    except (TimeoutException, NoSuchElementException):
+        await asyncio.sleep(timeout)
+        continue_btn =await session.wait_for_element(timeout, 'span.a-button.a-button-primary.a-padding-none.a-button-span12')
+        await continue_btn.click()
+    except (ArsenicTimeout, NoSuchElement):
         pass
 
 def format_address(address):
@@ -47,7 +47,7 @@ def format_address(address):
                   .rstrip('.')
                   # Add more here as you encounter more addresses
 
-def order_product(ASIN,
+async def order_product(ASIN,
                   FULLNAME,
                   ADDRESS_LINE_ONE,
                   CITY,
@@ -60,7 +60,7 @@ def order_product(ASIN,
                   screenshot=None,
                   quit=True):
     try:
-        driver = None
+        session = None
         added_address = False
         if os.name == 'posix':
             chrome_options = webdriver.ChromeOptions()
@@ -70,33 +70,26 @@ def order_product(ASIN,
                                       service_args=['--verbose', f"--log-path={pathlib.Path('logs/chrome.log').resolve()}"])
             driver.set_window_size(width=1363, height=1094)
         else:
-            driver = webdriver.Chrome('chrome86-driver.exe')
+            service = services.Chromedriver(binary='./chromedriver89.exe')
+            browser = browsers.Chrome()
+            session = await start_session(service, browser)
 
-        driver.get("https://amazon.com/")
+        await session.get("https://amazon.com/")
 
         with open('cookies.json') as file:
             for cookie in json.load(file):
-                driver.add_cookie(cookie)
+                del cookie["httpOnly"]
+                await session.add_cookie(**cookie)
 
-        driver.refresh()
-        # Set address
-        account_button = WebDriverWait(driver, 10) \
-                         .until(EC.presence_of_element_located((By.ID, 'nav-link-accountList')))
-        account_button.click()
+        await session.get("https://www.amazon.com/a/addresses?ref_=ya_d_l_addr")
 
-        addresses_button = WebDriverWait(driver, 10) \
-                           .until(EC.presence_of_element_located((By.LINK_TEXT, 'Your addresses')))
-        addresses_button.click()
+        await fill_password(session, os.environ['AMAZON_PASSWORD'])
 
-        fill_password(driver, os.environ['AMAZON_PASSWORD'])
-
-        add_address_button = WebDriverWait(driver, 10) \
-                             .until(EC.presence_of_element_located((By.ID, 'ya-myab-address-add-link')))
-        add_address_button.click()
+        add_address_button = await session.wait_for_element(10, '#ya-myab-address-add-link')
+        await add_address_button.click()
 
         # Add all the address info
-        address_form = WebDriverWait(driver, 10) \
-                      .until(EC.presence_of_element_located((By.ID, 'address-ui-address-form')))
+        address_form = await session.wait_for_element(10, '#address-ui-address-form')
         ADDRESS = [
             FULLNAME,
             ADDRESS_LINE_ONE,
@@ -117,56 +110,65 @@ def order_product(ASIN,
         ]
         assert len(ADDRESS) == len(input_ids), 'Invalid address data was detected submitted'
         for info, html_id in zip(ADDRESS, input_ids):
-            input_field = address_form.find_element_by_id(html_id)
+            input_field = await address_form.get_element('#'+html_id)
             if html_id == "address-ui-widgets-enterAddressFullName":
-                input_field.clear()
-            input_field.send_keys(info)
-        state_select = Select(address_form.find_element_by_id('address-ui-widgets-enterAddressStateOrRegion-dropdown-nativeId'))
-        state_select.select_by_value(STATE)
-        address_form.submit()
+                await input_field.clear()
+            await input_field.send_keys(info)
+        state_select = await address_form.get_element('#address-ui-widgets-enterAddressStateOrRegion-dropdown-nativeId')
+        await state_select.select_by_value(STATE)
+        await session.execute_script('document.getElementById("address-ui-address-form").submit();')
 
         added_address = True
         # Set previously added address as default address
         for number in itertools.count():
             if number == 0:
-                address_tile = WebDriverWait(driver, 10) \
-                               .until(EC.presence_of_element_located((By.ID, f'ya-myab-display-address-block-{number}')))
+                address_tile = await session.wait_for_element(10, f'#ya-myab-display-address-block-{number}')
             else:
-                address_tile = driver.find_element_by_id(f'ya-myab-display-address-block-{number}')
-            address_text = address_tile.find_element_by_id('address-ui-widgets-AddressLineOne').text
+                address_tile = await session.get_element(f'#ya-myab-display-address-block-{number}')
+            address_text = await (await address_tile.get_element('#address-ui-widgets-AddressLineOne')).get_text()
             if address_text == format_address(ADDRESS_LINE_ONE):
-                set_as_default_button = driver.find_element_by_id(f'ya-myab-set-default-shipping-btn-{number}')
-                set_as_default_button.click()
+                set_as_default_button = await session.get_element(f'#ya-myab-set-default-shipping-btn-{number}')
+                await set_as_default_button.click()
                 break
 
         # Purchase item
-        driver.get(f"https://amazon.com/dp/{ASIN}")
+        await session.get(f"https://amazon.com/dp/{ASIN}")
 
-        amazon_fresh_link = WebDriverWait(driver, 10) \
-                            .until(EC.presence_of_element_located((By.ID, 'freshAddToCartButton')))
-        amazon_fresh_link.click()
-        close_button = WebDriverWait(driver, 10) \
-                             .until(EC.presence_of_element_located((By.ID, 'sis-close-div')))
-        close_button.click()
+        amazon_fresh_link = await session.wait_for_element(10, '#freshAddToCartButton')
+        await amazon_fresh_link.click()
 
-        WebDriverWait(driver, 10).until(EC.text_to_be_present_in_element((By.ID, 'nav-cart-count'), '1'))
+        await asyncio.sleep(2)
 
-        cart_button = driver.find_element_by_id('nav-cart')
-        cart_button.click()
+        close_button = await session.wait_for_element(10, '#sis-close-div')
+        await close_button.click()
 
-        checkout_button = WebDriverWait(driver, 10) \
-                          .until(EC.presence_of_element_located((By.NAME, 'proceedToALMCheckout-QW1hem9uIEZyZXNo')))
-        checkout_button.click()
+        cart_count = int(await (await session.wait_for_element(10, '#nav-cart-count')).get_text())
+        start = time.time()
+        while cart_count == 0:
+            if time.time() - start > 10:
+                class FailedToAddToCart(Exception):
+                    pass
+                raise FailedToAddToCart()
+            cart_count = int(await (await session.get_element('#nav-cart-count')).get_text())
+        else:
+            if cart_count != 1:
+                class IncorrectCartValue(Exception):
+                    pass
+                raise IncorrectCartValue(f'Cart count = {cart_count}')
 
-        continue_to_checkout_button = WebDriverWait(driver, 10) \
-                                      .until(EC.presence_of_element_located((By.NAME, 'proceedToCheckout')))
-        continue_to_checkout_button.click()
+        cart_button = await session.get_element('#nav-cart')
+        await cart_button.click()
 
-        fill_password(driver, os.environ['AMAZON_PASSWORD'])
+        checkout_button = await session.wait_for_element(10, '[name=proceedToALMCheckout-QW1hem9uIEZyZXNo]')
+        await checkout_button.click()
 
-        change_address_button = WebDriverWait(driver, 10) \
-                                .until(EC.presence_of_element_located((By.ID, 'hover-override')))
-        change_address_button.click()
+        continue_to_checkout_button = await session.wait_for_element(10, '[name=proceedToCheckout]')
+        await continue_to_checkout_button.click()
+
+        #fill_password(driver, os.environ['AMAZON_PASSWORD'])
+
+        change_address_button = await session.wait_for_element(10,'#hover-override')
+        await change_address_button.click()
 
         class AddressNotFoundError(Exception):
             pass
@@ -174,94 +176,130 @@ def order_product(ASIN,
         for number in itertools.count():
             try:
                 if number == 0:
-                    current_address_option = WebDriverWait(driver, 10) \
-                                             .until(EC.presence_of_element_located((By.ID, f'address-book-entry-{number}')))
+                    current_address_option = await session.wait_for_element(10, f'#address-book-entry-{number}')
                 else:
-                    current_address_option = driver.find_element_by_id(f'address-book-entry-{number}')
+                    current_address_option = session.get_element(f'#address-book-entry-{number}')
             except NoSuchElementException as error:
                 raise AddressNotFoundError(click.style("Could not find the address selected in the .env file", fg='red')) from error
 
-            address_text = current_address_option.find_element_by_css_selector('li.displayAddressLI.displayAddressAddressLine1').text
+            address_text = await(await current_address_option.get_element('li.displayAddressLI.displayAddressAddressLine1')).get_text()
             if address_text == format_address(ADDRESS_LINE_ONE):
-                confirm_address_button = current_address_option.find_element_by_link_text('Deliver to this address')
-                confirm_address_button.click()
+                confirm_address_button = await current_address_option.get_element('.a-declarative.a-button-text')
+                await confirm_address_button.click()
                 break
         day_delivery_classes = "span.a-button.a-button-toggle.ufss-date-select-toggle"
         try:
-            limited_available_delivery = WebDriverWait(driver, 10) \
-                                       .until(EC.presence_of_element_located((By.CSS_SELECTOR, day_delivery_classes+'.ufss-limited-available')))
-            limited_available_delivery.click()
-        except (TimeoutException, NoSuchElementException):
-            first_avaliable_delivery = WebDriverWait(driver, 10) \
-                                   .until(EC.presence_of_element_located((By.CSS_SELECTOR, day_delivery_classes+'.ufss-available')))
-            first_avaliable_delivery.click()
+            limited_available_delivery = await session.wait_for_element(10, day_delivery_classes+'.ufss-limited-available')
+            await limited_available_delivery.click()
+        except (ArsenicTimeout, NoSuchElement):
+            first_avaliable_delivery = await session.wait_for_element(10, day_delivery_classes+'.ufss-available')
+            await first_avaliable_delivery.click()
         time_slots = "ul.a-unordered-list.a-nostyle.a-vertical.ufss-slot-list.ufss-expanded"
         clicked = False
-        for unordered_list in driver.find_elements_by_css_selector(time_slots):
-            for slot in unordered_list.find_elements_by_css_selector("li"):
-                # print(unordered_list)
-                # print(slot)
-                if "ufss-available" in slot.find_element_by_css_selector("div.ufss-slot").get_attribute("class"):
-                    slot.location_once_scrolled_into_view
-                    slot.click()
+        def future_dates():
+            day = datetime.date.today()
+            for i in range(4):
+                yield day
+                day += datetime.timedelta(days=1)
+        for day in future_dates():
+            date_format = format(day, '%Y%m%d')
+            print(date_format)
+            today_div = await session.get_element(f'[id="{date_format}"]')
+            try:
+                unordered_list = await today_div.get_element('[aria-label="2-hour delivery windows"]')
+            except(NoSuchElement):
+                continue
+            day_button = await session.get_element(f'[name="{date_format}"]')
+            await day_button.click()
+            for num, slot in enumerate(await unordered_list.get_elements('li')):
+                print(f'The slot class = {await (await slot.get_element("div.ufss-slot")).get_attribute("class")}')
+                if "ufss-available" in await (await slot.get_element("div.ufss-slot")).get_attribute("class"):
+                    await session.execute_script(f'document.getElementById("{date_format}").getElementsByTagName("li")[{num}].scrollIntoView();')
+                    await (await slot.get_element('.ufss-slot.ufss-available')).click()
                     clicked = True
                     break;
+            if clicked:
+                break
+        # for unordered_list in await session.get_elements(time_slots):
+        #     for slot in await unordered_list.get_elements("li"):
+        #         # print(unordered_list)
+        #         # print(slot)
+        #         if "ufss-available" in await (await slot.get_element("div.ufss-slot")).get_attribute("class"):
+        #
+        #             slot.location_once_scrolled_into_view
+        #             await slot.click()
+        #             clicked = True
+        #             break;
         if not clicked:
             class NoAvailableDelivery(Exception):
                 pass
             raise NoAvailableDelivery("There was no available delivery")
-        continue_order_button = driver.find_element_by_css_selector('input.a-button-input')
-        continue_order_button.click()
+        continue_order_button = await session.get_element('input.a-button-input')
+        await continue_order_button.click()
 
 
-        confirm_order_again = WebDriverWait(driver, 10) \
-                              .until(EC.presence_of_element_located((By.ID, 'continue-top')))
-        confirm_order_again.click()
+        confirm_order_again = await session.wait_for_element(10,'[id="continue-top"]')
+        await confirm_order_again.click()
 
-        fill_credit_number(driver, os.environ["CREDIT_CARD"])
+        await fill_credit_number(session, os.environ["CREDIT_CARD"])
 
-        edit_tip_button = WebDriverWait(driver, 10) \
-                          .until(EC.presence_of_element_located((By.CSS_SELECTOR, 'a.a-link-normal.tip-widget--edit-control')))
-        edit_tip_button.click()
+        edit_tip_button = await session.wait_for_element(10,'a.a-link-normal.tip-widget--edit-control')
+        await edit_tip_button.click()
 
-        select_tip_amount = driver.find_element_by_id('tip-widget--edit-form--amount-input')
-        select_tip_amount.send_keys(Keys.BACK_SPACE * 4 + "0")
+        select_tip_amount = await session.get_element('[id="tip-widget--edit-form--amount-input"]')
+        while not await select_tip_amount.is_displayed():
+            await edit_tip_button.click()
+        await select_tip_amount.send_keys(keys.BACKSPACE * 4 + "0")
 
-        apply_new_tip_button = driver.find_element_by_id('tip-widget--submit-update')
-        apply_new_tip_button.click()
+        apply_new_tip_button = await session.get_element('[id="tip-widget--submit-update"]')
+        await apply_new_tip_button.click()
 
-        loading_spinner = WebDriverWait(driver, 10) \
-                          .until(EC.invisibility_of_element((By.ID, 'spinner-anchor')))
+        loading_spinner = await session.wait_for_element(10, '[id="spinner-anchor"]')
 
         if place_order:
-            place_order_button = driver.find_element_by_name('placeYourOrder1')
-            place_order_button.click()
-            WebDriverWait(driver, 10).until(EC.invisibility_of_element((By.ID, 'loading-spinner-img')))
+            place_order_button = await session.get_element('[name="placeYourOrder1"]')
+            await place_order_button.click()
+            await session.wait_for_element_gone(10, '#loading-spinner-img')
     finally:
-        if driver:
+        if session:
             if screenshot:
-                driver.save_screenshot(str(pathlib.Path(screenshot).resolve()))
+                await session.get_screenshot()(str(pathlib.Path(screenshot).resolve()))
             if remove_address and added_address:
-                driver.get("https://amazon.com/")
-                account_button = WebDriverWait(driver, 10) \
-                                 .until(EC.presence_of_element_located((By.ID, 'nav-link-accountList')))
-                account_button.click()
-                addresses_button = WebDriverWait(driver, 10) \
-                                   .until(EC.presence_of_element_located((By.LINK_TEXT, 'Your addresses')))
-                addresses_button.click()
-                fill_password(driver, os.environ['AMAZON_PASSWORD'])
+                await session.get("https://www.amazon.com/a/addresses?ref_=ya_d_l_addr")
+                # await session.get("https://amazon.com/")
+                # account_button = await session.wait_for_element(10, '[id="nav-link-accountList"]')
+                # await account_button.click()
+                # addresses_button = await session.wait_for_element(10, '[link_text="Your addresses"]')
+                # await addresses_button.click()
+                # fill_password(driver, os.environ['AMAZON_PASSWORD'])
                 for number in itertools.count():
                     if number == 0:
-                        address_tile = WebDriverWait(driver, 10) \
-                                       .until(EC.presence_of_element_located((By.ID, f'ya-myab-display-address-block-{number}')))
+                        address_tile = await session.wait_for_element(10, f'[id="ya-myab-display-address-block-{number}"]')
                     else:
-                        address_tile = driver.find_element_by_id(f'ya-myab-display-address-block-{number}')
-                    address_text = address_tile.find_element_by_id('address-ui-widgets-AddressLineOne').text
+                        address_tile = await session.get_element(f'[id="ya-myab-display-address-block-{number}"]')
+                    address_text = await( await address_tile.get_element('[id="address-ui-widgets-AddressLineOne"]')).get_text()
+                    print(f'Address Text = {address_text}')
                     if address_text == format_address(ADDRESS_LINE_ONE):
-                        delete_address_button = driver.find_element_by_id(f'ya-myab-address-delete-btn-{number}')
-                        delete_address_button.click()
-                        confirm_delete_address_form = driver.find_element_by_css_selector('.a-column.a-span8>form')
-                        confirm_delete_address_form.submit()
+                        remove_address_button = await session.get_element(f'[id="ya-myab-address-delete-btn-{number}"]')
+                        await remove_address_button.click()
+                        # confirm_removal = await session.get_element(f'#deleteAddressModal-{number}-submit-btn')
+                        # await confirm_removal.click()
+                        await session.execute_script(f'document.getElementById("deleteAddressModal-{number}-submit-btn").parentElement.submit();')
+                        # confirm_delete_address_form = driver.find_element_by_css_selector('.a-column.a-span8>form')
+                        # confirm_delete_address_form.submit()
                         break
             if quit:
-                driver.quit()
+                await session.close()
+
+if __name__ == '__main__':
+    import asyncio
+    from data import values
+    person_with_address = values.student_data_df[values.student_data_df['addrline1'].notnull()].iloc[0]
+    asyncio.run(order_product(ASIN="B000RGY5RG",
+                              FULLNAME=person_with_address['firstname'] + ' ' + person_with_address['lastname'],
+                              ADDRESS_LINE_ONE=person_with_address['addrline1'],
+                              ADDRESS_LINE_TWO=person_with_address['addrline2'],
+                              CITY=person_with_address['city'],
+                              STATE=person_with_address['state'],
+                              ZIPCODE=str(int(person_with_address['zipcode'])),
+                              place_order=False, quit=False))
