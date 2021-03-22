@@ -1,6 +1,5 @@
 click
 pandas
-selenium
 python-dotenv
 python-Levenshtein
 discord.py>=1.5.0
