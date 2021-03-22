@@ -30,7 +30,7 @@ async def order_product(ASIN,
     try:
         session = None
         added_address = False
-        
+
         browser = browsers.Chrome()
         if os.name == 'posix':
             service = services.Chromedriver(log_file=pathlib.Path('logs/chrome.log').resolve().open(mode='a'),
@@ -210,7 +210,8 @@ async def order_product(ASIN,
     finally:
         if session:
             if screenshot:
-                await session.get_screenshot()(str(pathlib.Path(screenshot).resolve()))
+                with pathlib.Path(screenshot).open(mode='wb') as screenshot:
+                    screenshot.write((await session.get_screenshot()).getvalue())
             if remove_address and added_address:
                 await session.get("https://www.amazon.com/a/addresses?ref_=ya_d_l_addr")
                 for number in itertools.count():
