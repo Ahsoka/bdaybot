@@ -181,7 +181,7 @@ async def order_product(ASIN,
                     current_address_option = await session.wait_for_element(10, f'#address-book-entry-{number}')
                 else:
                     current_address_option = session.get_element(f'#address-book-entry-{number}')
-            except NoSuchElementException as error:
+            except NoSuchElement as error:
                 raise AddressNotFoundError(click.style("Could not find the address selected in the .env file", fg='red')) from error
 
             address_text = await(await current_address_option.get_element('li.displayAddressLI.displayAddressAddressLine1')).get_text()
