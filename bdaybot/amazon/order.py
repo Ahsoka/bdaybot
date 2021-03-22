@@ -4,6 +4,7 @@ import pathlib
 import click
 import json
 import time
+import re
 import os
 
 from arsenic import get_session, keys, browsers, services, start_session
@@ -32,12 +33,13 @@ async def order_product(ASIN,
         added_address = False
 
         browser = browsers.Chrome()
+        drivers = filter(lambda path: re.search(r'chrome\d\d-driver', str(path)), pathlib.Path('.').iterdir())
         if os.name == 'posix':
             service = services.Chromedriver(log_file=pathlib.Path('logs/chrome.log').resolve().open(mode='a'),
-                                            binary='./chrome89-driver')
+                                            binary=f"./{next(filter(lambda path: path.suffix == '', drivers))}")
             browser.capabilities = {"goog:chromeOptions": {"args": ["--headless"]}}
         else:
-            service = services.Chromedriver(binary='./chrome89-driver.exe')
+            service = services.Chromedriver(binary=f"./{next(filter(lambda path: path.suffix == '.exe', drivers))}")
 
         session = await start_session(service, browser)
         await session.set_window_size(width=1363, height=1094)
