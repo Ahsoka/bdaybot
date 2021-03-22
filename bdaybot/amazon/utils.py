@@ -8,7 +8,7 @@ async def fill_password(session, password, timeout=2):
         password_input = await session.wait_for_element(timeout,'#ap_password')
         await password_input.send_keys(password)
 
-        await session.execute_script('document.getElementByName("signIn").submit();')
+        await session.execute_script('document.getElementsByName("signIn")[0].submit();')
     except (ArsenicTimeout, NoSuchElement):
         pass
 
