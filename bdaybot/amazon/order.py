@@ -78,7 +78,7 @@ async def order_product(ASIN,
         ]
         assert len(ADDRESS) == len(input_ids), 'Invalid address data was detected submitted'
         for info, html_id in zip(ADDRESS, input_ids):
-            input_field = await address_form.get_element('#'+html_id)
+            input_field = await address_form.get_element('#' + html_id)
             if html_id == "address-ui-widgets-enterAddressFullName":
                 await input_field.clear()
             await input_field.send_keys(info)
@@ -129,7 +129,7 @@ async def order_product(ASIN,
         continue_to_checkout_button = await session.wait_for_element(10, '[name=proceedToCheckout]')
         await continue_to_checkout_button.click()
 
-        # fill_password(session, os.environ['AMAZON_PASSWORD'])
+        # await fill_password(session, os.environ['AMAZON_PASSWORD'])
 
         change_address_button = await session.wait_for_element(10,'#hover-override')
         await change_address_button.click()
@@ -143,7 +143,7 @@ async def order_product(ASIN,
             except NoSuchElement as error:
                 raise AddressNotFoundError(click.style("Could not find the address selected in the .env file", fg='red')) from error
 
-            address_text = await(await current_address_option.get_element('li.displayAddressLI.displayAddressAddressLine1')).get_text()
+            address_text = await (await current_address_option.get_element('li.displayAddressLI.displayAddressAddressLine1')).get_text()
             if address_text == format_address(ADDRESS_LINE_ONE):
                 confirm_address_button = await current_address_option.get_element('.a-declarative.a-button-text')
                 await confirm_address_button.click()
