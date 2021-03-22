@@ -4,7 +4,7 @@ import logging
 import datetime
 import itertools
 from discord.ext import commands, tasks
-from ..order_from_amazon import order_product
+from ..amazon.order import order_product
 from ..snailmail import sendmail
 from sqlalchemy.ext.asyncio import AsyncSession
 from .. import values, config, engine, postgres_engine
