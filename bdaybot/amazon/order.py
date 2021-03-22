@@ -30,17 +30,17 @@ async def order_product(ASIN,
     try:
         session = None
         added_address = False
-        # if os.name == 'posix':
-        #     chrome_options = webdriver.ChromeOptions()
-        #     chrome_options.add_argument('--headless'); # chrome_options.add_argument('--no-sandbox')
-        #     driver = webdriver.Chrome(executable_path=str(pathlib.Path('chrome87-driver').resolve()),
-        #                               chrome_options=chrome_options,
-        #                               service_args=['--verbose', f"--log-path={pathlib.Path('logs/chrome.log').resolve()}"])
-        #     driver.set_window_size(width=1363, height=1094)
-        # else:
-        service = services.Chromedriver(binary='./chrome89-driver.exe')
+        
         browser = browsers.Chrome()
+        if os.name == 'posix':
+            service = services.Chromedriver(log_file=pathlib.Path('logs/chrome.log').resolve().open(mode='a'),
+                                            binary='./chrome89-driver')
+            browser.capabilities = {"goog:chromeOptions": {"args": ["--headless"]}}
+        else:
+            service = services.Chromedriver(binary='./chrome89-driver.exe')
+
         session = await start_session(service, browser)
+        await session.set_window_size(width=1363, height=1094)
 
         await session.get("https://amazon.com/")
 
