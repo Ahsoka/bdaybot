@@ -6,9 +6,11 @@ import itertools
 import asyncio
 import click
 import datetime
+
 from dotenv import load_dotenv
 from arsenic import get_session, keys, browsers, services, start_session
 from arsenic.errors import ArsenicTimeout, NoSuchElement
+
 load_dotenv()
 
 async def fill_password(session, password, timeout=2):
@@ -33,7 +35,7 @@ async def fill_credit_number(session, credit_card_number, timeout=4):
         await credit_form.click()
 
         await asyncio.sleep(timeout)
-        continue_btn =await session.wait_for_element(timeout, 'span.a-button.a-button-primary.a-padding-none.a-button-span12')
+        continue_btn = await session.wait_for_element(timeout, 'span.a-button.a-button-primary.a-padding-none.a-button-span12')
         await continue_btn.click()
     except (ArsenicTimeout, NoSuchElement):
         pass
@@ -48,17 +50,17 @@ def format_address(address):
                   # Add more here as you encounter more addresses
 
 async def order_product(ASIN,
-                  FULLNAME,
-                  ADDRESS_LINE_ONE,
-                  CITY,
-                  STATE,
-                  ZIPCODE,
-                  PHONE_NUMBER=os.environ['PHONE_NUMBER'],
-                  ADDRESS_LINE_TWO=None,
-                  place_order=False,
-                  remove_address=True,
-                  screenshot=None,
-                  quit=True):
+                        FULLNAME,
+                        ADDRESS_LINE_ONE,
+                        CITY,
+                        STATE,
+                        ZIPCODE,
+                        PHONE_NUMBER=os.environ['PHONE_NUMBER'],
+                        ADDRESS_LINE_TWO=None,
+                        place_order=False,
+                        remove_address=True,
+                        screenshot=None,
+                        quit=True):
     try:
         session = None
         added_address = False
@@ -187,20 +189,24 @@ async def order_product(ASIN,
                 confirm_address_button = await current_address_option.get_element('.a-declarative.a-button-text')
                 await confirm_address_button.click()
                 break
-        day_delivery_classes = "span.a-button.a-button-toggle.ufss-date-select-toggle"
+        
         try:
-            limited_available_delivery = await session.wait_for_element(10, day_delivery_classes+'.ufss-limited-available')
+            day_delivery_classes = "span.a-button.a-button-toggle.ufss-date-select-toggle"
+            limited_available_delivery = await session.wait_for_element(10, day_delivery_classes + '.ufss-limited-available')
             await limited_available_delivery.click()
         except (ArsenicTimeout, NoSuchElement):
-            first_avaliable_delivery = await session.wait_for_element(10, day_delivery_classes+'.ufss-available')
+            first_avaliable_delivery = await session.wait_for_element(10, day_delivery_classes + '.ufss-available')
             await first_avaliable_delivery.click()
+        
         time_slots = "ul.a-unordered-list.a-nostyle.a-vertical.ufss-slot-list.ufss-expanded"
         clicked = False
+
         def future_dates():
             day = datetime.date.today()
             for i in range(4):
                 yield day
                 day += datetime.timedelta(days=1)
+        
         for day in future_dates():
             date_format = format(day, '%Y%m%d')
             print(date_format)
@@ -292,7 +298,6 @@ async def order_product(ASIN,
                 await session.close()
 
 if __name__ == '__main__':
-    import asyncio
     from data import values
     person_with_address = values.student_data_df[values.student_data_df['addrline1'].notnull()].iloc[0]
     asyncio.run(order_product(ASIN="B000RGY5RG",
