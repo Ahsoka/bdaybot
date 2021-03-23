@@ -5,7 +5,7 @@ python-dotenv
 python-Levenshtein
 discord.py>=1.5.0
 aiohttp
-SQLAlchemy>=1.4.0
+SQLAlchemy==1.4.0b2
 # If installing psycopg2
 # doesn't work try installing
 # psycopg2-binary instead
