@@ -17,7 +17,7 @@ if EmojiURLs.missing_urls:
 
 engine = create_async_engine(config.database)
 
-postgres_URL = URL.create('postgresql',
+postgres_URL = URL.create('postgresql+asyncpg',
                           database=os.environ['database'],
                           username=os.environ['dbuser'],
                           password=os.environ['password'],
