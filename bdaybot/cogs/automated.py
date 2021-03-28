@@ -3,6 +3,7 @@ import discord
 import logging
 import datetime
 import itertools
+from sqlalchemy import select
 from discord.ext import commands, tasks
 from ..amazon.order import order_product
 from ..snailmail import sendmail
@@ -204,7 +205,7 @@ class AutomatedTasksCog(commands.Cog):
                 logger.warning(f"Ignoring {error!r}")
 
     async def update_cyclers(self):
-        sql_guilds = await self.session.run_sync(lambda session: session.query(guilds).all())
+        sql_guilds = (await self.session.execute(select(guilds))).all()
         new_cycler = itertools.cycle(values.today_df['FirstName'] + ' ' + values.today_df['LastName'])
         for guild in sql_guilds:
             guild.today_names_cycle = new_cycler

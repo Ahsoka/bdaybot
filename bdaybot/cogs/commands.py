@@ -2,8 +2,8 @@ import pandas
 import logging
 import discord
 import datetime
-from sqlalchemy import or_
 from discord.ext import commands
+from sqlalchemy import select, or_
 from sqlalchemy.exc import IntegrityError
 from .. import values, engine, postgres_engine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -64,7 +64,7 @@ class CommandsCog(commands.Cog):
                                     "Add yourself to database here ⬇\n"
                                     "**http://drneato.com/Bday/Bday2.php**"))
 
-            today_df = values.today_df
+            today_df = values.today_df.copy()
             if len(message) == 0 and len(today_df) > 1:
                 wish_embed.description = (f"Today is {get_bday_names()} birthday\n"
                                            "You must specify who you want wish a happy birthday!")
@@ -94,8 +94,7 @@ class CommandsCog(commands.Cog):
                                       StudentData.lastname == firstname.capitalize(),
                                       StudentData.firstname == secondname.capitalize(),
                                       StudentData.lastname == secondname.capitalize())
-                    fail_wishee = await self.session.run_sync(lambda session: session.query(StudentData) \
-                                                                                     .filter(discrim).first())
+                    fail_wishee = (await self.session.execute(select(StudentData).filter(discrim))).scalar()
                     if fail_wishee is None:
                         wish_embed.description = f"'{name}' is not a name in the birthday database!"
                         logger.debug(f"{ctx.author} unsucessfully used the wish command because tried to wish someone whose birthday is not today.")
@@ -242,9 +241,7 @@ class CommandsCog(commands.Cog):
 
         upcoming_bdays = []
         for stuid, row in upcoming_df.iloc[:num].iterrows():
-            discord_user = await self.session.run_sync(lambda session: session.query(DiscordUser) \
-                                                       .filter(DiscordUser.student_id == stuid) \
-                                                       .one_or_none())
+            discord_user = (await self.session.execute(select(DiscordUser).where(DiscordUser.student_id == stuid))).scalar_one_or_none()
             mention = '' if discord_user is None else discord_user.mention
             upcoming_bdays.append([f"{(row['FirstName'] + ' ' + row['LastName'])} {mention}",
                                    format(row['Birthdate'], '%b %d'),
