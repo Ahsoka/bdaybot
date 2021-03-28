@@ -29,6 +29,7 @@ async def test_getann(bot, session, channel, delay):
     guild.announcements_id = channel.id
     await session.commit()
     await channel.send(f'test.getannouncements')
+    await session.refresh(guild)
     await asyncio.sleep(delay)
     latest_message = (await channel.history(limit=1).flatten())[0]
     assert (f"{bot.user.mention} The current announcements channel is {guild.mention_ann}. "
