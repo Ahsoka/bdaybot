@@ -83,7 +83,7 @@ class DiscordUser(Base):
     discord_user_id = Column(BigInteger, primary_key=True)
     student_id = Column(Integer, ForeignKey('student_data.stuid', ondelete='CASCADE'),
                         unique=True, nullable=False)
-    student_data = relationship(StudentData, backref=backref('discord_user', uselist=False))
+    student_data = relationship(StudentData, lazy='selectin', backref=backref('discord_user', uselist=False, lazy='selectin'))
 
     @property
     def mention(self):
@@ -108,8 +108,8 @@ class Wish(Base):
     wishee_stuid = Column(Integer,
                           ForeignKey('student_data.stuid', ondelete='CASCADE'),
                           primary_key=True)
-    discord_user = relationship(DiscordUser, backref='wishes_given')
-    wishee = relationship(StudentData, backref='wishes_received')
+    discord_user = relationship(DiscordUser, lazy='selectin', backref=backref('wishes_given', lazy='selectin'))
+    wishee = relationship(StudentData, lazy='selectin', backref=backref('wishes_received', lazy='selectin'))
 
     def __repr__(self):
         return (f'<Wish(discord_user_id={self.discord_user_id}, '

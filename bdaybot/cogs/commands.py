@@ -51,6 +51,7 @@ class CommandsCog(commands.Cog):
                                 "you do not need to submitted it again to send wishes!"))
 
             if input_id is not None:
+                await self.session.refresh(discord_user)
                 if discord_user.student_data.stuid != input_id:
                     wish_embed.description = ("The ID you submitted does not match the ID you submitted previously.\n"
                                               "Please use the same ID you have used in the past or don't use an ID at all")
@@ -111,18 +112,18 @@ class CommandsCog(commands.Cog):
             wishee = await self.session.get(StudentData, int(wishee_id))
             assert wishee is not None, "Some how wishee is None"
 
-            try:
-                wish = Wish(year=datetime.datetime.today().year, wishee=wishee, discord_user=discord_user)
-                self.session.add(wish)
-                await self.session.commit()
-                wish_embed.description = (f"Congrats {discord_user.student_data.firstname}! 🎈 ✨ 🎉\n"
-                                          f"You wished ***__{wish.wishee.fullname}__*** a happy birthday!")
-                logger.info(f"{ctx.author} successfully wished {wish.wishee.fullname} a happy birthday!")
-            except IntegrityError:
-                await self.session.rollback()
+            wish = await self.session.get(Wish, (discord_user.discord_user_id, datetime.datetime.today().year, wishee.stuid))
+            if wish:
                 wish_embed.description = (f"You cannot wish **{wish.wishee.fullname}** a happy birthday more than once!"
                                            "\nTry wishing someone else a happy birthday!")
                 logger.debug(f"{ctx.author} tried to wish {wish.wishee.fullname} a happy birthday even though they already wished them before.")
+            else:
+                wish = Wish(year=datetime.datetime.today().year, wishee=wishee, discord_user=discord_user)
+                self.session.add(wish)
+                wish_embed.description = (f"Congrats {discord_user.student_data.firstname}! 🎈 ✨ 🎉\n"
+                                          f"You wished ***__{wish.wishee.fullname}__*** a happy birthday!")
+                logger.info(f"{ctx.author} successfully wished {wish.wishee.fullname} a happy birthday!")
+                await self.session.commit()
             await ctx.send(ctx.author.mention, embed=wish_embed)
         else:
             wish_embed.description = (f"You cannot use the `{ctx.prefix}wish` command if it is no one's birthday today.\n"
@@ -191,7 +192,7 @@ class CommandsCog(commands.Cog):
             self.session.add(discord_user)
         else:
             old_id = discord_user.student_id
-            discord_user.student_data = student
+            discord_user.student_id = student.stuid
             exists = True
 
         try:
@@ -332,6 +333,7 @@ class CommandsCog(commands.Cog):
                 wishers_dict = {}
                 more_than_one = False
                 for wish in wishes_received:
+                    await self.session.refresh(wish)
                     if wish.discord_user not in wishers_dict:
                         wishers_dict[wish.discord_user] = [wish]
                     else:
