@@ -6,8 +6,6 @@ from .logs import setUpLogger
 
 load_dotenv()
 
-config.andres = True
-
 the_bot = bdaybot(command_prefix='test.' if config.testing else 'b.',
                   case_insensitive=True)
 logger_names = [
