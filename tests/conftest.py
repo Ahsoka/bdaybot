@@ -5,6 +5,7 @@ import asyncio
 import discord
 import inspect
 import functools
+from sqlalchemy import select
 from dotenv import load_dotenv
 from bdaybot.bot import bdaybot
 from bdaybot.tables import StudentData
@@ -138,7 +139,7 @@ def channel(bot):
 
 @pytest.fixture()
 async def students(session):
-    return await session.run_sync(lambda sess: sess.query(StudentData).all())
+    return (await session.execute(select(StudentData))).scalars().all()
 
 @pytest.fixture()
 def valid_ids(students):

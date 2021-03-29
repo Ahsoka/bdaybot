@@ -5,6 +5,7 @@ import discord
 import datetime
 import pandas
 from bdaybot.tables import DiscordUser, StudentData
+from sqlalchemy import select, delete
 from bdaybot.tables import Wish
 from bdaybot.data import values
 
@@ -108,12 +109,12 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     # with a full name with a previously set ID
     # DEBUG: We will mimic the second user by the deleting all the
     # data in the 'wishes' table.
-    await session.run_sync(lambda sess: sess.query(Wish).delete())
+
+    await session.execute(delete(Wish))
+
     await channel.send(f'test.wish {wishee_fullname}')
     await asyncio.sleep(delay)
-    wishlist = await session.run_sync(lambda sess: sess.query(Wish).all())
-    assert len(wishlist) == 1, \
-            'Wish not Found'
+    wishlist = (await session.execute(select(Wish))).one()
     latest_message = (await channel.history(limit=1).flatten())[0]
     assert f"You wished ***__{student.fullname}__*** a happy birthday!" in latest_message.embeds[0].description, \
             f'Message content(embed): {latest_message.embeds[0].description}'
@@ -127,7 +128,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
             f'Message content(embed): {latest_message.embeds[0].description}'
 
     #Test situation where user wishes without specifying name on one person's birthday with a perviously set ID
-    await session.run_sync(lambda sess: sess.query(Wish).delete())
+    await session.execute(delete(Wish))
     mocker.patch("bdaybot.data.values.today_df", new_callable=mocker.PropertyMock, return_value=test_df.loc[test_df['FirstName'] == wishee])
 
     await channel.send(f'test.wish')

@@ -4,6 +4,7 @@ import pytest
 import random
 import asyncio
 import discord
+from sqlalchemy import delete
 from bdaybot.tables import DiscordUser
 
 
@@ -71,4 +72,4 @@ async def test_setID(bot, session, valid_ids, channel, mock_delete, dashes, dela
 
     # Delete all data in DiscordUsers
     # before moving onto the next test
-    await session.run_sync(lambda sess: sess.query(DiscordUser).delete())
+    await session.execute(delete(DiscordUser))
