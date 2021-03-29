@@ -7,8 +7,7 @@ from sqlalchemy import select
 from discord.ext import commands, tasks
 from ..amazon.order import order_product
 from ..snailmail import sendmail
-from sqlalchemy.ext.asyncio import AsyncSession
-from .. import values, config, engine, postgres_engine
+from .. import values, config, sessionmaker
 from ..utils import fake_ctx, ping_devs, EmojiURLs, devs
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from ..tables import Guild as guilds, DiscordUser as discord_users, StudentData as student_data
@@ -20,7 +19,6 @@ cushion_delay = 0.1
 class AutomatedTasksCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.session = AsyncSession(bind=engine, binds={student_data: postgres_engine})
         self.new_day = True
 
     @commands.Cog.listener()
@@ -69,8 +67,9 @@ class AutomatedTasksCog(commands.Cog):
     @tasks.loop(hours=24)
     async def send_bdays(self):
         if values.bday_today:
+            session = sessionmaker()
             for guild in self.bot.guilds:
-                sql_guild = await self.session.get(guilds, guild.id)
+                sql_guild = await session.get(guilds, guild.id)
                 if sql_guild is None:
                     # TODO: Call function in housekeeping
                     continue
@@ -89,7 +88,7 @@ class AutomatedTasksCog(commands.Cog):
                 for stuid, series in values.today_df.iterrows():
                     # TODO: Add some different styles for the bday message
                     full_name = f"***__{series['FirstName']} {series['LastName']}__***"
-                    student = await self.session.get(student_data, stuid)
+                    student = await session.get(student_data, stuid)
                     mention = f' {student.discord_user.mention}' if student.discord_user else ''
                     age = datetime.datetime.today().year - series['Birthyear']
                     age_portion = ' 🎂 🎉' if age >= 100 or age <= 14 \
@@ -97,7 +96,7 @@ class AutomatedTasksCog(commands.Cog):
                     embed = discord.Embed(description=f"Happy Birthday to {full_name}{mention}🎈 🎊{age_portion}") \
                             .set_author(name='Happy Birthday! 🎉', icon_url=await EmojiURLs.partying_face)
                     await channel.send(embed=embed)
-
+            await session.close()
         logger.info(f"The 'send_bdays()' coroutine was run.")
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
@@ -139,6 +138,7 @@ class AutomatedTasksCog(commands.Cog):
     @tasks.loop(hours=24)
     async def snailmail(self):
         if values.bday_today:
+            session = sessionmaker()
             for stuid, bday_person in values.today_df.iterrows():
                 if bday_person['AddrLine1']:
                     sendmail(FULLNAME=bday_person['FirstName'] + ' ' + bday_person['LastName'],
@@ -147,13 +147,15 @@ class AutomatedTasksCog(commands.Cog):
                                   CITY=bday_person['City'],
                                   STATE=bday_person['State'],
                                   ZIPCODE=str(int(bday_person['Zipcode'])),
-                                  PERSON=await self.session.get(student_data, 123456))
+                                  PERSON=await session.get(student_data, 123456))
+            await session.close()
 
     @tasks.loop(hours=24)
     async def send_DM_message(self):
         if values.bday_today:
+            session = sessionmaker()
             for stuid, series in values.today_df.iterrows():
-                student = await self.session.get(student_data, stuid)
+                student = await session.get(student_data, stuid)
                 if student.discord_user is not None:
                     user = await self.bot.get_user(student.discord_user.discord_user_id)
                     try:
@@ -163,6 +165,7 @@ class AutomatedTasksCog(commands.Cog):
                     except discord.Forbidden:
                         logger.debug(("The bdaybot failed to send a happy birthday DM message to "
                                      f"{user} because the bot and {user} do not have any mutual servers."))
+            await session.close()
 
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
@@ -175,9 +178,9 @@ class AutomatedTasksCog(commands.Cog):
     @commands.bot_has_permissions(change_nickname=True)
     async def update_nickname(self, ctx):
         if not hasattr(ctx, 'author'):
-            guild = await self.session.get(guilds, ctx.guild.id)
-            await ctx.guild.me.edit(nick=next(guild.today_names_cycle))
-            await self.session.commit()
+            async with sessionmaker.begin() as session:
+                guild = await session.get(guilds, ctx.guild.id)
+                await ctx.guild.me.edit(nick=next(guild.today_names_cycle))
 
     @update_nickname.error
     async def handle_update_nickname_error(self, ctx, error):
@@ -190,26 +193,25 @@ class AutomatedTasksCog(commands.Cog):
                 logger.warning(f"There is an issue with the database, {error!r}")
                 await ping_devs(error, self.update_nickname, ctx)
                 return
-
-            guild = await self.session.get(guilds, ctx.guild.id)
-            if isinstance(error, commands.BotMissingPermissions) and guild.nickname_notice:
-                logger_message = f"The bot unsucessfully changed its nickname in '{ctx.guild}'. "
-                if config.DM_owner:
-                    await ctx.guild.owner.send((f"Currently I cannot change my nickname in {ctx.guild}. "
-                                                 "Please give me the `change nickname` permission so I can work properly."))
-                    logger_message += f"A DM message requesting to change it's permissions was sent to {ctx.guild.owner}."
-                logger.warning(logger_message)
-                guild.nickname_notice = False
-                await self.session.commit()
-            else:
-                logger.warning(f"Ignoring {error!r}")
+            async with sessionmaker.begin() as session:
+                guild = await session.get(guilds, ctx.guild.id)
+                if isinstance(error, commands.BotMissingPermissions) and guild.nickname_notice:
+                    logger_message = f"The bot unsucessfully changed its nickname in '{ctx.guild}'. "
+                    if config.DM_owner:
+                        await ctx.guild.owner.send((f"Currently I cannot change my nickname in {ctx.guild}. "
+                                                    "Please give me the `change nickname` permission so I can work properly."))
+                        logger_message += f"A DM message requesting to change it's permissions was sent to {ctx.guild.owner}."
+                    logger.warning(logger_message)
+                    guild.nickname_notice = False
+                else:
+                    logger.warning(f"Ignoring {error!r}")
 
     async def update_cyclers(self):
-        sql_guilds = (await self.session.execute(select(guilds))).all()
-        new_cycler = itertools.cycle(values.today_df['FirstName'] + ' ' + values.today_df['LastName'])
-        for guild in sql_guilds:
-            guild.today_names_cycle = new_cycler
-        await self.session.commit()
+        async with sessionmaker.begin() as session:
+            sql_guilds = (await session.execute(select(guilds))).all()
+            new_cycler = itertools.cycle(values.today_df['FirstName'] + ' ' + values.today_df['LastName'])
+            for guild in sql_guilds:
+                guild.today_names_cycle = new_cycler
 
     async def update_cycler_wait_to_run(self, *args):
         await self.update_cyclers()
@@ -245,29 +247,29 @@ class AutomatedTasksCog(commands.Cog):
     @commands.bot_has_permissions(manage_roles=True)
     async def update_role(self, ctx):
         if not hasattr(ctx, 'author'):
-            if values.bday_today:
-                role_name, color = "🎉 Happy Birthday", discord.Color.from_rgb(255, 0, 0)
-            else:
-                role_name, color = (f"Upcoming Bday-{format(values.today_df.iloc[0]['Birthdate'], '%a %b %d')}",
-                                    discord.Color.from_rgb(162, 217, 145))
-            guild = await self.session.get(guilds, ctx.guild.id)
-            if guild.role_id is not None:
-                try:
-                    bday_role = ctx.guild.get_role(guild.role_id)
-                    await bday_role.edit(name=role_name, color=color)
-                except (discord.NotFound, commands.RoleNotFound):
+            async with sessionmaker.begin() as session:
+                if values.bday_today:
+                    role_name, color = "🎉 Happy Birthday", discord.Color.from_rgb(255, 0, 0)
+                else:
+                    role_name, color = (f"Upcoming Bday-{format(values.today_df.iloc[0]['Birthdate'], '%a %b %d')}",
+                                        discord.Color.from_rgb(162, 217, 145))
+                guild = await session.get(guilds, ctx.guild.id)
+                if guild.role_id is not None:
+                    try:
+                        bday_role = ctx.guild.get_role(guild.role_id)
+                        await bday_role.edit(name=role_name, color=color)
+                    except (discord.NotFound, commands.RoleNotFound):
+                        bday_role = None
+                else:
                     bday_role = None
-            else:
-                bday_role = None
 
-            if bday_role is None:
-                bday_role = await ctx.guild \
-                                     .create_role(name=role_name,
-                                                  hoist=True,
-                                                  color=color,
-                                                  reason='Creating Happy Birthday/Upcoming Birthday role')
-                guild.role_id = bday_role.id
-                await self.session.commit()
+                if bday_role is None:
+                    bday_role = await ctx.guild \
+                                        .create_role(name=role_name,
+                                                    hoist=True,
+                                                    color=color,
+                                                    reason='Creating Happy Birthday/Upcoming Birthday role')
+                    guild.role_id = bday_role.id
 
             await ctx.guild.me.add_roles(bday_role)
 
@@ -297,7 +299,8 @@ class AutomatedTasksCog(commands.Cog):
                 logger.warning(logger_message)
             elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden):
                 # TODO: Have the bot fix this problem on its own if possible
-                guild = await self.session.get(guilds, ctx.guild.id)
+                async with sessionmaker() as session:
+                    guild = await session.get(guilds, ctx.guild.id)
                 current_role = ctx.guild.get_role(guild.role_id)
                 most_likely = [role for role in ctx.guild.me.roles
                                 if role.id != current_role_id and

@@ -1,10 +1,12 @@
 import os
 from .data import values
-from .utils import EmojiURLs, format_iterable
-from dotenv import load_dotenv
 from .argparser import parser
+from dotenv import load_dotenv
+from .tables import StudentData
 from sqlalchemy.engine.url import URL
-from sqlalchemy.ext.asyncio import create_async_engine
+from .utils import EmojiURLs, format_iterable
+from sqlalchemy.orm import sessionmaker as maker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 load_dotenv()
 
@@ -31,3 +33,5 @@ config.andres, config.elliot, config.ryan, config.peter, config.deelan = (not co
 config.andres = True
 
 postgres_engine = create_async_engine(postgres_URL) if engine.name != 'postgresql' else engine
+
+sessionmaker = maker(bind=engine, binds={StudentData: postgres_engine}, class_=AsyncSession)

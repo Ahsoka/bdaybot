@@ -4,18 +4,14 @@ import discord
 import datetime
 from discord.ext import commands
 from sqlalchemy import select, or_
+from .. import values, sessionmaker
 from sqlalchemy.exc import IntegrityError
-from .. import values, engine, postgres_engine
-from sqlalchemy.ext.asyncio import AsyncSession
 from ..tables import DiscordUser, StudentData, Guild, Wish
 from ..utils import get_bday_names, apostrophe, maybe_mention, ping_devs, EmojiURLs, format_iterable
 
 logger = logging.getLogger(__name__)
 
 class CommandsCog(commands.Cog):
-    def __init__(self):
-        self.session = AsyncSession(bind=engine, binds={StudentData: postgres_engine})
-
     @commands.command()
     @commands.bot_has_guild_permissions(manage_messages=True)
     async def wish(self, ctx, *message):
@@ -30,100 +26,99 @@ class CommandsCog(commands.Cog):
             input_id = None
 
         if values.bday_today:
-            discord_user = await self.session.get(DiscordUser, ctx.author.id)
-            if discord_user is None:
-                if input_id is None:
-                    wish_embed.description = "You are first-time wisher. You must include your 6-digit student ID at the end of the wish command to send a wish."
-                    await ctx.send(ctx.author.mention, embed=wish_embed)
-                    logger.debug(f"{ctx.author} unsucessfully used the wish command because they forgot to put their student ID.")
-                    return
-                student_user = await self.session.get(StudentData, input_id)
-                if student_user is None:
-                    wish_embed.description = "Your ID is invalid, please use a valid 6-digit ID"
-                    await ctx.send(ctx.author.mention, embed=wish_embed)
-                    logger.debug(f"{ctx.author} unsucessfully used the wish command because they included an invalid ID.")
-                    return
-                discord_user = DiscordUser(discord_user_id=ctx.author.id, student_data=student_user)
-                self.session.add(discord_user)
-                await self.session.commit()
-            elif input_id is not None:
-                await ctx.send((f"{ctx.author.mention} Once you've submitted your ID once, "
-                                "you do not need to submitted it again to send wishes!"))
+            async with sessionmaker.begin() as session:
+                discord_user = await session.get(DiscordUser, ctx.author.id)
+                if discord_user is None:
+                    if input_id is None:
+                        wish_embed.description = "You are first-time wisher. You must include your 6-digit student ID at the end of the wish command to send a wish."
+                        await ctx.send(ctx.author.mention, embed=wish_embed)
+                        logger.debug(f"{ctx.author} unsucessfully used the wish command because they forgot to put their student ID.")
+                        return
+                    student_user = await session.get(StudentData, input_id)
+                    if student_user is None:
+                        wish_embed.description = "Your ID is invalid, please use a valid 6-digit ID"
+                        await ctx.send(ctx.author.mention, embed=wish_embed)
+                        logger.debug(f"{ctx.author} unsucessfully used the wish command because they included an invalid ID.")
+                        return
+                    discord_user = DiscordUser(discord_user_id=ctx.author.id, student_data=student_user)
+                    session.add(discord_user)
+                elif input_id is not None:
+                    await ctx.send((f"{ctx.author.mention} Once you've submitted your ID once, "
+                                    "you do not need to submitted it again to send wishes!"))
 
-            if input_id is not None:
-                await self.session.refresh(discord_user)
-                if discord_user.student_data.stuid != input_id:
-                    wish_embed.description = ("The ID you submitted does not match the ID you submitted previously.\n"
-                                              "Please use the same ID you have used in the past or don't use an ID at all")
-                    await ctx.send(ctx.author.mention, embed=wish_embed)
-                    logger.debug(f"{ctx.author} unsucessfully used the with command because they used a different ID than their previously stored ID.")
-                    return
-                elif input_id not in values.bday_df.index:
-                    await ctx.send((f"Yay! {ctx.author.mention} Your ID is valid, however, "
-                                    "you are not in the bdaybot's birthday database.\n"
-                                    "Add yourself to database here ⬇\n"
-                                    "**http://drneato.com/Bday/Bday2.php**"))
+                if input_id is not None:
+                    # await session.refresh(discord_user)
+                    if discord_user.student_data.stuid != input_id:
+                        wish_embed.description = ("The ID you submitted does not match the ID you submitted previously.\n"
+                                                "Please use the same ID you have used in the past or don't use an ID at all")
+                        await ctx.send(ctx.author.mention, embed=wish_embed)
+                        logger.debug(f"{ctx.author} unsucessfully used the with command because they used a different ID than their previously stored ID.")
+                        return
+                    elif input_id not in values.bday_df.index:
+                        await ctx.send((f"Yay! {ctx.author.mention} Your ID is valid, however, "
+                                        "you are not in the bdaybot's birthday database.\n"
+                                        "Add yourself to database here ⬇\n"
+                                        "**http://drneato.com/Bday/Bday2.php**"))
 
-            today_df = values.today_df.copy()
-            if len(message) == 0 and len(today_df) > 1:
-                wish_embed.description = (f"Today is {get_bday_names()} birthday\n"
-                                           "You must specify who you want wish a happy birthday!")
-                await ctx.send(ctx.author.mention, embed=wish_embed)
-                logger.debug(f"{ctx.author} unsucessfully used the wish command because they failed to include who they wanted to wish.")
-                return
-            elif len(message) == 0:
-                wishee_id = today_df.index.values[0]
-            elif len(message) >= 1:
-                # Can use first name, last name, or first and last name together to wish someone
-                # Also firstname and lastname as one word ex: 'ahsokatano'
-                comparing = map(lambda string: string.capitalize(), message)
-                columns = ['FirstName', 'LastName']
-                if len(message) == 1:
-                    today_df['FullNameLower'] = today_df['FirstName'].str.lower() + today_df['LastName'].str.lower()
-                    comparing = [*comparing, message[0].lower()]
-                    columns += ['FullNameLower']
-                is_in = today_df[columns].isin(comparing)
-                if not is_in.any(axis=None):
+                today_df = values.today_df.copy()
+                if len(message) == 0 and len(today_df) > 1:
+                    wish_embed.description = (f"Today is {get_bday_names()} birthday\n"
+                                            "You must specify who you want wish a happy birthday!")
+                    await ctx.send(ctx.author.mention, embed=wish_embed)
+                    logger.debug(f"{ctx.author} unsucessfully used the wish command because they failed to include who they wanted to wish.")
+                    return
+                elif len(message) == 0:
+                    wishee_id = today_df.index.values[0]
+                elif len(message) >= 1:
+                    # Can use first name, last name, or first and last name together to wish someone
+                    # Also firstname and lastname as one word ex: 'ahsokatano'
+                    comparing = map(lambda string: string.capitalize(), message)
+                    columns = ['FirstName', 'LastName']
                     if len(message) == 1:
-                        name = message[0]
-                        discrim = or_(StudentData.firstname == name.capitalize(),
-                                      StudentData.lastname == name.capitalize())
-                    else:
-                        firstname, secondname, *rest = message
-                        discrim = or_(StudentData.firstname == firstname.capitalize(),
-                                      StudentData.lastname == firstname.capitalize(),
-                                      StudentData.firstname == secondname.capitalize(),
-                                      StudentData.lastname == secondname.capitalize())
-                    fail_wishee = (await self.session.execute(select(StudentData).filter(discrim))).scalar()
-                    if fail_wishee is None:
-                        wish_embed.description = f"'{name}' is not a name in the birthday database!"
-                        logger.debug(f"{ctx.author} unsucessfully used the wish command because tried to wish someone whose birthday is not today.")
-                    else:
-                        wish_embed.description = (f"Today is not **{fail_wishee.firstname} "
-                                                  f"{fail_wishee.lastname}{apostrophe(fail_wishee.lastname)}** birthday.\n"
-                                                  f"It is {get_bday_names()} birthday today. Wish them a happy birthday!")
-                        logger.debug(f"{ctx.author} unsuccessfully used the wish command because they used a name that is not in the birthday database.")
-                    await ctx.send(ctx.author.mention, embed=wish_embed)
-                    return
+                        today_df['FullNameLower'] = today_df['FirstName'].str.lower() + today_df['LastName'].str.lower()
+                        comparing = [*comparing, message[0].lower()]
+                        columns += ['FullNameLower']
+                    is_in = today_df[columns].isin(comparing)
+                    if not is_in.any(axis=None):
+                        if len(message) == 1:
+                            name = message[0]
+                            discrim = or_(StudentData.firstname == name.capitalize(),
+                                        StudentData.lastname == name.capitalize())
+                        else:
+                            firstname, secondname, *rest = message
+                            discrim = or_(StudentData.firstname == firstname.capitalize(),
+                                        StudentData.lastname == firstname.capitalize(),
+                                        StudentData.firstname == secondname.capitalize(),
+                                        StudentData.lastname == secondname.capitalize())
+                        fail_wishee = (await session.execute(select(StudentData).filter(discrim))).scalar()
+                        if fail_wishee is None:
+                            wish_embed.description = f"'{name}' is not a name in the birthday database!"
+                            logger.debug(f"{ctx.author} unsucessfully used the wish command because tried to wish someone whose birthday is not today.")
+                        else:
+                            wish_embed.description = (f"Today is not **{fail_wishee.firstname} "
+                                                    f"{fail_wishee.lastname}{apostrophe(fail_wishee.lastname)}** birthday.\n"
+                                                    f"It is {get_bday_names()} birthday today. Wish them a happy birthday!")
+                            logger.debug(f"{ctx.author} unsuccessfully used the wish command because they used a name that is not in the birthday database.")
+                        await ctx.send(ctx.author.mention, embed=wish_embed)
+                        return
 
-                wishee_id = today_df[is_in.any(axis='columns')].index.values[0]
+                    wishee_id = today_df[is_in.any(axis='columns')].index.values[0]
 
-            wishee = await self.session.get(StudentData, int(wishee_id))
-            assert wishee is not None, "Some how wishee is None"
+                wishee = await session.get(StudentData, int(wishee_id))
+                assert wishee is not None, "Some how wishee is None"
 
-            wish = await self.session.get(Wish, (discord_user.discord_user_id, datetime.datetime.today().year, wishee.stuid))
-            if wish:
-                wish_embed.description = (f"You cannot wish **{wish.wishee.fullname}** a happy birthday more than once!"
-                                           "\nTry wishing someone else a happy birthday!")
-                logger.debug(f"{ctx.author} tried to wish {wish.wishee.fullname} a happy birthday even though they already wished them before.")
-            else:
-                wish = Wish(year=datetime.datetime.today().year, wishee=wishee, discord_user=discord_user)
-                self.session.add(wish)
-                wish_embed.description = (f"Congrats {discord_user.student_data.firstname}! 🎈 ✨ 🎉\n"
-                                          f"You wished ***__{wish.wishee.fullname}__*** a happy birthday!")
-                logger.info(f"{ctx.author} successfully wished {wish.wishee.fullname} a happy birthday!")
-                await self.session.commit()
-            await ctx.send(ctx.author.mention, embed=wish_embed)
+                wish = await session.get(Wish, (discord_user.discord_user_id, datetime.datetime.today().year, wishee.stuid))
+                if wish:
+                    wish_embed.description = (f"You cannot wish **{wish.wishee.fullname}** a happy birthday more than once!"
+                                            "\nTry wishing someone else a happy birthday!")
+                    logger.debug(f"{ctx.author} tried to wish {wish.wishee.fullname} a happy birthday even though they already wished them before.")
+                else:
+                    wish = Wish(year=datetime.datetime.today().year, wishee=wishee, discord_user=discord_user)
+                    session.add(wish)
+                    wish_embed.description = (f"Congrats {discord_user.student_data.firstname}! 🎈 ✨ 🎉\n"
+                                            f"You wished ***__{wish.wishee.fullname}__*** a happy birthday!")
+                    logger.info(f"{ctx.author} successfully wished {wish.wishee.fullname} a happy birthday!")
+                await ctx.send(ctx.author.mention, embed=wish_embed)
         else:
             wish_embed.description = (f"You cannot use the `{ctx.prefix}wish` command if it is no one's birthday today.\n"
                                       f"However, it will be **{get_bday_names()}** birthday on "
@@ -147,7 +142,8 @@ class CommandsCog(commands.Cog):
 
     @commands.command()
     async def getID(self, ctx, *message):
-        discord_user = await self.session.get(DiscordUser, ctx.author.id)
+        async with sessionmaker() as session:
+            discord_user = await session.get(DiscordUser, ctx.author.id)
         if discord_user is None:
             await ctx.send(f"{maybe_mention(ctx)}You do not currently have a registered ID. Use `{ctx.prefix}setID` to set your ID")
             logger.debug(f"{ctx.author} tried to access their ID even though they do not have one.")
@@ -178,31 +174,29 @@ class CommandsCog(commands.Cog):
         # to another ID we should also transfer any of their wishes with the new id
         if ctx.guild:
             await ctx.message.delete()
-        student = await self.session.get(StudentData, new_id)
-        if student is None:
-            await ctx.author.send(f"**{new_id}** is not a valid ID. Please use a valid 6-digit ID.")
-            logger.debug(f"{ctx.author} tried to set their ID to an invalid ID.")
-            return
-
-        exists = False
-        discord_user = await self.session.get(DiscordUser, ctx.author.id)
-        if discord_user is None:
-            discord_user = DiscordUser(discord_user_id=ctx.author.id, student_data=student)
-            self.session.add(discord_user)
-        else:
-            old_id = discord_user.student_id
-            discord_user.student_id = student.stuid
-            exists = True
-
         try:
-            await self.session.commit()
+            async with sessionmaker.begin() as session:
+                student = await session.get(StudentData, new_id)
+                if student is None:
+                    await ctx.author.send(f"**{new_id}** is not a valid ID. Please use a valid 6-digit ID.")
+                    logger.debug(f"{ctx.author} tried to set their ID to an invalid ID.")
+                    return
+
+                exists = False
+                discord_user = await session.get(DiscordUser, ctx.author.id)
+                if discord_user is None:
+                    discord_user = DiscordUser(discord_user_id=ctx.author.id, student_data=student)
+                    session.add(discord_user)
+                else:
+                    old_id = discord_user.student_id
+                    discord_user.student_id = student.stuid
+                    exists = True
             if exists:
                 logger.info(f"{ctx.author} successfully updated their ID from {old_id} to {new_id}.")
             else:
                 logger.info(f"{ctx.author} successfully set their ID to {new_id}.")
             await ctx.author.send(f"Your ID has now been set to **{new_id}**!")
         except IntegrityError:
-            await self.session.rollback()
             await ctx.author.send(f"**{new_id}** is already in use. Please use another ID.")
             logger.debug(f"{ctx.author} tried to set their ID to an ID already in use.")
 
@@ -240,12 +234,13 @@ class CommandsCog(commands.Cog):
             num = max_num
 
         upcoming_bdays = []
-        for stuid, row in upcoming_df.iloc[:num].iterrows():
-            discord_user = (await self.session.execute(select(DiscordUser).where(DiscordUser.student_id == stuid))).scalar_one_or_none()
-            mention = '' if discord_user is None else discord_user.mention
-            upcoming_bdays.append([f"{(row['FirstName'] + ' ' + row['LastName'])} {mention}",
-                                   format(row['Birthdate'], '%b %d'),
-                                   f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}"])
+        async with sessionmaker() as session:
+            for stuid, row in upcoming_df.iloc[:num].iterrows():
+                discord_user = (await session.execute(select(DiscordUser).where(DiscordUser.student_id == stuid))).scalar_one_or_none()
+                mention = '' if discord_user is None else discord_user.mention
+                upcoming_bdays.append([f"{(row['FirstName'] + ' ' + row['LastName'])} {mention}",
+                                    format(row['Birthdate'], '%b %d'),
+                                    f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}"])
         upcoming_embed.add_field(name='Name', value='\n'.join(map(lambda iterr: iterr[0], upcoming_bdays))) \
                       .add_field(name='Birthday', value='\n'.join(map(lambda iterr: iterr[1], upcoming_bdays))) \
                       .add_field(name='Upcoming In', value='\n'.join(map(lambda iterr: iterr[2], upcoming_bdays)))
@@ -273,9 +268,9 @@ class CommandsCog(commands.Cog):
     async def setannouncements(self, ctx, channel=commands.TextChannelConverter()):
         if not isinstance(channel, discord.TextChannel):
             channel = ctx.channel
-        guild = await self.session.get(Guild, ctx.guild.id)
-        guild.announcements_id = channel.id
-        await self.session.commit()
+        async with sessionmaker.begin() as session:
+            guild = await session.get(Guild, ctx.guild.id)
+            guild.announcements_id = channel.id
         await ctx.send(f"The new announcements channel is now {channel.mention}!")
 
     @setannouncements.error
@@ -297,7 +292,8 @@ class CommandsCog(commands.Cog):
     @commands.command(aliases=['getann'])
     @commands.guild_only()
     async def getannouncements(self, ctx, *args):
-        guild = await self.session.get(Guild, ctx.guild.id)
+        async with sessionmaker() as session:
+            guild = await session.get(Guild, ctx.guild.id)
         if guild.announcements_id is None:
             await ctx.send((f"{ctx.author.mention} There is not currently an announcements channel set. "
                             f"Use `{ctx.prefix}setann` to set an announcements channel."))
@@ -320,7 +316,8 @@ class CommandsCog(commands.Cog):
     async def wishes(self, ctx, person=commands.MemberConverter()):
         if not isinstance(person, discord.Member):
             person = ctx.author
-        discord_user = await self.session.get(DiscordUser, person.id)
+        session = sessionmaker()
+        discord_user = await session.get(DiscordUser, person.id)
         embed = discord.Embed().set_author(name=f"{person}'s Wishes Received!", icon_url=person.avatar_url)
         if discord_user:
             wishes_received = discord_user.student_data.wishes_received
@@ -330,7 +327,7 @@ class CommandsCog(commands.Cog):
                 wishers_dict = {}
                 more_than_one = False
                 for wish in wishes_received:
-                    await self.session.refresh(wish)
+                    await session.refresh(wish)
                     if wish.discord_user not in wishers_dict:
                         wishers_dict[wish.discord_user] = [wish]
                     else:
@@ -346,6 +343,7 @@ class CommandsCog(commands.Cog):
             embed.description = f"{person.mention} currently has 0 wishes."
             embed.set_footer(text=f"{person} is not currently in the database 🙁")
         await ctx.send(embed=embed)
+        await session.close()
 
     @wishes.error
     async def handle_wishes_error(self, ctx, error):

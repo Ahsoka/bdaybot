@@ -4,9 +4,9 @@ from .help import HelpCommand
 from discord.ext import commands
 from Levenshtein import distance
 from sqlalchemy.exc import IntegrityError
-from . import engine, postgres_engine, config
 from .tables import Base, StudentData, Guild
 from sqlalchemy.ext.asyncio import AsyncSession
+from . import engine, postgres_engine, config, sessionmaker
 from .utils import EmojiURLs, maybe_mention, format_iterable
 from .cogs import AutomatedTasksCog, CommandsCog, CosmicHouseKeepingCog, EasterEggsCog
 
@@ -34,8 +34,6 @@ class bdaybot(commands.Bot):
         if kwargs.get('easter_egg', True):
             self.add_cog(self.easter_egg_cog)
 
-        self.session = AsyncSession(bind=engine, binds={StudentData: postgres_engine})
-
         EmojiURLs.bot = self
 
     async def start(self, *args, **kwargs):
@@ -44,15 +42,13 @@ class bdaybot(commands.Bot):
                                 tables=map(lambda iterr: iterr[1],
                                            filter(lambda tup: 'student_data' not in tup[0],
                                                   Base.metadata.tables.items())))
+
         if config.testing:
-            self.session.add(Guild(guild_id=713095060652163113,
-                                   role_id=791804070398132225))
-            self.session.add(Guild(guild_id=675806001231822863,
-                                   role_id=791186971078033428))
-            try:
-                await self.session.commit()
-            except IntegrityError:
-                await self.session.rollback()
+            async with sessionmaker.begin() as session:
+                session.add(Guild(guild_id=713095060652163113,
+                                    role_id=791804070398132225))
+                session.add(Guild(guild_id=675806001231822863,
+                                    role_id=791186971078033428))
 
         await super().start(*args, **kwargs)
 

@@ -3,8 +3,7 @@ import discord
 from .. import config
 from discord.ext import commands
 from ..tables import StudentData, Guild
-from .. import engine, postgres_engine, config
-from sqlalchemy.ext.asyncio import AsyncSession
+from .. import sessionmaker, config
 from ..utils import find_ann_channel, permissions, fake_ctx
 
 logger = logging.getLogger(__name__)
@@ -22,12 +21,12 @@ class CosmicHouseKeepingCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.parsed_command_prefix = self.bot.parsed_command_prefix
-        self.session = AsyncSession(bind=engine, binds={StudentData: postgres_engine})
 
     @commands.Cog.listener()
     async def on_ready(self):
+        session = sessionmaker()
         for guild in self.bot.guilds:
-            sql_guild = await self.session.get(Guild, guild.id)
+            sql_guild = await session.get(Guild, guild.id)
             if sql_guild is None:
                 channel = find_ann_channel(guild)
                 if channel is None:
@@ -45,8 +44,8 @@ class CosmicHouseKeepingCog(commands.Cog):
                                                 f"If you think this is a mistake use `{self.parsed_command_prefix}setann` to change it."))
                         logger.info(f"The bot sent a DM message to {guild.owner} confirming the announcements channel was correct, "
                                     f"since it is the bot's first time in {guild}.")
-                self.session.add(sql_guild)
-                await self.session.commit()
+                async with session.begin():
+                    session.add(sql_guild)
             else:
                 channel = guild.get_channel(sql_guild.announcements_id)
                 if channel is None:
@@ -57,8 +56,8 @@ class CosmicHouseKeepingCog(commands.Cog):
                             await guild.owner.send(script + (f". Please use `{self.parsed_command_prefix}setann` "
                                                               "to set a new announcements channel."))
                     else:
-                        sql_guild.announcements_id = channel.id
-                        await self.session.commit()
+                        async with session.begin():
+                            sql_guild.announcements_id = channel.id
                         if config.DM_owner:
                             await guild.owner.send(script + (f", however, I automatically detected {channel.mention} "
                                                               "as the announcements channel! If you think this is a mistake "
@@ -74,35 +73,41 @@ class CosmicHouseKeepingCog(commands.Cog):
                                             f"command to set {channel.mention} as the announcements channel."))
                     logger_message += f" {guild.owner} was sent a message notifying them of the situation."
                 logger.warning(logger_message)
-                sql_guild.announcements_id = None
-                await self.session.commit()
+                async with session.begin():
+                    sql_guild.announcements_id = None
+        await session.close()
 
     @commands.Cog.listener()
     async def on_guild_channel_update(self, before, after):
-        guild = await self.session.get(Guild, after.guild.id)
+        session = sessionmaker()
+        guild = await session.get(Guild, after.guild.id)
         if guild.announcements_id == before.id and not permissions(after, after.guild.me, 'send_messages'):
-            guild.announcements_id = None
-            await self.session.commit()
+            async with session.begin():
+                guild.announcements_id = None
             if config.DM_owner:
                 await after.guild.owner.send((f"While changing {after.mention} you or someone in **{after.guild}** "
                                               f"accidently made it so I can no longer send messages in {after.mention}. "
                                               f"Please use `{self.bot.parsed_command_prefix}setann` to set another announcements "
                                                "channel."))
+        await session.close()
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
-        guild = await self.session.get(Guild, channel.guild.id)
+        session = sessionmaker()
+        guild = await session.get(Guild, channel.guild.id)
         if channel.id == guild.announcements_id:
-            guild.announcements_id = None
-            await self.session.commit()
+            async with session.begin():
+                guild.announcements_id = None
             if config.DM_owner:
                 await channel.guild.owner.send(("You or someone in the server deleted the channel I announce birthdays in. "
                                                f"Please set a new channel with `{self.bot.parsed_command_prefix}setann`"))
+        await session.close()
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
+        session = sessionmaker()
         if after == self.bot.user:
-            guild = await self.session.get(Guild, after.guild.id)
+            guild = await session.get(Guild, after.guild.id)
             missing_manage_roles = False
             if before.roles != after.roles and guild.role_id not in map(lambda role: role.id, after.roles):
                 try:
@@ -121,8 +126,8 @@ class CosmicHouseKeepingCog(commands.Cog):
                 if not permissions(channel, after.guild.me, 'send_messages'):
                     beginning = "Additionally," if missing_manage_roles \
                                 else f"While changing my roles you or someone in **{after.guild}** made it so"
-                    guild.announcements_id = None
-                    await self.session.commit()
+                    async with session.begin():
+                        guild.announcements_id = None
                     logger_message = (f"Someone in {after.guild} accidently made it so that "
                                        "the bot can no longer send messsages in the announcements channel.")
                     if config.DM_owner:
@@ -132,3 +137,4 @@ class CosmicHouseKeepingCog(commands.Cog):
                                                       f"`{self.parsed_command_prefix}setannouncements`."))
                         logger_message += f" A message was sent to {after.guild.owner}."
                     logger.warning(logger_message)
+        await session.close()
