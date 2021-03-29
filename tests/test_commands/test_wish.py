@@ -140,3 +140,10 @@ async def test_wish(bot, session, channel, mocker, mock_delete, delay, valid_ids
     # TODO:
     # Test the situation when a user submits with
     # a previously set ID submits their ID again
+
+    # TODO:
+    # Test the situation where a user tries to wish
+    # someone who is in the database but there birthday
+    # is not today.
+
+    # TODO: Make it so you can run this test multiple times in a row
