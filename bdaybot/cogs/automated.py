@@ -209,7 +209,7 @@ class AutomatedTasksCog(commands.Cog):
 
     async def update_cyclers(self):
         async with sessionmaker.begin() as session:
-            sql_guilds = (await session.execute(select(guilds))).all()
+            sql_guilds = (await session.execute(select(guilds))).scalars().all()
             new_cycler = itertools.cycle(values.today_df['FirstName'] + ' ' + values.today_df['LastName'])
             for guild in sql_guilds:
                 guild.today_names_cycle = new_cycler
