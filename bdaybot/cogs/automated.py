@@ -3,10 +3,11 @@ import discord
 import logging
 import datetime
 import itertools
+
 from sqlalchemy import select
+from ..snailmail import sendmail
 from discord.ext import commands, tasks
 from ..amazon.order import order_product
-from ..snailmail import sendmail
 from .. import values, config, sessionmaker
 from ..utils import fake_ctx, ping_devs, EmojiURLs, devs
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound

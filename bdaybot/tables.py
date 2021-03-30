@@ -1,7 +1,9 @@
 import itertools
+
 from . import values
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.orm import declarative_base, relationship, backref
+
 from sqlalchemy import (Column,
                         Text,
                         Integer,

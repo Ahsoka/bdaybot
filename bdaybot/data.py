@@ -4,6 +4,7 @@ import logging
 import datetime
 import psycopg2
 import functools
+
 from dotenv import load_dotenv
 from .utils import classproperty
 import urllib.request, urllib.error

@@ -1,3 +1,9 @@
+import os
+import pathlib
+
+from dotenv import load_dotenv, find_dotenv
+from fpdf import FPDF
+
 #envelope size: 110 by 145 mm
 
 # Elliot Torres
@@ -7,11 +13,6 @@
 # Ryan Lee
 # 1234 Boomer Road
 # La Crescenta, CA 91214
-
-import os
-from dotenv import load_dotenv, find_dotenv
-from fpdf import FPDF
-import pathlib
 
 load_dotenv(find_dotenv())
 

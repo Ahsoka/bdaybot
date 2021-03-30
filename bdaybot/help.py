@@ -1,8 +1,9 @@
 import discord
 import logging
+
+from . import values
 from discord.ext import commands
 from .cogs.commands import CommandsCog
-from . import values
 from .utils import maybe_mention, ping_devs, EmojiURLs
 
 logger = logging.getLogger(__name__)

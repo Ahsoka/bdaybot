@@ -1,11 +1,11 @@
 import discord
 import logging
+
 from .help import HelpCommand
 from discord.ext import commands
 from Levenshtein import distance
 from sqlalchemy.exc import IntegrityError
 from .tables import Base, StudentData, Guild
-from sqlalchemy.ext.asyncio import AsyncSession
 from . import engine, postgres_engine, config, sessionmaker
 from .utils import EmojiURLs, maybe_mention, format_iterable
 from .cogs import AutomatedTasksCog, CommandsCog, CosmicHouseKeepingCog, EasterEggsCog
