@@ -5,9 +5,10 @@ import asyncio
 import discord
 import inspect
 import functools
-from sqlalchemy import select, delete
+
 from dotenv import load_dotenv
 from bdaybot.bot import bdaybot
+from sqlalchemy import select, delete
 from bdaybot.tables import StudentData, DiscordUser, Wish
 from bdaybot import sessionmaker, engine, postgres_engine
 

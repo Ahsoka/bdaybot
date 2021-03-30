@@ -5,6 +5,7 @@ import pytest
 import random
 import asyncio
 import discord
+
 from sqlalchemy import delete
 from bdaybot.tables import DiscordUser
 
