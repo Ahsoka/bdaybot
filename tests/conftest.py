@@ -5,11 +5,11 @@ import asyncio
 import discord
 import inspect
 import functools
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from dotenv import load_dotenv
 from bdaybot.bot import bdaybot
-from bdaybot.tables import StudentData
-from bdaybot import engine, postgres_engine
+from bdaybot.tables import StudentData, DiscordUser, Wish
+from bdaybot import sessionmaker, engine, postgres_engine
 
 BDAY_SERVER_ID = 713095060652163113
 STARSHIP_SERVER_ID = 675806001231822863
@@ -20,8 +20,7 @@ TESTING_CHANNEL_ID = 787491935517802558
 NUMBER_OF_DASHES = 25
 UNIT_TEST_NUMBER_OF_DASHES = 10
 
-# DELAY_BETWEEN_MESSAGE = 1 # seconds
-DELAY_BETWEEN_MESSAGE = 0.5 # seconds
+TIMEOUT = 10
 
 load_dotenv()
 
@@ -140,6 +139,14 @@ def channel(bot):
 async def students(session):
     return (await session.execute(select(StudentData))).scalars().all()
 
+@pytest.fixture(autouse=True)
+async def delete_tables(session):
+    # Delete all data in DiscordUsers and Wish
+    # tables before moving onto the next test
+    await session.execute(delete(DiscordUser))
+    await session.execute(delete(Wish))
+    await session.commit()
+
 @pytest.fixture()
 def valid_ids(students):
     return list(map(lambda student: student.stuid, students))
@@ -157,6 +164,6 @@ async def which_test(channel):
 def dashes():
     return UNIT_TEST_NUMBER_OF_DASHES
 
-@pytest.fixture
-def delay():
-    return DELAY_BETWEEN_MESSAGE
+@pytest.fixture()
+def timeout():
+    return TIMEOUT

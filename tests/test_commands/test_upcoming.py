@@ -4,20 +4,22 @@ import asyncio
 import discord
 
 @pytest.mark.asyncio
-async def test_upcoming(bot, channel, delay):
+async def test_upcoming(bot, channel, timeout):
     # Test when the user types a number less than 1
     await channel.send('test.upcoming -1')
-    await asyncio.sleep(delay)
-    latest_message = (await channel.history(limit=1).flatten())[0]
+    latest_message = await bot.wait_for('message',
+                                        timeout=timeout,
+                                        check=lambda message: channel.guild.me in message.mentions)
     assert "**-1** is less than 1. Please use a number" in latest_message.content, \
           f"Message content: {latest_message.content}"
 
     # Test the standard usage of the upcoming command
     await channel.send('test.upcoming')
-    await asyncio.sleep(delay)
-    latest_message = (await channel.history(limit=1).flatten())[0]
+    latest_message = await bot.wait_for('message',
+                                        timeout=timeout,
+                                        check=lambda message: message.embeds)
     # Check if latest_message has any embeds
-    assert latest_message.embeds, "latest_message does not have any embeds"
+    assert latest_message.embeds, f"latest_message does not have any embeds, {latest_message}"
     # Check if latest_message embed has three fields
     assert len(latest_message.embeds[0].fields) == 3, f"Num of field: {len(latest_message.embeds[0].fields)}"
     # Check if the first field name is 'Name'
@@ -30,8 +32,9 @@ async def test_upcoming(bot, channel, delay):
     # Test the upcoming command with a number between 1 and 10 (inclusive on both sides)
     num_of_rows = random.randint(1, 10)
     await channel.send(f'test.upcoming {num_of_rows}')
-    await asyncio.sleep(delay)
-    latest_message = (await channel.history(limit=1).flatten())[0]
+    latest_message = await bot.wait_for('message',
+                                        timeout=timeout,
+                                        check=lambda message: message.embeds)
     # Check if latest_message has any embeds
     assert latest_message.embeds, "latest_message does not have any embeds"
     # Check if latest_message embed has three fields
@@ -46,8 +49,9 @@ async def test_upcoming(bot, channel, delay):
     # Test the upcoming command with a number greater than 10
     num_of_rows = 1_000
     await channel.send(f'test.upcoming {num_of_rows}')
-    await asyncio.sleep(delay)
-    latest_message = (await channel.history(limit=1).flatten())[0]
+    latest_message = await bot.wait_for('message',
+                                        timeout=timeout,
+                                        check=lambda message: message.embeds)
     # Check if latest_message has any embeds
     assert latest_message.embeds, "latest_message does not have any embeds"
     # Check if latest_message embed has three fields
