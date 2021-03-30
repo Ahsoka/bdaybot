@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 from bdaybot.bot import bdaybot
 from bdaybot.tables import StudentData
 from bdaybot import engine, postgres_engine
-from sqlalchemy.ext.asyncio import AsyncSession
 
 BDAY_SERVER_ID = 713095060652163113
 STARSHIP_SERVER_ID = 675806001231822863
@@ -103,14 +102,14 @@ async def bot():
 
 @pytest.fixture(scope='session')
 async def session():
-    session = AsyncSession(bind=engine, binds={StudentData: postgres_engine})
-    yield session
+    async with sessionmaker() as session:
+        yield session
     # Close session and
     # dispose engine so
     # that we can run
     # pytest.main() many
     # times in row
-    await session.close()
+    await postgres_engine.dispose()
     await engine.dispose()
 
 @pytest.fixture()
