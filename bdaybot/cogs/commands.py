@@ -42,9 +42,6 @@ class CommandsCog(commands.Cog):
                         return
                     discord_user = DiscordUser(discord_user_id=ctx.author.id, student_data=student_user)
                     session.add(discord_user)
-                elif input_id is not None:
-                    await ctx.send((f"{ctx.author.mention} Once you've submitted your ID once, "
-                                    "you do not need to submitted it again to send wishes!"))
 
                 if input_id is not None:
                     # await session.refresh(discord_user)
@@ -59,6 +56,9 @@ class CommandsCog(commands.Cog):
                                         "you are not in the bdaybot's birthday database.\n"
                                         "Add yourself to database here ⬇\n"
                                         "**http://drneato.com/Bday/Bday2.php**"))
+                    else:
+                        await ctx.send((f"{ctx.author.mention} Once you've submitted your ID once, "
+                                        "you do not need to submitted it again to send wishes!"))
 
                 today_df = values.today_df.copy()
                 if len(message) == 0 and len(today_df) > 1:
@@ -118,7 +118,7 @@ class CommandsCog(commands.Cog):
                     wish_embed.description = (f"Congrats {discord_user.student_data.firstname}! 🎈 ✨ 🎉\n"
                                             f"You wished ***__{wish.wishee.fullname}__*** a happy birthday!")
                     logger.info(f"{ctx.author} successfully wished {wish.wishee.fullname} a happy birthday!")
-                await ctx.send(ctx.author.mention, embed=wish_embed)
+            await ctx.send(ctx.author.mention, embed=wish_embed)
         else:
             wish_embed.description = (f"You cannot use the `{ctx.prefix}wish` command if it is no one's birthday today.\n"
                                       f"However, it will be **{get_bday_names()}** birthday on "
