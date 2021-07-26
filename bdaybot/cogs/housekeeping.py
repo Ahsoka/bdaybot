@@ -2,9 +2,9 @@ import logging
 import discord
 
 from .. import config
+from ..tables import Guild
 from discord.ext import commands
 from .. import sessionmaker, config
-from ..tables import StudentData, Guild
 from ..utils import find_ann_channel, permissions, fake_ctx
 
 logger = logging.getLogger(__name__)
