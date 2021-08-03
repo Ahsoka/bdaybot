@@ -86,6 +86,10 @@ class CommandsCog(commands.Cog):
                                         StudentData.lastname == name.capitalize())
                         else:
                             firstname, secondname, *rest = message
+                            if input_id is not None:
+                                name = ' '.join(message[:-1])
+                            else:
+                                name = ' '.join(message)
                             discrim = or_(StudentData.firstname == firstname.capitalize(),
                                         StudentData.lastname == firstname.capitalize(),
                                         StudentData.firstname == secondname.capitalize(),
