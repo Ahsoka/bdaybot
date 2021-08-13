@@ -48,7 +48,7 @@ class HelpCommand(commands.HelpCommand):
                             "▶ If there are multiple people's birthday today you must specify who you want to wish a happy birthday.\n"
                             f"\ne.g. If you want wish Jaiden a happy birthday, use `{ctx.prefix}wish Jaiden 694208`"
                             "\nThe ID you submit is checked against a list of valid IDs so use your real ID.\n"
-                            "\n**Your message containing your ID is deleted to keep your ID confidental.**\n\n"
+                            "\n**Your message containing your ID is deleted to keep your ID confidential.**\n\n"
                             f"The `{ctx.prefix}wish` command is not available on days when it is no one's birthday")
 
             description += "." if values.bday_today else " (like today)."
@@ -74,7 +74,7 @@ class HelpCommand(commands.HelpCommand):
                             f"To use the setID command use `{ctx.prefix}setID " "{6-digit student ID}`\n"
                             "\nThe student ID you input is validated against a database of legitimate student IDs, "
                             "so make sure you use your real one.\n"
-                            "\nIf you are using this command in a server, your message will be deleted to keep your ID confidental.")
+                            "\nIf you are using this command in a server, your message will be deleted to keep your ID confidential.")
             command_embed = discord.Embed(description=description).set_author(name="setID Command", icon_url=await EmojiURLs.numbers)
         elif command.name == 'setannouncements':
             description = ''
