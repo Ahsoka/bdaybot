@@ -120,7 +120,7 @@ async def ping_devs(error, command, ctx=None, bot=None):
     # It is here to avoid circular import issues.
     from . import config
     if ctx is None:
-        assert bot is not None, 'bot not be None if ctx is None'
+        assert bot is not None, 'bot cannot be None if ctx is None'
     else:
         bot = ctx.bot
         discord_location = ctx.guild if ctx.guild else 'a DM message'
