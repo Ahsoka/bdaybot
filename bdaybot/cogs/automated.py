@@ -103,6 +103,16 @@ class AutomatedTasksCog(commands.Cog):
         # In the code below it is now converted to the local time zone automatically
         logger.info(f"The next iteration is scheduled for {format(self.send_bdays.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
 
+    @send_bdays.error
+    async def handle_send_bdays_error(self, error: Exception):
+        logger.warning("The following error occured with the send_bdays task:", exc_info=error)
+        if not self.send_bdays.is_running():
+            logger.debug('Attempting to restart the send_bdays task.')
+            self.send_bdays.restart()
+            if not self.send_bdays.is_running():
+                logger.critical('Failed to restart the send_bdays task.')
+                await ping_devs(error, 'send_bdays', bot=self.bot)
+
     @tasks.loop(hours=24)
     async def order_from_amazon(self):
         if values.bday_today:
@@ -129,7 +139,6 @@ class AutomatedTasksCog(commands.Cog):
                     else:
                         logger.info(("The bot successfully accessed Amazon, however it did not order "
                                      "candy since this was disabled."))
-
 
     @order_from_amazon.error
     async def handle_order_from_amazon_error(self, error):
