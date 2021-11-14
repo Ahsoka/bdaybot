@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 
 from bdaybot.tables import Guild
 
