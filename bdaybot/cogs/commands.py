@@ -182,7 +182,10 @@ class CommandsCog(commands.Cog):
             await ctx.message.delete()
         try:
             async with sessionmaker.begin() as session:
-                student = await session.get(StudentData, new_id)
+                if new_id > 2147483647 or new_id < -2147483648:
+                    student = None
+                else:
+                    student = await session.get(StudentData, new_id)
                 if student is None:
                     await ctx.author.send(f"**{new_id}** is not a valid ID. Please use a valid 6-digit ID.")
                     logger.debug(f"{ctx.author} tried to set their ID to an invalid ID.")
