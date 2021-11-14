@@ -42,9 +42,11 @@ class EasterEggsCog(commands.Cog):
                 key = list(iterr)[index]
                 return f"{iterr[key].mention} ({key})"
 
-            creators = format_iterable(devs,
-                                       apos=False,
-                                       get_str=get_dev_str)
+            creators = format_iterable(
+                devs,
+                apos=False,
+                get_str=get_dev_str
+            )
             await message.channel.send(f"My creators are {creators}")
             logger.info(f"{message.author} discovered the 'who are ur devs' easter egg!")
 
