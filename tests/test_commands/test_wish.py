@@ -24,6 +24,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, valid_ids, timeo
     wishee_fullname = f"{wishee_series['FirstName']} {wishee_series['LastName']}"
     wishee_id = int(test_df.index[test_df["FirstName"] == wishee].values[0])
     student = await session.get(StudentData, wishee_id)
+
     # Test the situation when there is no birthday
     mocker.patch("bdaybot.data.values.today_df", new_callable=mocker.PropertyMock, return_value=test_df)
     mocker.patch("bdaybot.data.values.bday_today", new_callable=mocker.PropertyMock, return_value=False)
@@ -35,6 +36,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, valid_ids, timeo
     )
     assert "You cannot use the `test.wish`" in latest_message.embeds[0].description, \
         f'Message content(embed): {latest_message.embeds[0].description}'
+
     # Test the situation when the user does not include their ID
     mocker.patch.object(values, "bday_today", return_value=True)
     await channel.send(f"test.wish")
@@ -45,6 +47,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, valid_ids, timeo
     )
     assert "You are first-time wisher." in latest_message.embeds[0].description, \
         f'Message content(embed): {latest_message.embeds[0].description}'
+
     # Test the situation when the user submits an invalid ID
     invalid_id = 1_000_000
     message = await channel.send(f"test.wish {invalid_id}")
@@ -57,6 +60,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, valid_ids, timeo
     discord.message.delete_message.assert_awaited_with(message)
     assert "Your ID is invalid" in latest_message.embeds[0].description, \
         f'Message content(embed): {latest_message.embeds[0].description}'
+
     # Test the situation when the user submits a valid ID (that is in the birthday database)
     # but does not specify who they want to wish a happy
     # birthday, when it is multiple people's birthday
@@ -80,6 +84,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, valid_ids, timeo
     # Make sure the proper message is sent back
     assert "You must specify who you want wish a happy birthday!" in latest_message.embeds[0].description, \
     f'Message content(embed): {latest_message.embeds[0].description}'
+
     # Test the situation when the user submits a different valid ID (that is in the birthday database)
     # than the one they previously submitted
     # Make sure that another_valid_id != valid_id
@@ -136,6 +141,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, valid_ids, timeo
     wishlist = (await session.execute(select(Wish))).one()
     assert f"You wished ***__{student.fullname}__*** a happy birthday!" in latest_message.embeds[0].description, \
         f'Message content(embed): {latest_message.embeds[0].description}'
+
     # Test the situation when the user tries to wish
     # the same person twice
     await channel.send(f'test.wish {wishee}')
