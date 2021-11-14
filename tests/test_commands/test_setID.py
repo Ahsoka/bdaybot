@@ -1,9 +1,6 @@
 import re
-import os
-import click
 import pytest
 import random
-import asyncio
 import discord
 
 from sqlalchemy import delete
