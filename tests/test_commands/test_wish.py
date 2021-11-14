@@ -86,6 +86,17 @@ async def test_wish(bot, session, channel, mocker, mock_delete, valid_ids, timeo
     assert "You must specify who you want wish a happy birthday!" in latest_message.embeds[0].description, \
     f'Message content(embed): {latest_message.embeds[0].description}'
 
+    # Test the situation when there is an invalid first and last name and a previously set ID,
+    # see https://github.com/Ahsoka/bdaybot/commit/5c026ea981def9def84356e5c9de6033614bd682
+    await channel.send(f"test.wish Govenor Tarkin")
+    latest_message = await bot.wait_for(
+        'message',
+        timeout=timeout,
+        check=lambda message: message.embeds
+    )
+    assert 'is not a name in the birthday database!' in latest_message.embeds[0].description, \
+        f'Message content(embed): {latest_message.embeds[0].description}'
+
     # Test the situation when the user submits a different valid ID (that is in the birthday database)
     # than the one they previously submitted
     # Make sure that another_valid_id != valid_id
