@@ -1,7 +1,5 @@
 import re
 import pytest
-import random
-import asyncio
 
 from bdaybot.tables import Guild
 
