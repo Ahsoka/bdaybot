@@ -1,6 +1,5 @@
 import pytest
 import random
-import asyncio
 import discord
 
 @pytest.mark.asyncio
