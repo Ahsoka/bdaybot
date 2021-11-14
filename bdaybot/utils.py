@@ -5,7 +5,7 @@ import discord
 import inspect
 import logging
 import datetime
-import functools
+import functools # NOTE: Do not remove this, see EmojiURLs class
 import traceback
 
 from discord.ext import commands
