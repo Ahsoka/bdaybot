@@ -19,8 +19,10 @@ logger_names = [
     'bdaybot.bot'
 ]
 for logger_name in logger_names:
-    setUpLogger(logger_name,
-                files=not config.testing,
-                fmt='[%(levelname)s] %(name)s: %(asctime)s - [%(funcName)s()] %(message)s')
+    setUpLogger(
+        logger_name,
+        files=not config.testing,
+        fmt='[%(levelname)s] %(name)s: %(asctime)s - [%(funcName)s()] %(message)s'
+    )
 
 the_bot.run(os.environ['testing_token'] if config.testing else os.environ['Bday_Token'])

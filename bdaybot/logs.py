@@ -48,16 +48,22 @@ def setUpLogger(name, fmt, datefmt='%I:%M %p', files=True):
         logs_dir = pathlib.Path('.').parent / 'logs'
         logs_dir.mkdir(exist_ok=True)
         # Create a handler that records all activity
-        everything = logging.handlers.TimedRotatingFileHandler(logs_dir / f'bdaybot.{format(datetime.datetime.today(), "%Y-%m-%d")}.log',
-                                                               when='midnight', encoding='UTF-8')
+        everything = logging.handlers.TimedRotatingFileHandler(
+            logs_dir / f'bdaybot.{format(datetime.datetime.today(), "%Y-%m-%d")}.log',
+            when='midnight',
+            encoding='UTF-8'
+        )
         # Do not use loggging.NOTSET, does not work for some reason
         # use logging.DEBUG if you want the lowest level
         everything.setLevel(logging.DEBUG)
         everything.setFormatter(pretty)
 
         # Create a handler that records only ERRORs and CRITICALs
-        errors_only = logging.handlers.TimedRotatingFileHandler(logs_dir / f'ERRORS.bdaybot.{format(datetime.datetime.today(), "%Y-%m-%d")}.log',
-                                                                when='midnight', encoding='UTF-8')
+        errors_only = logging.handlers.TimedRotatingFileHandler(
+            logs_dir / f'ERRORS.bdaybot.{format(datetime.datetime.today(), "%Y-%m-%d")}.log',
+            when='midnight',
+            encoding='UTF-8'
+        )
         errors_only.setLevel(logging.ERROR)
         errors_only.setFormatter(pretty)
 

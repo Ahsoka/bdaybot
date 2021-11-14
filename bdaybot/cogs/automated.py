@@ -118,27 +118,35 @@ class AutomatedTasksCog(commands.Cog):
         if values.bday_today:
             for stuid, bday_person in values.today_df.iterrows():
                 if bday_person['AddrLine1']:
-                    order_product(ASIN=config.ASIN,
-                                  FULLNAME=bday_person['FirstName'] + ' ' + bday_person['LastName'],
-                                  ADDRESS_LINE_ONE=bday_person['AddrLine1'],
-                                  ADDRESS_LINE_TWO=bday_person['AddrLine2'],
-                                  CITY=bday_person['City'],
-                                  STATE=bday_person['State'],
-                                  ZIPCODE=str(int(bday_person['Zipcode'])),
-                                  place_order=config.place_order)
+                    order_product(
+                        ASIN=config.ASIN,
+                        FULLNAME=bday_person['FirstName'] + ' ' + bday_person['LastName'],
+                        ADDRESS_LINE_ONE=bday_person['AddrLine1'],
+                        ADDRESS_LINE_TWO=bday_person['AddrLine2'],
+                        CITY=bday_person['City'],
+                        STATE=bday_person['State'],
+                        ZIPCODE=str(int(bday_person['Zipcode'])),
+                        place_order=config.place_order
+                    )
                     if config.place_order:
-                        logger.info((f"The bot successfully sent candy to {bday_person['AddrLine1']} "
-                                     f"for {bday_person['FirstName'] + ' ' + bday_person['LastName']} "
-                                      "via Amazon!"))
+                        logger.info((
+                            f"The bot successfully sent candy to {bday_person['AddrLine1']} "
+                            f"for {bday_person['FirstName'] + ' ' + bday_person['LastName']} "
+                            "via Amazon!"
+                        ))
                         for name, discord_id in devs.items():
                             if getattr(config, name.lower()):
                                 dev = await self.bot.get_user(discord_id)
-                                await dev.send((f"The bot successfully sent candy to **{bday_person['AddrLine1']}** "
-                                                f"for __{bday_person['FirstName'] + ' ' + bday_person['LastName']}__ "
-                                                 "via Amazon! ✨"))
+                                await dev.send((
+                                    f"The bot successfully sent candy to **{bday_person['AddrLine1']}** "
+                                    f"for __{bday_person['FirstName'] + ' ' + bday_person['LastName']}__ "
+                                    "via Amazon! ✨"
+                                ))
                     else:
-                        logger.info(("The bot successfully accessed Amazon, however it did not order "
-                                     "candy since this was disabled."))
+                        logger.info((
+                            "The bot successfully accessed Amazon, however it did not order "
+                            "candy since this was disabled."
+                        ))
 
     @order_from_amazon.error
     async def handle_order_from_amazon_error(self, error):
@@ -151,13 +159,15 @@ class AutomatedTasksCog(commands.Cog):
             session = sessionmaker()
             for stuid, bday_person in values.today_df.iterrows():
                 if bday_person['AddrLine1']:
-                    sendmail(FULLNAME=bday_person['FirstName'] + ' ' + bday_person['LastName'],
-                                  ADDRESS_LINE_ONE=bday_person['AddrLine1'],
-                                  ADDRESS_LINE_TWO=bday_person['AddrLine2'],
-                                  CITY=bday_person['City'],
-                                  STATE=bday_person['State'],
-                                  ZIPCODE=str(int(bday_person['Zipcode'])),
-                                  PERSON=await session.get(student_data, 123456))
+                    sendmail(
+                        FULLNAME=bday_person['FirstName'] + ' ' + bday_person['LastName'],
+                        ADDRESS_LINE_ONE=bday_person['AddrLine1'],
+                        ADDRESS_LINE_TWO=bday_person['AddrLine2'],
+                        CITY=bday_person['City'],
+                        STATE=bday_person['State'],
+                        ZIPCODE=str(int(bday_person['Zipcode'])),
+                        PERSON=await session.get(student_data, 123456)
+                    )
             await session.close()
 
     @tasks.loop(hours=24)
@@ -169,12 +179,16 @@ class AutomatedTasksCog(commands.Cog):
                 if student.discord_user is not None:
                     user = await self.bot.get_user(student.discord_user.discord_user_id)
                     try:
-                        await user.send((f"Happy birthday from me, {self.bot.user.mention}, "
-                                          "and all the developers of the bdaybot! Hope you have an awesome birthday!"))
+                        await user.send((
+                            f"Happy birthday from me, {self.bot.user.mention}, "
+                            "and all the developers of the bdaybot! Hope you have an awesome birthday!"
+                        ))
                         logger.info(f"A happy birthday DM message was sent to {user}.")
                     except discord.Forbidden:
-                        logger.debug(("The bdaybot failed to send a happy birthday DM message to "
-                                     f"{user} because the bot and {user} do not have any mutual servers."))
+                        logger.debug((
+                            "The bdaybot failed to send a happy birthday DM message to "
+                            f"{user} because the bot and {user} do not have any mutual servers."
+                        ))
             await session.close()
 
     @tasks.loop(seconds=5)
@@ -208,8 +222,10 @@ class AutomatedTasksCog(commands.Cog):
                 if isinstance(error, commands.BotMissingPermissions) and guild.nickname_notice:
                     logger_message = f"The bot unsucessfully changed its nickname in '{ctx.guild}'. "
                     if config.DM_owner:
-                        await ctx.guild.owner.send((f"Currently I cannot change my nickname in {ctx.guild}. "
-                                                    "Please give me the `change nickname` permission so I can work properly."))
+                        await ctx.guild.owner.send((
+                            f"Currently I cannot change my nickname in {ctx.guild}. "
+                            "Please give me the `change nickname` permission so I can work properly."
+                        ))
                         logger_message += f"A DM message requesting to change it's permissions was sent to {ctx.guild.owner}."
                     logger.warning(logger_message)
                     guild.nickname_notice = False
@@ -234,7 +250,10 @@ class AutomatedTasksCog(commands.Cog):
         logger.info(f"The 'update_cycler()' coroutine was run.")
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
-        logger.info(f"The next iteration is scheduled for {format(self.update_cycler.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
+        logger.info((
+            "The next iteration is scheduled for "
+            f"{format(self.update_cycler.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}."
+        ))
 
     async def invoke_update_role(self):
         for guild in self.bot.guilds:
@@ -251,7 +270,10 @@ class AutomatedTasksCog(commands.Cog):
         logger.info(f"The 'change_roles()' coroutine was run.")
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
-        logger.info(f"The next iteration is scheduled for {format(self.change_roles.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
+        logger.info((
+            f"The next iteration is scheduled for "
+            f"{format(self.change_roles.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}."
+        ))
 
     @commands.command(hidden=True)
     @commands.bot_has_permissions(manage_roles=True)
@@ -261,8 +283,10 @@ class AutomatedTasksCog(commands.Cog):
                 if values.bday_today:
                     role_name, color = "🎉 Happy Birthday", discord.Color.from_rgb(255, 0, 0)
                 else:
-                    role_name, color = (f"Upcoming Bday-{format(values.today_df.iloc[0]['Birthdate'], '%a %b %d')}",
-                                        discord.Color.from_rgb(162, 217, 145))
+                    role_name, color = (
+                        f"Upcoming Bday-{format(values.today_df.iloc[0]['Birthdate'], '%a %b %d')}",
+                        discord.Color.from_rgb(162, 217, 145)
+                    )
                 guild = await session.get(guilds, ctx.guild.id)
                 if guild.role_id is not None:
                     try:
@@ -274,11 +298,12 @@ class AutomatedTasksCog(commands.Cog):
                     bday_role = None
 
                 if bday_role is None:
-                    bday_role = await ctx.guild \
-                                        .create_role(name=role_name,
-                                                    hoist=True,
-                                                    color=color,
-                                                    reason='Creating Happy Birthday/Upcoming Birthday role')
+                    bday_role = await ctx.guild.create_role(
+                        name=role_name,
+                        hoist=True,
+                        color=color,
+                        reason='Creating Happy Birthday/Upcoming Birthday role'
+                    )
                     guild.role_id = bday_role.id
 
             await ctx.guild.me.add_roles(bday_role)
@@ -288,9 +313,11 @@ class AutomatedTasksCog(commands.Cog):
             while no_error:
                 position = next(counter)
                 try:
-                    await bday_role.edit(position=position,
-                                         hoist=True,
-                                         reason='Moving role above other roles')
+                    await bday_role.edit(
+                        position=position,
+                        hoist=True,
+                        reason='Moving role above other roles'
+                    )
                 except discord.errors.HTTPException:
                     no_error = False
 
@@ -300,11 +327,15 @@ class AutomatedTasksCog(commands.Cog):
     async def handle_update_role_error(self, ctx, error):
         if not hasattr(ctx, 'author'):
             if isinstance(error, commands.BotMissingPermissions):
-                logger_message = (f"The bot unsucessfully edited its role in '{ctx.guild}' "
-                                   "due the the fact the bot was the required missing permissions.")
+                logger_message = (
+                    f"The bot unsucessfully edited its role in '{ctx.guild}' "
+                    "due the the fact the bot was the required missing permissions."
+                )
                 if config.DM_owner:
-                    await ctx.guild.owner.send((f"I cannot currently edit my role in **{ctx.guild}**. "
-                                                 "Please give me the `manage roles` permission so I can work properly"))
+                    await ctx.guild.owner.send((
+                        f"I cannot currently edit my role in **{ctx.guild}**. "
+                        "Please give me the `manage roles` permission so I can work properly"
+                    ))
                     logger_message += f" A DM message requesting to change its permissions was sent to {ctx.guild.owner}."
                 logger.warning(logger_message)
             elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden):
@@ -312,15 +343,21 @@ class AutomatedTasksCog(commands.Cog):
                 async with sessionmaker() as session:
                     guild = await session.get(guilds, ctx.guild.id)
                 current_role = ctx.guild.get_role(guild.role_id)
-                most_likely = [role for role in ctx.guild.me.roles
-                                if role.id != current_role_id and
-                                "Upcoming Bday-" not in role.name and
-                                "🎉 Happy Birthday" != role.name]
-                logger_message = (f"The bot unsucessfully edited its role in '{ctx.guild}' "
-                                  f"due to the fact the bot's highest role was not above the '{current_role}' role.")
+                most_likely = [
+                    role for role in ctx.guild.me.roles
+                    if role.id != current_role_id
+                    and "Upcoming Bday-" not in role.name
+                    and "🎉 Happy Birthday" != role.name
+                ]
+                logger_message = (
+                    f"The bot unsucessfully edited its role in '{ctx.guild}' "
+                    f"due to the fact the bot's highest role was not above the '{current_role}' role."
+                )
                 if config.DM_owner:
-                    await ctx.guild.owner.send(f"I cannot currently edit my role in **{ctx.guild}**. "
-                                               f"Please move the **{most_likely[-1]}** role to above the **{current_role}** role.")
+                    await ctx.guild.owner.send((
+                        f"I cannot currently edit my role in **{ctx.guild}**. "
+                        f"Please move the **{most_likely[-1]}** role to above the **{current_role}** role."
+                    ))
                     logger_message += f" A DM message requesting to change its permissions was sent to {ctx.guild.owner}."
                 logger.warning(logger_message)
             else:

@@ -55,7 +55,11 @@ class values:
                 elif index == 2:
                     unparsed_date = attr.split('-')
                     try:
-                        data_dict[keys[index - 1]].append(datetime.date(*map(int, unparsed_date)).replace(year=datetime.date.today().year))
+                        data_dict[keys[index - 1]].append(
+                            datetime.date(
+                                *map(int, unparsed_date)
+                            ).replace(year=datetime.date.today().year)
+                        )
                         data_dict[keys[index]].append(int(unparsed_date[0]))
                     except ValueError:
                         data_dict[keys[index - 1]].append(None)
@@ -68,17 +72,19 @@ class values:
                     data_dict[keys[index - 1 if index == 1 else index]].append(attr)
             logger.info('Sucessfully parsed the raw data from drneato.com')
 
-            bday_df = pandas.concat([pandas.DataFrame(data_dict),
-                                     pandas.DataFrame({
-                                        'PeriodNumber': [-1],
-                                        'Birthdate': [datetime.date.today().replace(month=11, day=15)],
-                                        'Birthyear': [0], # Use 0 since we don't know her birthyear
-                                        'Radio': [None],
-                                        'Question #1': [None],
-                                        'Question #2': [None],
-                                        'Question #3': [None],
-                                        'StuID': [1]
-                                     })])
+            bday_df = pandas.concat([
+                pandas.DataFrame(data_dict),
+                pandas.DataFrame({
+                    'PeriodNumber': [-1],
+                    'Birthdate': [datetime.date.today().replace(month=11, day=15)],
+                    'Birthyear': [0], # Use 0 since we don't know her birthyear
+                    'Radio': [None],
+                    'Question #1': [None],
+                    'Question #2': [None],
+                    'Question #3': [None],
+                    'StuID': [1]
+                })
+            ])
             bday_df['Birthdate'] = pandas.to_datetime(bday_df['Birthdate'])
             student_df = cls.student_data_df
             bday_df = bday_df[bday_df['StuID'].isin(student_df['stuid'])]
@@ -127,10 +133,12 @@ class values:
         try:
             temp_connection = psycopg2.connect(dbname='botsdb')
         except psycopg2.OperationalError:
-            temp_connection = psycopg2.connect(dbname='botsdb',
-                                               host=os.environ['host'],
-                                               user=os.environ['dbuser'],
-                                               password=os.environ['password'])
+            temp_connection = psycopg2.connect(
+                dbname='botsdb',
+                host=os.environ['host'],
+                user=os.environ['dbuser'],
+                password=os.environ['password']
+            )
         # NOTE: For some reason using the table name only causes
         # a syntax error even though in the documentation table names
         # are supported.  It might be because we are using an unsupported

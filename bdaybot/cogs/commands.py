@@ -137,8 +137,10 @@ class CommandsCog(commands.Cog):
             await ctx.send(f"The `{ctx.prefix}wish` command is not currently available in DMs. Please try using it in a server with me.")
         elif isinstance(error, commands.BotMissingPermissions):
             logger.warning(f"The wish command was used in {ctx.guild} without the 'manage_messages' permission by {ctx.author}")
-            await ctx.send((f"The `{ctx.prefix}wish` command is currently unavailable because I do not have the `manage messages` permission.\n"
-                            f"If you would like to use the `{ctx.prefix}wish` command please, give me the `manage messages` permission."))
+            await ctx.send((
+                f"The `{ctx.prefix}wish` command is currently unavailable because I do not have the `manage messages` permission.\n"
+                f"If you would like to use the `{ctx.prefix}wish` command please, give me the `manage messages` permission."
+            ))
         else:
             logger.error(f'The following error occured with the wish command: {error!r}')
             await ctx.send(f"{ctx.author.mention} Congratulations, you managed to break the wish command.")
@@ -210,12 +212,16 @@ class CommandsCog(commands.Cog):
             await ctx.send(f"{maybe_mention(ctx)}You must give me a new ID to replace your old one with")
             logger.debug(f"{ctx.author} unsucessfully used the setID command because they did not include an ID.")
         elif isinstance(error, commands.BadArgument):
-            await ctx.send((f"{maybe_mention(ctx)}"
-                            f"**{' '.join(ctx.message.content.split()[1:])}** is not a valid number."))
+            await ctx.send((
+                f"{maybe_mention(ctx)}"
+                f"**{' '.join(ctx.message.content.split()[1:])}** is not a valid number."
+            ))
             logger.debug(f"{ctx.author} tried to set their ID to a non-numeric value.")
         elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send((f"The `{ctx.prefix}setID` command is currently unavailable because I do not have the `manage messages` permission.\n"
-                            f"If you would like to use the `{ctx.prefix}setID` command please, give me the `manage messages` permission."))
+            await ctx.send((
+                f"The `{ctx.prefix}setID` command is currently unavailable because I do not have the `manage messages` permission.\n"
+                f"If you would like to use the `{ctx.prefix}setID` command please, give me the `manage messages` permission."
+            ))
             logger.warning(f"The setID command was used in {ctx.guild} without the 'manage_messages' permission by {ctx.author}")
         else:
             logger.error(f'The following error occured with the setID command: {error!r}')
@@ -242,9 +248,11 @@ class CommandsCog(commands.Cog):
             for stuid, row in upcoming_df.iloc[:num].iterrows():
                 discord_user = (await session.execute(select(DiscordUser).where(DiscordUser.student_id == stuid))).scalar_one_or_none()
                 mention = '' if discord_user is None else discord_user.mention
-                upcoming_bdays.append([f"{(row['FirstName'] + ' ' + row['LastName'])} {mention}",
-                                    format(row['Birthdate'], '%b %d'),
-                                    f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}"])
+                upcoming_bdays.append([
+                    f"{(row['FirstName'] + ' ' + row['LastName'])} {mention}",
+                    format(row['Birthdate'], '%b %d'),
+                    f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}"
+                ])
         upcoming_embed.add_field(name='Name', value='\n'.join(map(lambda iterr: iterr[0], upcoming_bdays))) \
                       .add_field(name='Birthday', value='\n'.join(map(lambda iterr: iterr[1], upcoming_bdays))) \
                       .add_field(name='Upcoming In', value='\n'.join(map(lambda iterr: iterr[2], upcoming_bdays)))
@@ -280,8 +288,10 @@ class CommandsCog(commands.Cog):
     @setannouncements.error
     async def handle_setannouncements_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send((f"{ctx.author.mention} You do not have the required permissions to set the announcements channel. "
-                            "You must have a role that has the 'admin' permission."))
+            await ctx.send((
+                f"{ctx.author.mention} You do not have the required permissions to set the announcements channel. "
+                "You must have a role that has the 'admin' permission."
+            ))
             logger.debug(f"{ctx.author} failed to set the announcements channel due to the lack of appropriate permissions.")
         elif isinstance(error, commands.NoPrivateMessage):
             await ctx.send(f"The `{ctx.prefix}setannouncements` command is unavailable in DMs. Please try using it in a server with me.")
@@ -299,11 +309,15 @@ class CommandsCog(commands.Cog):
         async with sessionmaker() as session:
             guild = await session.get(Guild, ctx.guild.id)
         if guild.announcements_id is None:
-            await ctx.send((f"{ctx.author.mention} There is not currently an announcements channel set. "
-                            f"Use `{ctx.prefix}setann` to set an announcements channel."))
+            await ctx.send((
+                f"{ctx.author.mention} There is not currently an announcements channel set. "
+                f"Use `{ctx.prefix}setann` to set an announcements channel."
+            ))
         else:
-            await ctx.send((f"{ctx.author.mention} The current announcements channel is {guild.mention_ann}. "
-                            f"If you like to change the announcements channel use `{ctx.prefix}setann`."))
+            await ctx.send((
+                f"{ctx.author.mention} The current announcements channel is {guild.mention_ann}. "
+                f"If you like to change the announcements channel use `{ctx.prefix}setann`."
+            ))
 
     @getannouncements.error
     async def handle_getannouncements_error(self, ctx, error):
@@ -338,9 +352,20 @@ class CommandsCog(commands.Cog):
                         more_than_one = True
                         wishers_dict[wish.discord_user].append(wish)
                 embed.add_field(name='Wishers', value='\n'.join(map(lambda discord_user: discord_user.mention, wishers_dict)))
-                embed.add_field(name=f"Year{'s' if more_than_one else ''}", \
-                                value='\n'.join(map(lambda wishes: format_iterable(wishes, get_str=lambda ref, index: ref[index].year, apos=False, conjunction=None),
-                                                    wishers_dict.values())))
+                embed.add_field(
+                    name=f"Year{'s' if more_than_one else ''}",
+                    value='\n'.join(
+                        map(
+                            lambda wishes: format_iterable(
+                                wishes,
+                                get_str=lambda ref, index: ref[index].year,
+                                apos=False,
+                                conjunction=None
+                            ),
+                            wishers_dict.values()
+                        )
+                    )
+                )
                 if discord_user in map(lambda wish: wish.discord_user, wishes_received):
                     embed.set_footer(text=f'Hey {person} wished himself/herself! 🤔')
         else:

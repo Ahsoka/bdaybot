@@ -38,17 +38,24 @@ class bdaybot(commands.Bot):
 
     async def start(self, *args, **kwargs):
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all,
-                                tables=map(lambda iterr: iterr[1],
-                                           filter(lambda tup: 'student_data' not in tup[0],
-                                                  Base.metadata.tables.items())))
+            await conn.run_sync(
+                Base.metadata.create_all,
+                tables=map(
+                    lambda iterr: iterr[1],
+                    filter(lambda tup: 'student_data' not in tup[0], Base.metadata.tables.items())
+                )
+            )
 
         if config.testing:
             async with sessionmaker.begin() as session:
-                session.add(Guild(guild_id=713095060652163113,
-                                    role_id=791804070398132225))
-                session.add(Guild(guild_id=675806001231822863,
-                                    role_id=791186971078033428))
+                session.add(Guild(
+                    guild_id=713095060652163113,
+                    role_id=791804070398132225
+                ))
+                session.add(Guild(
+                    guild_id=675806001231822863,
+                    role_id=791186971078033428
+                ))
 
         await super().start(*args, **kwargs)
 
@@ -76,13 +83,21 @@ class bdaybot(commands.Bot):
                         command_names.append(alias)
                 parsed = command_plus_prefix.removeprefix(ctx.prefix) if hasattr(str, 'removeprefix') \
                          else command_plus_prefix[len(ctx.prefix):]
-                possibly_meant = [name for name in command_names \
-                                  if len(name) >= 8 and distance(parsed.lower(), name.lower()) <= 2 \
-                                     or len(name) < 8 and distance(parsed.lower(), name.lower()) < 2]
+                possibly_meant = [
+                    name for name in command_names
+                    if len(name) >= 8
+                    and distance(parsed.lower(), name.lower()) <= 2
+                    or len(name) < 8
+                    and distance(parsed.lower(), name.lower()) < 2
+                ]
                 if possibly_meant:
-                    await ctx.send(f'Did you mean '
-                                   + format_iterable(possibly_meant,
-                                                     conjunction='or',
-                                                     apos=False,
-                                                     get_str=lambda iterr, index: f'`{ctx.prefix}{iterr[index]}`')
-                                   + '?')
+                    await ctx.send(
+                        f'Did you mean '
+                        + format_iterable(
+                            possibly_meant,
+                            conjunction='or',
+                            apos=False,
+                            get_str=lambda iterr, index: f'`{ctx.prefix}{iterr[index]}`'
+                        )
+                        + '?'
+                    )

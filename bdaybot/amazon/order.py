@@ -9,25 +9,29 @@ import os
 
 from arsenic import get_session, keys, browsers, services, start_session
 from .utils import fill_password, fill_credit_number, format_address, future_dates
-from .errors import (ArsenicTimeout,
-                     NoSuchElement,
-                     FailedToAddToCart,
-                     IncorrectCartValue,
-                     AddressNotFoundError,
-                     NoAvailableDelivery)
+from .errors import (
+    ArsenicTimeout,
+    NoSuchElement,
+    FailedToAddToCart,
+    IncorrectCartValue,
+    AddressNotFoundError,
+    NoAvailableDelivery
+)
 
-async def order_product(ASIN,
-                        FULLNAME,
-                        ADDRESS_LINE_ONE,
-                        CITY,
-                        STATE,
-                        ZIPCODE,
-                        PHONE_NUMBER=os.environ['PHONE_NUMBER'],
-                        ADDRESS_LINE_TWO=None,
-                        place_order=False,
-                        remove_address=True,
-                        screenshot=None,
-                        quit=True):
+async def order_product(
+    ASIN,
+    FULLNAME,
+    ADDRESS_LINE_ONE,
+    CITY,
+    STATE,
+    ZIPCODE,
+    PHONE_NUMBER=os.environ['PHONE_NUMBER'],
+    ADDRESS_LINE_TWO=None,
+    place_order=False,
+    remove_address=True,
+    screenshot=None,
+    quit=True
+):
     try:
         session = None
         added_address = False
@@ -150,7 +154,7 @@ async def order_product(ASIN,
                 confirm_address_button = await current_address_option.get_element('.a-declarative.a-button-text')
                 await confirm_address_button.click()
                 break
-        
+
         try:
             day_delivery_classes = "span.a-button.a-button-toggle.ufss-date-select-toggle"
             limited_available_delivery = await session.wait_for_element(10, day_delivery_classes + '.ufss-limited-available')
@@ -158,7 +162,7 @@ async def order_product(ASIN,
         except (ArsenicTimeout, NoSuchElement):
             first_avaliable_delivery = await session.wait_for_element(10, day_delivery_classes + '.ufss-available')
             await first_avaliable_delivery.click()
-        
+
         clicked = False
         for day in future_dates():
             date_format = format(day, '%Y%m%d')
@@ -182,7 +186,7 @@ async def order_product(ASIN,
 
         if not clicked:
             raise NoAvailableDelivery("There was no available delivery")
-        
+
         continue_order_button = await session.get_element('input.a-button-input')
         await continue_order_button.click()
 

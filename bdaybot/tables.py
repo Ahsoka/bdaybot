@@ -4,14 +4,16 @@ from . import values
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.orm import declarative_base, relationship, backref
 
-from sqlalchemy import (Column,
-                        Text,
-                        Integer,
-                        Boolean,
-                        String,
-                        BigInteger,
-                        PickleType,
-                        ForeignKey)
+from sqlalchemy import (
+    Column,
+    Text,
+    Integer,
+    Boolean,
+    String,
+    BigInteger,
+    PickleType,
+    ForeignKey
+)
 
 Base = declarative_base()
 
@@ -38,9 +40,11 @@ class Guild(Base):
                 value = cls(*value.__reduce__()[1])
             return value
 
-    today_names_cycle = Column(MutableCycler.as_mutable(PickleType),
-                               nullable=False,
-                               default=itertools.cycle(values.today_df['FirstName'] + " " + values.today_df['LastName']))
+    today_names_cycle = Column(
+        MutableCycler.as_mutable(PickleType),
+        nullable=False,
+        default=itertools.cycle(values.today_df['FirstName'] + " " + values.today_df['LastName'])
+    )
     nickname_notice = Column(Boolean, nullable=False, default=True)
 
     @property
@@ -52,11 +56,13 @@ class Guild(Base):
         return f'<#{self.announcements_id}>'
 
     def __repr__(self):
-        return (f'<Guilds(guild_id={self.guild_id}, '
-                f'announcements_id={self.announcements_id}, '
-                f'role_id={self.role_id}), '
-                f'today_names_cycle={self.today_names_cycle}, '
-                f'nickname_notice={self.nickname_notice}>')
+        return (
+            f'<Guilds(guild_id={self.guild_id}, '
+            f'announcements_id={self.announcements_id}, '
+            f'role_id={self.role_id}), '
+            f'today_names_cycle={self.today_names_cycle}, '
+            f'nickname_notice={self.nickname_notice}>'
+        )
 
 class StudentData(Base):
     __tablename__ = 'student_data'
@@ -75,25 +81,37 @@ class StudentData(Base):
         return f'{self.firstname} {self.lastname}'
 
     def __repr__(self):
-        return (f'<StudentData(stuid={self.stuid}, '
-                f'firstname={self.firstname}, '
-                f'lastname={self.lastname}, '
-                f'grd={self.grd})>')
+        return (
+            f'<StudentData(stuid={self.stuid}, '
+            f'firstname={self.firstname}, '
+            f'lastname={self.lastname}, '
+            f'grd={self.grd})>'
+        )
 
 class DiscordUser(Base):
     __tablename__ = 'discord_users'
     discord_user_id = Column(BigInteger, primary_key=True)
-    student_id = Column(Integer, ForeignKey('student_data.stuid', ondelete='CASCADE'),
-                        unique=True, nullable=False)
-    student_data = relationship(StudentData, lazy='selectin', backref=backref('discord_user', uselist=False, lazy='selectin'))
+    student_id = Column(
+        Integer,
+        ForeignKey('student_data.stuid', ondelete='CASCADE'),
+        unique=True,
+        nullable=False
+    )
+    student_data = relationship(
+        StudentData,
+        lazy='selectin',
+        backref=backref('discord_user', uselist=False, lazy='selectin')
+    )
 
     @property
     def mention(self):
         return f'<@{self.discord_user_id}>'
 
     def __repr__(self):
-        return (f'<DiscordUsers(discord_user_id={self.discord_user_id}, '
-                f'student_id={self.student_id})>')
+        return (
+            f'<DiscordUsers(discord_user_id={self.discord_user_id}, '
+            f'student_id={self.student_id})>'
+        )
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and self.discord_user_id == other.discord_user_id and self.student_id == other.student_id
@@ -103,17 +121,31 @@ class DiscordUser(Base):
 
 class Wish(Base):
     __tablename__ = 'wishes'
-    discord_user_id = Column(BigInteger,
-                             ForeignKey('discord_users.discord_user_id', ondelete='CASCADE'),
-                             primary_key=True)
+    discord_user_id = Column(
+        BigInteger,
+        ForeignKey('discord_users.discord_user_id', ondelete='CASCADE'),
+        primary_key=True
+    )
     year = Column(Integer, primary_key=True)
-    wishee_stuid = Column(Integer,
-                          ForeignKey('student_data.stuid', ondelete='CASCADE'),
-                          primary_key=True)
-    discord_user = relationship(DiscordUser, lazy='selectin', backref=backref('wishes_given', lazy='selectin'))
-    wishee = relationship(StudentData, lazy='selectin', backref=backref('wishes_received', lazy='selectin'))
+    wishee_stuid = Column(
+        Integer,
+        ForeignKey('student_data.stuid', ondelete='CASCADE'),
+        primary_key=True
+    )
+    discord_user = relationship(
+        DiscordUser,
+        lazy='selectin',
+        backref=backref('wishes_given', lazy='selectin')
+    )
+    wishee = relationship(
+        StudentData,
+        lazy='selectin',
+        backref=backref('wishes_received', lazy='selectin')
+    )
 
     def __repr__(self):
-        return (f'<Wish(discord_user_id={self.discord_user_id}, '
-                f'year={self.year}, '
-                f'wishee_stuid={self.wishee_stuid})>')
+        return (
+            f'<Wish(discord_user_id={self.discord_user_id}, '
+            f'year={self.year}, '
+            f'wishee_stuid={self.wishee_stuid})>'
+        )

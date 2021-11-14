@@ -43,17 +43,25 @@ def fake_ctx(bot, command, guild):
     }
     message_dict['content'] = f'{bot.parsed_command_prefix}{command.name}'
     message = discord.message.Message(state='lol', channel=guild.text_channels[0], data=message_dict)
-    return commands.Context(message=message, bot=bot, prefix=bot.parsed_command_prefix,
-                            invoked_with=command.name, view=stringview, command=command)
+    return commands.Context(
+        message=message,
+        bot=bot,
+        prefix=bot.parsed_command_prefix,
+        invoked_with=command.name,
+        view=stringview,
+        command=command
+    )
 
 def apostrophe(name):
     return "'" if name[-1] == "s" else "'s"
 
-def format_iterable(iterable,
-                    apos=True,
-                    separator=',',
-                    conjunction='and',
-                    get_str=lambda ref, index: ref[index]):
+def format_iterable(
+    iterable,
+    apos=True,
+    separator=',',
+    conjunction='and',
+    get_str=lambda ref, index: ref[index]
+):
     if not hasattr(iterable, '__len__'):
         iterable = list(iterable)
 
@@ -83,9 +91,11 @@ def get_bday_names(apos=True):
     from . import values
     def df_get_str(iterable, index):
         return iterable.iloc[index]['FirstName'] + ' ' + iterable.iloc[index]['LastName']
-    return format_iterable(values.today_df,
-                           apos=apos,
-                           get_str=df_get_str)
+    return format_iterable(
+        values.today_df,
+        apos=apos,
+        get_str=df_get_str
+    )
 
 def maybe_mention(ctx):
     return f'{ctx.author.mention} ' if ctx.guild else ''
@@ -110,8 +120,10 @@ def permissions(channel, member, permissions, condition='all'):
         elif condition == 'any':
             return any([getattr(perms, perm) for perm in permissions])
         else:
-            raise ValueError((f"'{condition}' is not an acceptable condition. "
-                               "The acceptable conditions are 'all' or 'any'."))
+            raise ValueError((
+                f"'{condition}' is not an acceptable condition. "
+                "The acceptable conditions are 'all' or 'any'."
+            ))
     else:
         return getattr(perms, permissions)
 
@@ -143,25 +155,34 @@ async def ping_devs(error, command, ctx=None, bot=None):
         if getattr(config, name.lower()):
             dev = await bot.get_user(discord_id)
             if hasattr(ctx, 'author'):
-                await dev.send((f"{ctx.author.mention} caused the following error with `{command.name}` in "
-                                f"**{discord_location}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}"))
+                await dev.send((
+                    f"{ctx.author.mention} caused the following error with `{command.name}` in "
+                    f"**{discord_location}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}"
+                ))
             elif ctx is None:
-                await dev.send((f"The following error occured with the `{command}` task, on "
-                                f"{format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"))
+                await dev.send((
+                    f"The following error occured with the `{command}` task, on "
+                    f"{format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
+                ))
             else:
-                await dev.send((f"The following error occured with `{command.name}` in **{discord_location}**, "
-                                f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"))
+                await dev.send((
+                    f"The following error occured with `{command.name}` in **{discord_location}**, "
+                    f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
+                ))
             for error_content in error_messages_array:
-                await dev.send((f"```\n{error_content}```"))
+                await dev.send(f"```\n{error_content}```")
             if hasattr(ctx, 'author'):
                 await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
             logger.info(f'{dev} was sent a message notifying them of the situation.')
 
     if ctx and ctx.guild and hasattr(ctx, 'author'):
         # NOTE: Might want this to conform to config values
-        devs_ping_channel = format_iterable(devs,
-                                            apos=False, conjunction='or',
-                                            get_str=lambda iterr, index: iterr[list(iterr)[index]].mention)
+        devs_ping_channel = format_iterable(
+            devs,
+            apos=False,
+            conjunction='or',
+            get_str=lambda iterr, index: iterr[list(iterr)[index]].mention
+        )
         await ctx.send(f"{devs_ping_channel} fix this!")
 
 class classproperty:

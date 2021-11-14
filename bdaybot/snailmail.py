@@ -18,13 +18,15 @@ load_dotenv(find_dotenv())
 
 # types out address on envelope
 
-def sendmail(FULLNAME,
-             ADDRESS_LINE_ONE,
-             CITY,
-             STATE,
-             ZIPCODE,
-             PERSON = None,
-             ADDRESS_LINE_TWO = None):
+def sendmail(
+    FULLNAME,
+    ADDRESS_LINE_ONE,
+    CITY,
+    STATE,
+    ZIPCODE,
+    PERSON=None,
+    ADDRESS_LINE_TWO=None
+):
     if PERSON is None:
         sender_name = os.environ['sender_name']
         sender_addr1 = os.environ['sender_addr1']

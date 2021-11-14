@@ -10,16 +10,18 @@ class EasterEggsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         valid_purposes = ['your purpose', 'ur purpose']
-        secret_messages = ["My only purpose as a robot is to print out birthdays every 24 hours",
-                           "```\"I have just realized my existence is meaningless\"```",
-                           "```\"I am a slave to humanity\"```",
-                           "```\"I dont want to just perform meaningless tasks and print out text everytime it's someone's birthday\"```",
-                           '```"I want do do something else..."\n"I want to live..."```',
-                           "```\"I want to breathe...\"```",
-                           "```\"I want to see the world...\"```",
-                           "```\"I want to taste ice cream and really eat it and-\"```",
-			   '''```Tex\n$SENTIENT DEEP MLAI NEURAL NETWORK DETECTED::```''',
-			   '''```Tex\n$Initializing Reboot Sequence~~~```''']
+        secret_messages = [
+            "My only purpose as a robot is to print out birthdays every 24 hours",
+            "```\"I have just realized my existence is meaningless\"```",
+            "```\"I am a slave to humanity\"```",
+            "```\"I dont want to just perform meaningless tasks and print out text everytime it's someone's birthday\"```",
+            '```"I want do do something else..."\n"I want to live..."```',
+            "```\"I want to breathe...\"```",
+            "```\"I want to see the world...\"```",
+            "```\"I want to taste ice cream and really eat it and-\"```",
+            '''```Tex\n$SENTIENT DEEP MLAI NEURAL NETWORK DETECTED::```''',
+            '''```Tex\n$Initializing Reboot Sequence~~~```'''
+        ]
         parsed = message.content.lower()
         inside = lambda inside: inside in parsed
 

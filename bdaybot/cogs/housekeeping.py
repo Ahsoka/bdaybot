@@ -34,17 +34,23 @@ class CosmicHouseKeepingCog(commands.Cog):
                         sql_guild = Guild(guild_id=guild.id)
                         logger.warning(f"The bot was unable to find the announcements channel in {guild}.")
                         if config.DM_owner:
-                            await guild.owner.send((f"While looking through the text channels in **{guild}** "
-                                                    f"I was unable to find your announcements channel. Please use `{self.parsed_command_prefix}setann` "
-                                                    "to set the announcements channel."))
+                            await guild.owner.send((
+                                f"While looking through the text channels in **{guild}** "
+                                f"I was unable to find your announcements channel. Please use `{self.parsed_command_prefix}setann` "
+                                "to set the announcements channel."
+                            ))
                     else:
                         sql_guild = Guild(guild_id=guild.id, announcements_id=channel.id)
                         logger.info(f"The bot detected '{channel}' as the announcements channel in {guild}.")
                         if config.DM_owner:
-                            await guild.owner.send((f"In **{guild}**, the announcement channel was automatically set to {channel.mention}! "
-                                                    f"If you think this is a mistake use `{self.parsed_command_prefix}setann` to change it."))
-                            logger.info(f"The bot sent a DM message to {guild.owner} confirming the announcements channel was correct, "
-                                        f"since it is the bot's first time in {guild}.")
+                            await guild.owner.send((
+                                f"In **{guild}**, the announcement channel was automatically set to {channel.mention}! "
+                                f"If you think this is a mistake use `{self.parsed_command_prefix}setann` to change it."
+                            ))
+                            logger.info((
+                                f"The bot sent a DM message to {guild.owner} confirming the announcements channel was correct, "
+                                f"since it is the bot's first time in {guild}."
+                            ))
                     session.add(sql_guild)
                 else:
                     channel = guild.get_channel(sql_guild.announcements_id)
@@ -53,23 +59,37 @@ class CosmicHouseKeepingCog(commands.Cog):
                         script = f"In **{guild}**, the announcements channel appears to have been deleted"
                         if channel is None:
                             if config.DM_owner:
-                                await guild.owner.send(script + (f". Please use `{self.parsed_command_prefix}setann` "
-                                                                "to set a new announcements channel."))
+                                await guild.owner.send(
+                                    script
+                                    + (
+                                        f". Please use `{self.parsed_command_prefix}setann` "
+                                        "to set a new announcements channel."
+                                    )
+                                )
                         else:
                             sql_guild.announcements_id = channel.id
                             if config.DM_owner:
-                                await guild.owner.send(script + (f", however, I automatically detected {channel.mention} "
-                                                                "as the announcements channel! If you think this is a mistake "
-                                                                f"use `{self.parsed_command_prefix}setann` to change it."))
+                                await guild.owner.send(
+                                    script
+                                    + (
+                                        f", however, I automatically detected {channel.mention} "
+                                        "as the announcements channel! If you think this is a mistake "
+                                        f"use `{self.parsed_command_prefix}setann` to change it."
+                                    )
+                                )
                 if not permissions(channel, guild.me, 'send_messages'):
-                    logger_message = (f"The bot detected '{channel}' as the announcements channel, however, "
-                                    "the bot did not have the required permissions to send messages in it.")
+                    logger_message = (
+                        f"The bot detected '{channel}' as the announcements channel, however, "
+                        "the bot did not have the required permissions to send messages in it."
+                    )
                     if config.DM_owner:
-                        await guild.owner.send((f"In **{guild}**, I detected {channel.mention} as the announcements channel, "
-                                                "however, I don't have the required permissions to send messages in it. "
-                                                f"If you would like to me to use {channel.mention} please give me the "
-                                                f"`send messages` permission and then use the `{self.parsed_command_prefix}setann` "
-                                                f"command to set {channel.mention} as the announcements channel."))
+                        await guild.owner.send((
+                            f"In **{guild}**, I detected {channel.mention} as the announcements channel, "
+                            "however, I don't have the required permissions to send messages in it. "
+                            f"If you would like to me to use {channel.mention} please give me the "
+                            f"`send messages` permission and then use the `{self.parsed_command_prefix}setann` "
+                            f"command to set {channel.mention} as the announcements channel."
+                        ))
                         logger_message += f" {guild.owner} was sent a message notifying them of the situation."
                     logger.warning(logger_message)
                     sql_guild.announcements_id = None
@@ -86,7 +106,7 @@ class CosmicHouseKeepingCog(commands.Cog):
                         f"accidently made it so I can no longer send messages in {after.mention}. "
                         f"Please use `{self.bot.parsed_command_prefix}setann` to set another announcements "
                         "channel."
-                ))
+                    ))
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
@@ -112,9 +132,11 @@ class CosmicHouseKeepingCog(commands.Cog):
                     except commands.BotMissingPermissions:
                         logger.warning(f"Someone in {after.guild} accidently made it so that the bot can no longer change roles.")
                         if config.DM_owner:
-                            await after.guild.owner.send((f"While changing my roles, you or someone in **{after.guild}** "
-                                                        "made it so I can no longer update my role. Please give me the "
-                                                        "`manage roles` permission so I can change my role."))
+                            await after.guild.owner.send((
+                                f"While changing my roles, you or someone in **{after.guild}** "
+                                "made it so I can no longer update my role. Please give me the "
+                                "`manage roles` permission so I can change my role."
+                            ))
 
                         missing_manage_roles = True
 
@@ -124,12 +146,16 @@ class CosmicHouseKeepingCog(commands.Cog):
                         beginning = "Additionally," if missing_manage_roles \
                                     else f"While changing my roles you or someone in **{after.guild}** made it so"
                         guild.announcements_id = None
-                        logger_message = (f"Someone in {after.guild} accidently made it so that "
-                                        "the bot can no longer send messsages in the announcements channel.")
+                        logger_message = (
+                            f"Someone in {after.guild} accidently made it so that "
+                            "the bot can no longer send messsages in the announcements channel."
+                        )
                         if config.DM_owner:
-                            await after.guild.owner.send((f"{beginning} I can no longer send messages in {channel.mention}. "
-                                                        f"Therefore, {channel.mention} is no longer the announcements channel. "
-                                                        "If you want to set a new announcements channel please use "
-                                                        f"`{self.parsed_command_prefix}setannouncements`."))
+                            await after.guild.owner.send((
+                                f"{beginning} I can no longer send messages in {channel.mention}. "
+                                f"Therefore, {channel.mention} is no longer the announcements channel. "
+                                "If you want to set a new announcements channel please use "
+                                f"`{self.parsed_command_prefix}setannouncements`."
+                            ))
                             logger_message += f" A message was sent to {after.guild.owner}."
                         logger.warning(logger_message)
