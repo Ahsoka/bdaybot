@@ -1,7 +1,6 @@
 import re
 import pytest
 import random
-import asyncio
 
 from sqlalchemy import delete, select
 from bdaybot.tables import DiscordUser
