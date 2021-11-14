@@ -37,8 +37,9 @@ async def test_wish(bot, session, channel, mocker, mock_delete, valid_ids, timeo
     assert "You cannot use the `test.wish`" in latest_message.embeds[0].description, \
         f'Message content(embed): {latest_message.embeds[0].description}'
 
-    # Test the situation when the user does not include their ID
     mocker.patch.object(values, "bday_today", return_value=True)
+
+    # Test the situation when the user does not include their ID
     await channel.send(f"test.wish")
     latest_message = await bot.wait_for(
         'message',
