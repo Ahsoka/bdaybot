@@ -345,7 +345,7 @@ class AutomatedTasksCog(commands.Cog):
                 current_role = ctx.guild.get_role(guild.role_id)
                 most_likely = [
                     role for role in ctx.guild.me.roles
-                    if role.id != current_role_id
+                    if role.id != current_role.id
                     and "Upcoming Bday-" not in role.name
                     and "🎉 Happy Birthday" != role.name
                 ]
