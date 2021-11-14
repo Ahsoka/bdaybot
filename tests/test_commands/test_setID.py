@@ -24,6 +24,33 @@ async def test_setID(bot, session, valid_ids, channel, mock_delete, dashes, time
     assert f'**{invalid_id}** is not a valid ID. Please use a valid 6-digit ID.' \
         == latest_message.content, f'Message content: {latest_message.content}'
 
+    # Test the bot does not crash when given IDs outside of the 32 bit integer
+    # range, see #30
+    invalid_id = 5_000_000_000
+    message = await channel.send(f'test.setID {invalid_id}')
+    latest_message = await bot.wait_for(
+        'message',
+        timeout=timeout,
+        check=lambda message: re.search(r'\*\*\d{10}\*\*', message.content)
+    )
+    # Make sure the message is attempted to be deleted
+    discord.message.delete_message.assert_awaited_with(message)
+    assert f'**{invalid_id}** is not a valid ID. Please use a valid 6-digit ID.' \
+        == latest_message.content, f'Message content: {latest_message.content}'
+
+    # Same test as above but with a negative number
+    invalid_id = -5_000_000_000
+    message = await channel.send(f'test.setID {invalid_id}')
+    latest_message = await bot.wait_for(
+        'message',
+        timeout=timeout,
+        check=lambda message: re.search(r'\*\*-\d{10}\*\*', message.content)
+    )
+    # Make sure the message is attempted to be deleted
+    discord.message.delete_message.assert_awaited_with(message)
+    assert f'**{invalid_id}** is not a valid ID. Please use a valid 6-digit ID.' \
+        == latest_message.content, f'Message content: {latest_message.content}'
+
     # Test that the bot accepts valid IDs
     valid_id = random.choice(valid_ids); valid_ids.remove(valid_id)
     message = await channel.send(f'test.setID {valid_id}')
