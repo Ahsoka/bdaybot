@@ -3,8 +3,6 @@ import re
 import pytest
 import asyncio
 import discord
-import inspect
-import functools
 
 from dotenv import load_dotenv
 from bdaybot.bot import bdaybot
