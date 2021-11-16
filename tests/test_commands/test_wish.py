@@ -88,7 +88,7 @@ async def test_wish(bot, session, channel, mocker, mock_delete, valid_ids, timeo
 
     # Test the situation when there is an invalid first and last name and a previously set ID,
     # see https://github.com/Ahsoka/bdaybot/commit/5c026ea981def9def84356e5c9de6033614bd682
-    await channel.send(f"test.wish Govenor Tarkin")
+    await channel.send(f"test.wish Governor Tarkin")
     latest_message = await bot.wait_for(
         'message',
         timeout=timeout,
