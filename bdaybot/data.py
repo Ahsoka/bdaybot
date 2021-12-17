@@ -61,7 +61,7 @@ class values:
                             ).replace(year=datetime.date.today().year)
                         )
                         data_dict[keys[index]].append(int(unparsed_date[0]))
-                    except ValueError:
+                    except (ValueError, TypeError):
                         data_dict[keys[index - 1]].append(None)
                         data_dict[keys[index]].append(0)
                 else:
