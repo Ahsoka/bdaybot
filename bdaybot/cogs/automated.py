@@ -198,6 +198,11 @@ class AutomatedTasksCog(commands.Cog):
             for guild in self.bot.guilds:
                 await self.bot.invoke(fake_ctx(self.bot, 'update_nickname', guild))
 
+    @change_nicknames.error
+    async def handle_change_nicknames_error(self, error):
+        logger.error(f'The following error occured with the change_nicknames command: {error!r}')
+        await ping_devs(error, 'change_nicknames', bot=self.bot)
+
     @commands.command(hidden=True)
     @commands.bot_has_permissions(change_nickname=True)
     async def update_nickname(self, ctx):
