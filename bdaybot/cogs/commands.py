@@ -354,31 +354,24 @@ class CommandsCog(commands.Cog):
             guild.announcements_id = channel.id
         await ctx.respond(f"The new announcements channel is now {channel.mention}!")
 
-    @commands.command(aliases=['getann'])
+    @get_commands.command(
+        name='announcements',
+        description="Use this command to get the current announcements channel."
+    )
     @commands.guild_only()
-    async def getannouncements(self, ctx, *args):
+    async def get_announcements(self, ctx: discord.ApplicationContext):
         async with sessionmaker() as session:
             guild = await session.get(Guild, ctx.guild.id)
         if guild.announcements_id is None:
-            await ctx.send((
-                f"{ctx.author.mention} There is not currently an announcements channel set. "
-                f"Use `{ctx.prefix}setann` to set an announcements channel."
-            ))
+            await ctx.respond(
+                f"There is not currently an announcements channel set. "
+                f"Use `/set announcements` to set an announcements channel."
+            )
         else:
-            await ctx.send((
-                f"{ctx.author.mention} The current announcements channel is {guild.mention_ann}. "
-                f"If you like to change the announcements channel use `{ctx.prefix}setann`."
-            ))
-
-    @getannouncements.error
-    async def handle_getannouncements_error(self, ctx, error):
-        if isinstance(error, commands.NoPrivateMessage):
-            await ctx.send(f"The `{ctx.prefix}getannouncements` command is unavailable in DMs. Please try using it in server with me.")
-            logger.debug(f"{ctx.author} tried to use the getannouncements command in a DM.")
-        else:
-            logger.error(f'The following error occured with the getannouncements command: {error!r}')
-            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}getannouncements` command!")
-            await ping_devs(error, self.getannouncements, ctx=ctx)
+            await ctx.respond(
+                f"The current announcements channel is {guild.mention_ann}. "
+                f"If you like to change the announcements channel use `/set announcements`."
+            )
 
     @commands.command()
     @commands.guild_only()
