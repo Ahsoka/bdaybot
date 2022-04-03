@@ -373,18 +373,31 @@ class CommandsCog(commands.Cog):
                 f"If you like to change the announcements channel use `/set announcements`."
             )
 
-    @commands.command()
-    @commands.guild_only()
-    async def wishes(self, ctx, person=commands.MemberConverter()):
-        if not isinstance(person, discord.Member):
-            person = ctx.author
+    @get_commands.command(
+        description="Use this command to get the wishes of a certain user.",
+        options=[
+            Option(
+                discord.Member,
+                name='user',
+                description="The user to get the wishes of.",
+                required=True
+            )
+        ]
+    )
+    async def wishes(self, ctx: discord.ApplicationContext, person: discord.Member):
         session = sessionmaker()
         discord_user = await session.get(DiscordUser, person.id)
-        embed = discord.Embed().set_author(name=f"{person}'s Wishes Received!", icon_url=person.avatar_url)
+        embed = discord.Embed().set_author(
+            name=f"{person}'s Wishes Received!",
+            icon_url=person.display_avatar.url
+        )
         if discord_user:
             wishes_received = discord_user.student_data.wishes_received
-            embed.description = (f"{person.mention} currently has {len(wishes_received)} wish"
-                                 f"{'es' if len(wishes_received) != 1 else ''}{'.' if len(wishes_received) < 5 else '!'}")
+            embed.description = (
+                f"{person.mention} currently has {len(wishes_received)} wish"
+                f"{'es' if len(wishes_received) != 1 else ''}"
+                f"{'.' if len(wishes_received) < 5 else '!'}"
+            )
             if wishes_received:
                 wishers_dict = {}
                 more_than_one = False
@@ -395,7 +408,15 @@ class CommandsCog(commands.Cog):
                     else:
                         more_than_one = True
                         wishers_dict[wish.discord_user].append(wish)
-                embed.add_field(name='Wishers', value='\n'.join(map(lambda discord_user: discord_user.mention, wishers_dict)))
+                embed.add_field(
+                    name='Wishers',
+                    value='\n'.join(
+                        map(
+                            lambda discord_user: discord_user.mention,
+                            wishers_dict
+                        )
+                    )
+                )
                 embed.add_field(
                     name=f"Year{'s' if more_than_one else ''}",
                     value='\n'.join(
@@ -415,21 +436,8 @@ class CommandsCog(commands.Cog):
         else:
             embed.description = f"{person.mention} currently has 0 wishes."
             embed.set_footer(text=f"{person} is not currently in the database 🙁")
-        await ctx.send(embed=embed)
+        await ctx.respond(embed=embed)
         await session.close()
-
-    @wishes.error
-    async def handle_wishes_error(self, ctx, error):
-        if isinstance(error, commands.NoPrivateMessage):
-            await ctx.send(f"The `{ctx.prefix}wishes` command is unavailable in DMs. Please try using it in server with me.")
-            logger.debug(f"{ctx.author} tried to use the wishes command in a DM.")
-        elif isinstance(error, commands.MemberNotFound):
-            await ctx.send(f"'{ctx.message.content.split()[1:]}' is not a valid user.")
-            logger.debug(f"{ctx.author} inputted an invalid user.")
-        else:
-            logger.error(f'The following error occured with the wishes command: {error!r}')
-            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}wishes` command!")
-            await ping_devs(error, self.wishes, ctx=ctx)
 
     @commands.Cog.listener()
     async def on_application_command_error(
