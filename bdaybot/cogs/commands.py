@@ -8,7 +8,15 @@ from discord.commands import Option
 from .. import values, sessionmaker
 from sqlalchemy.exc import IntegrityError
 from ..tables import DiscordUser, StudentData, Guild, Wish
-from ..utils import get_bday_names, apostrophe, maybe_mention, ping_devs, EmojiURLs, format_iterable
+from ..utils import (
+    EmojiURLs,
+    ping_devs,
+    apostrophe,
+    permissions,
+    maybe_mention,
+    get_bday_names,
+    format_iterable
+)
 
 logger = logging.getLogger(__name__)
 
@@ -349,10 +357,17 @@ class CommandsCog(commands.Cog):
     ):
         if channel is None:
             channel = ctx.channel
-        async with sessionmaker.begin() as session:
-            guild = await session.get(Guild, ctx.guild.id)
-            guild.announcements_id = channel.id
-        await ctx.respond(f"The new announcements channel is now {channel.mention}!")
+        if permissions(channel, channel.guild.me, 'send_messages'):
+            async with sessionmaker.begin() as session:
+                guild = await session.get(Guild, ctx.guild.id)
+                guild.announcements_id = channel.id
+            await ctx.respond(f"The new announcements channel is now {channel.mention}!")
+        else:
+            await ctx.respond(
+                f"I cannot send messages in {channel.mention}. Please give me permission "
+                f"to send messages in {channel.mention} before setting it as the announcements "
+                "channel."
+            )
 
     @get_commands.command(
         name='announcements',
