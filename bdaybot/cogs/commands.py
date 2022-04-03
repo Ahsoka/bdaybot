@@ -42,7 +42,7 @@ class CommandsCog(commands.Cog):
                     )
                     await ctx.respond(embed=wish_embed)
                     logger.debug(
-                        f"{ctx.author} unsucessfully used the wish command "
+                        f"{ctx.author} unsuccessfully used the wish command "
                         "because they do not have an associated student ID."
                     )
                     return
@@ -56,7 +56,7 @@ class CommandsCog(commands.Cog):
                     )
                     await ctx.respond(embed=wish_embed)
                     logger.debug(
-                        f"{ctx.author} unsucessfully used the wish command "
+                        f"{ctx.author} unsuccessfully used the wish command "
                         "because they failed to include who they wanted to wish."
                     )
                     return
@@ -99,7 +99,7 @@ class CommandsCog(commands.Cog):
                         if fail_wishee is None:
                             wish_embed.description = f"'{name}' is not a name in the birthday database!"
                             logger.debug(
-                                f"{ctx.author} unsucessfully used the wish command "
+                                f"{ctx.author} unsuccessfully used the wish command "
                                 "because tried to wish someone whose birthday is not today."
                             )
                         else:
