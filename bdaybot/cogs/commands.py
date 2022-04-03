@@ -40,7 +40,7 @@ class CommandsCog(commands.Cog):
                         "You are first-time wisher. Use the `/set ID` command "
                         "to set your ID so you can use this command."
                     )
-                    await ctx.respond(ctx.author.mention, embed=wish_embed)
+                    await ctx.respond(embed=wish_embed)
                     logger.debug(
                         f"{ctx.author} unsucessfully used the wish command "
                         "because they do not have an associated student ID."
@@ -54,7 +54,7 @@ class CommandsCog(commands.Cog):
                         f"Today is {get_bday_names()} birthday\n"
                         "You must specify who you want wish a happy birthday!"
                     )
-                    await ctx.respond(ctx.author.mention, embed=wish_embed)
+                    await ctx.respond(embed=wish_embed)
                     logger.debug(
                         f"{ctx.author} unsucessfully used the wish command "
                         "because they failed to include who they wanted to wish."
@@ -113,7 +113,7 @@ class CommandsCog(commands.Cog):
                                 f"{ctx.author} unsuccessfully used the wish command because "
                                 "they used a name that is not in the birthday database."
                             )
-                        await ctx.respond(ctx.author.mention, embed=wish_embed)
+                        await ctx.respond(embed=wish_embed)
                         return
 
                     wishee_id = today_df[is_in.any(axis='columns')].index.values[0]
@@ -154,7 +154,7 @@ class CommandsCog(commands.Cog):
                         f"{ctx.author} successfully wished "
                         f"{wish.wishee.fullname} a happy birthday!"
                     )
-            await ctx.respond(ctx.author.mention, embed=wish_embed)
+            await ctx.respond(embed=wish_embed)
 
             if input_id not in values.bday_df.index:
                 await ctx.respond(
@@ -169,7 +169,7 @@ class CommandsCog(commands.Cog):
                 f"However, it will be **{get_bday_names()}** birthday on "
                 f"**{format(values.today_df.iloc[0]['Birthdate'], '%A, %B %d')}**"
             )
-            await ctx.respond(ctx.author.mention, embed=wish_embed)
+            await ctx.respond(embed=wish_embed)
             logger.debug(
                 f"{ctx.author} tried to use the wish command "
                 "on day when it was no one's birthday."
