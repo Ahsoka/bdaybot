@@ -4,6 +4,7 @@ import discord
 import logging
 import datetime
 import itertools
+import functools
 
 from typing import List
 from sqlalchemy import select
@@ -26,22 +27,35 @@ class AutomatedTasksCog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         if not self.send_bdays.is_running():
-            self.send_bdays.before_loop(self.wait_to_run)
+            # NOTE: Using functools.partial or functools.partialmethod on a method
+            # does not register that method as a valid coroutine function as
+            # determined by the inspect.iscoroutinefunction function.
+            # This might be worth making an issue about on https://bugs.python.org/
+            # Reference: https://bugs.python.org/issue33261
+            self.send_bdays._before_loop = functools.partial(
+                self.wait_to_run, loop_name='send_bdays'
+            )
             self.send_bdays.start()
             logger.info("Successfully started the 'send_bdays()' task.")
 
         if config.ASIN and not self.order_from_amazon.is_running():
-            self.order_from_amazon.before_loop(self.wait_to_run)
+            self.order_from_amazon._before_loop = functools.partial(
+                self.wait_to_run, loop_name='order_from_amazon'
+            )
             self.order_from_amazon.start()
             logger.info("Successfully started the 'order_from_amazon()' task.")
 
         if config.print_envelope and not self.snailmail.is_running():
-            self.snailmail.before_loop(self.wait_to_run)
+            self.snailmail._before_loop = functools.partial(
+                self.wait_to_run, loop_name='snailmail'
+            )
             self.snailmail.start()
             logger.info("Successfully started the 'snailmail()' task.")
 
         if not self.send_DM_message.is_running():
-            self.send_DM_message.before_loop(self.wait_to_run)
+            self.send_DM_message._before_loop = functools.partial(
+                self.wait_to_run, loop_name='send_DM_message'
+            )
             self.send_DM_message.start()
             logger.info("Successfully started the 'send_DM_message()' task.")
 
@@ -59,11 +73,14 @@ class AutomatedTasksCog(commands.Cog):
             self.update_cycler.start()
             logger.info("Successfully started the 'update_cycler()' task.")
 
-    async def wait_to_run(self, *args):
-        time_until_midnight = (datetime.datetime.today() + datetime.timedelta(days=1)) \
-                              .replace(hour=0, minute=0, second=0, microsecond=0) \
-                              - datetime.datetime.today()
-        logger.info(f"This coroutine is delayed for {time_until_midnight.total_seconds()} seconds to ensure it will run at midnight.")
+    async def wait_to_run(self, self_again = None, loop_name: str = 'unknown'):
+        time_until_midnight = (
+            datetime.datetime.today() + datetime.timedelta(days=1)
+        ).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.datetime.today()
+        logger.info(
+            f"The {loop_name} coroutine is delayed for {time_until_midnight.total_seconds()} "
+            "seconds to ensure it will run at midnight."
+        )
         await asyncio.sleep(time_until_midnight.total_seconds() + cushion_delay)
 
     @tasks.loop(hours=24)
@@ -249,7 +266,7 @@ class AutomatedTasksCog(commands.Cog):
 
     async def update_cycler_wait_to_run(self, *args):
         await self.update_cyclers()
-        await self.wait_to_run()
+        await self.wait_to_run(loop_name='update_cycler')
 
     @tasks.loop(hours=24)
     async def update_cycler(self):
@@ -372,7 +389,7 @@ class AutomatedTasksCog(commands.Cog):
             await self.update_roles()
         except Exception as error:
             await self.handle_change_roles_error(error)
-        await self.wait_to_run()
+        await self.wait_to_run(loop_name='change_roles')
 
     @tasks.loop(hours=24)
     async def change_roles(self):
