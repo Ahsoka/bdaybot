@@ -326,33 +326,33 @@ class CommandsCog(commands.Cog):
         await ctx.respond(embed=upcoming_embed)
         logger.info(f"{ctx.author} successfully used the upcoming command!")
 
-    @commands.command(aliases=['setann'])
+    @set_commands.command(
+        name='announcements',
+        description="Use this command to set the announcements channel in this server.",
+        options=[
+            Option(
+                discord.TextChannel,
+                name='channel',
+                description=(
+                    "Select channel to be the announcements channel, "
+                    "if there's no input the current channel is selected."
+                ),
+                required=False
+            )
+        ]
+    )
     @commands.has_guild_permissions(administrator=True)
-    async def setannouncements(self, ctx, channel=commands.TextChannelConverter()):
-        if not isinstance(channel, discord.TextChannel):
+    async def set_announcements(
+        self,
+        ctx: discord.ApplicationContext,
+        channel: discord.TextChannel = None
+    ):
+        if channel is None:
             channel = ctx.channel
         async with sessionmaker.begin() as session:
             guild = await session.get(Guild, ctx.guild.id)
             guild.announcements_id = channel.id
-        await ctx.send(f"The new announcements channel is now {channel.mention}!")
-
-    @setannouncements.error
-    async def handle_setannouncements_error(self, ctx, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send((
-                f"{ctx.author.mention} You do not have the required permissions to set the announcements channel. "
-                "You must have a role that has the 'admin' permission."
-            ))
-            logger.debug(f"{ctx.author} failed to set the announcements channel due to the lack of appropriate permissions.")
-        elif isinstance(error, commands.NoPrivateMessage):
-            await ctx.send(f"The `{ctx.prefix}setannouncements` command is unavailable in DMs. Please try using it in a server with me.")
-            logger.debug(f"{ctx.author} tried to used the setannouncements command in a DM.")
-        elif isinstance(error, commands.ChannelNotFound):
-            await ctx.send(f"{ctx.author.mention} '{ctx.message.content.split()[1:]}' is not a valid TextChannel")
-        else:
-            logger.error(f'The following error occured with the setannouncements command: {error!r}')
-            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}setannouncements` command!")
-            await ping_devs(error, self.setannouncements, ctx=ctx)
+        await ctx.respond(f"The new announcements channel is now {channel.mention}!")
 
     @commands.command(aliases=['getann'])
     @commands.guild_only()
