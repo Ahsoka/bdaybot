@@ -155,24 +155,26 @@ async def ping_devs(error, command, ctx=None, bot=None):
         if getattr(config, name.lower()):
             dev = await bot.get_user(discord_id)
             if hasattr(ctx, 'author'):
-                await dev.send((
-                    f"{ctx.author.mention} caused the following error with `{command.name}` in "
-                    f"**{discord_location}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}"
-                ))
+                await dev.send(
+                    f"{ctx.author.mention} caused the following error with "
+                    f"`/{command.qualified_name}` in **{discord_location}**, "
+                    f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}"
+                )
             elif ctx is None:
-                await dev.send((
+                await dev.send(
                     f"The following error occured with the `{command}` task, on "
                     f"{format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
-                ))
+                )
             else:
-                await dev.send((
-                    f"The following error occured with `{command.name}` in **{discord_location}**, "
-                    f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
-                ))
+                await dev.send(
+                    f"The following error occured with `/{command.qualified_name}` "
+                    f"in **{discord_location}**, on "
+                    f"{format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
+                )
             for error_content in error_messages_array:
                 await dev.send(f"```\n{error_content}```")
             if hasattr(ctx, 'author'):
-                await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
+                await dev.send(f"The following is dictionary of the command interaction:\n**{ctx.interaction.data}**")
             logger.info(f'{dev} was sent a message notifying them of the situation.')
 
 
