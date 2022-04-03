@@ -4,6 +4,7 @@ import datetime
 
 from discord.ext import commands
 from sqlalchemy import select, or_
+from discord.commands import Option
 from .. import values, sessionmaker
 from sqlalchemy.exc import IntegrityError
 from ..tables import DiscordUser, StudentData, Guild, Wish
@@ -12,6 +13,11 @@ from ..utils import get_bday_names, apostrophe, maybe_mention, ping_devs, EmojiU
 logger = logging.getLogger(__name__)
 
 class CommandsCog(commands.Cog):
+    set_commands = discord.SlashCommandGroup(
+        'set',
+        "Commands used for telling the bdaybot various information about yourself."
+    )
+
     @commands.command()
     @commands.bot_has_guild_permissions(manage_messages=True)
     async def wish(self, ctx, *message):
@@ -157,29 +163,21 @@ class CommandsCog(commands.Cog):
             await ctx.author.send(f"Your ID is **{discord_user.student_id}**.  If this is a mistake use `{ctx.prefix}setID` to change it.")
             logger.info(f"{ctx.author} succesfully used the getID command.")
 
-    def dm_allowed_bot_has_guild_permissions(**perms):
-        invalid = set(perms) - set(discord.Permissions.VALID_FLAGS)
-        if invalid:
-            raise TypeError('Invalid permission(s): %s' % (', '.join(invalid)))
-
-        def predicate(ctx):
-            if ctx.guild:
-                permissions = ctx.me.guild_permissions
-                missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
-                if not missing:
-                    return True
-                raise commands.BotMissingPermissions(missing)
-            return True
-
-        return commands.check(predicate)
-
-    @commands.command()
-    @dm_allowed_bot_has_guild_permissions(manage_messages=True)
-    async def setID(self, ctx, new_id: int):
+    @set_commands.command(
+        name='id',
+        description="Use this command to tell me your school ID so you can use the other commands. ",
+        options=[
+            Option(
+                int,
+                name='id',
+                description="Your 6-digit school ID.",
+                required=True
+            )
+        ]
+    )
+    async def set_id(self, ctx: discord.ApplicationContext, new_id: int):
         # TODO: Unlikely, however, if someone CHANGES their ID (from one that has been set in the past)
         # to another ID we should also transfer any of their wishes with the new id
-        if ctx.guild:
-            await ctx.message.delete()
         try:
             async with sessionmaker.begin() as session:
                 if new_id > 2147483647 or new_id < -2147483648:
@@ -187,7 +185,10 @@ class CommandsCog(commands.Cog):
                 else:
                     student = await session.get(StudentData, new_id)
                 if student is None:
-                    await ctx.author.send(f"**{new_id}** is not a valid ID. Please use a valid 6-digit ID.")
+                    await ctx.respond(
+                        f"**{new_id}** is not a valid ID. Please use a valid 6-digit ID.",
+                        ephemeral=True
+                    )
                     logger.debug(f"{ctx.author} tried to set their ID to an invalid ID.")
                     return
 
@@ -204,32 +205,16 @@ class CommandsCog(commands.Cog):
                 logger.info(f"{ctx.author} successfully updated their ID from {old_id} to {new_id}.")
             else:
                 logger.info(f"{ctx.author} successfully set their ID to {new_id}.")
-            await ctx.author.send(f"Your ID has now been set to **{new_id}**!")
+            await ctx.respond(
+                f"Your ID has now been set to **{new_id}**!",
+                ephemeral=True
+            )
         except IntegrityError:
-            await ctx.author.send(f"**{new_id}** is already in use. Please use another ID.")
+            await ctx.respond(
+                f"**{new_id}** is already in use. Please use another ID.",
+                ephemeral=True
+            )
             logger.debug(f"{ctx.author} tried to set their ID to an ID already in use.")
-
-    @setID.error
-    async def handle_setID_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"{maybe_mention(ctx)}You must give me a new ID to replace your old one with")
-            logger.debug(f"{ctx.author} unsucessfully used the setID command because they did not include an ID.")
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send((
-                f"{maybe_mention(ctx)}"
-                f"**{' '.join(ctx.message.content.split()[1:])}** is not a valid number."
-            ))
-            logger.debug(f"{ctx.author} tried to set their ID to a non-numeric value.")
-        elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send((
-                f"The `{ctx.prefix}setID` command is currently unavailable because I do not have the `manage messages` permission.\n"
-                f"If you would like to use the `{ctx.prefix}setID` command please, give me the `manage messages` permission."
-            ))
-            logger.warning(f"The setID command was used in {ctx.guild} without the 'manage_messages' permission by {ctx.author}")
-        else:
-            logger.error(f'The following error occured with the setID command: {error!r}')
-            await ctx.send(f"{maybe_mention(ctx)}Congrats, you managed to break the `{ctx.prefix}setID` command.")
-            await ping_devs(error, self.setID, ctx=ctx)
 
     @commands.command(aliases=['up'])
     @commands.guild_only()
