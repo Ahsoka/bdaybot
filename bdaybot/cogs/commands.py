@@ -257,52 +257,74 @@ class CommandsCog(commands.Cog):
             )
             logger.debug(f"{ctx.author} tried to set their ID to an ID already in use.")
 
-    @commands.command(aliases=['up'])
-    @commands.guild_only()
-    async def upcoming(self, ctx, num=5):
+    @commands.slash_command(
+        description="Use this command to see the upcoming birthdays.",
+        options=[
+            Option(
+                int,
+                name='number',
+                description='How many people will appear per page.',
+                required=False,
+                default=5,
+                min_value=1,
+                max_value=10
+            )
+        ]
+    )
+    async def upcoming(self, ctx: discord.ApplicationContext, num: int = 5):
         if num <= 0:
-            await ctx.send(f"{ctx.author.mention} **{num}** is less than 1. Please use a number that is not less than 1.")
-            logger.debug(f"{ctx.author} tried to use the upcoming command with a number less than 1.")
+            await ctx.respond(
+                f"**{num}** is less than 1. Please use a number that is not less than 1."
+            )
+            logger.debug(
+                f"{ctx.author} tried to use the upcoming command with a number less than 1."
+            )
             return
-        upcoming_embed = discord.Embed().set_author(name=f"Upcoming Birthday{'s' if num != 1 else ''}", icon_url=await EmojiURLs.calendar)
+        upcoming_embed = discord.Embed().set_author(
+            name=f"Upcoming Birthday{'s' if num != 1 else ''}",
+            icon_url=await EmojiURLs.calendar
+        )
         upcoming_df = values.bday_df.drop(values.today_df.index) if values.bday_today else values.bday_df
         # INFO: The maximum without erroring out is 76
         max_num = 10
         if num > max_num:
-            upcoming_embed.set_footer(text=f"The input value exceeded {max_num}. Automatically showing the top {max_num} results.")
+            upcoming_embed.set_footer(
+                text=(
+                    f"The input value exceeded {max_num}. "
+                    f"Automatically showing the top {max_num} results."
+                )
+            )
             num = max_num
 
         upcoming_bdays = []
         async with sessionmaker() as session:
             for stuid, row in upcoming_df.iloc[:num].iterrows():
-                discord_user = (await session.execute(select(DiscordUser).where(DiscordUser.student_id == stuid))).scalar_one_or_none()
+                discord_user = (
+                    await session.execute(
+                        select(DiscordUser).where(DiscordUser.student_id == stuid)
+                    )
+                ).scalar_one_or_none()
                 mention = '' if discord_user is None else discord_user.mention
                 upcoming_bdays.append([
                     f"{(row['FirstName'] + ' ' + row['LastName'])} {mention}",
                     format(row['Birthdate'], '%b %d'),
                     f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}"
                 ])
-        upcoming_embed.add_field(name='Name', value='\n'.join(map(lambda iterr: iterr[0], upcoming_bdays))) \
-                      .add_field(name='Birthday', value='\n'.join(map(lambda iterr: iterr[1], upcoming_bdays))) \
-                      .add_field(name='Upcoming In', value='\n'.join(map(lambda iterr: iterr[2], upcoming_bdays)))
+        upcoming_embed.add_field(
+            name='Name',
+            value='\n'.join(map(lambda iterr: iterr[0], upcoming_bdays))
+        )
+        upcoming_embed.add_field(
+            name='Birthday',
+            value='\n'.join(map(lambda iterr: iterr[1], upcoming_bdays))
+        )
+        upcoming_embed.add_field(
+            name='Upcoming In',
+            value='\n'.join(map(lambda iterr: iterr[2], upcoming_bdays))
+        )
 
-        # Commented out line below is to mention the user when they use upcoming
-        # await ctx.send(f"{ctx.author.mention}", embed=upcoming_embed)
-        await ctx.send(embed=upcoming_embed)
-        logger.info(f"{ctx.author} succesfully used the upcoming command!")
-
-    @upcoming.error
-    async def handle_upcoming_error(self, ctx, error):
-        if isinstance(error, commands.BadArgument):
-            await ctx.send(f"{ctx.author.mention} **{' '.join(ctx.message.content.split()[1:])}** is not a valid integer.")
-            logger.debug(f"{ctx.author} tried to use an non-integer value.")
-        elif isinstance(error, commands.NoPrivateMessage):
-            logger.debug(f"{ctx.author} tried to use the upcoming command in a DM.")
-            await ctx.send(f"The `{ctx.prefix}upcoming` command is currently unavailable in DMs. Please try using it in a server with me.")
-        else:
-            logger.error(f'The following error occured with the upcoming command: {error!r}')
-            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}upcoming` command.")
-            await ping_devs(error, self.upcoming, ctx)
+        await ctx.respond(embed=upcoming_embed)
+        logger.info(f"{ctx.author} successfully used the upcoming command!")
 
     @commands.command(aliases=['setann'])
     @commands.has_guild_permissions(administrator=True)
