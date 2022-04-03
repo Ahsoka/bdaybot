@@ -175,15 +175,6 @@ async def ping_devs(error, command, ctx=None, bot=None):
                 await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
             logger.info(f'{dev} was sent a message notifying them of the situation.')
 
-    if ctx and ctx.guild and hasattr(ctx, 'author'):
-        # NOTE: Might want this to conform to config values
-        devs_ping_channel = format_iterable(
-            devs,
-            apos=False,
-            conjunction='or',
-            get_str=lambda iterr, index: iterr[list(iterr)[index]].mention
-        )
-        await ctx.send(f"{devs_ping_channel} fix this!")
 
 class classproperty:
     # NOTE: The `classproperty` class
