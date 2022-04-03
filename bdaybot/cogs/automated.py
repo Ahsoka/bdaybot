@@ -1,17 +1,18 @@
+import heapq
 import asyncio
 import discord
 import logging
 import datetime
 import itertools
 
+from typing import List
 from sqlalchemy import select
 from ..snailmail import sendmail
+from ..tables import Guild, StudentData
 from discord.ext import commands, tasks
 from ..amazon.order import order_product
 from .. import values, config, sessionmaker
-from ..utils import fake_ctx, ping_devs, EmojiURLs, devs
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-from ..tables import Guild as guilds, DiscordUser as discord_users, StudentData as student_data
+from ..utils import ping_devs, EmojiURLs, devs
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ class AutomatedTasksCog(commands.Cog):
         if values.bday_today:
             session = sessionmaker()
             for guild in self.bot.guilds:
-                sql_guild = await session.get(guilds, guild.id)
+                sql_guild = await session.get(Guild, guild.id)
                 if sql_guild is None:
                     # TODO: Call function in housekeeping
                     continue
@@ -78,10 +79,12 @@ class AutomatedTasksCog(commands.Cog):
                 if channel is None:
                     logger_message = f"The bot failed to find the announcements channel in {guild}."
                     if config.DM_owner:
-                        await guild.owner.send(("While trying to send the birthday message, "
-                                                f"I failed to find the announcements channel in **{guild}**. "
-                                                f"Please use `{self.bot.parsed_command_prefix}setannouncements` "
-                                                "to set the announcements channel so I can send a birthday message!"))
+                        await guild.owner.send(
+                            "While trying to send the birthday message, "
+                            f"I failed to find the announcements channel in **{guild}**. "
+                            f"Please use `/set announcements` to set the announcements "
+                            "channel so I can send a birthday message!"
+                        )
                         logger_message += f" A message has been sent to {guild.owner}."
                     logger.warning(logger_message)
                     continue
@@ -89,19 +92,30 @@ class AutomatedTasksCog(commands.Cog):
                 for stuid, series in values.today_df.iterrows():
                     # TODO: Add some different styles for the bday message
                     full_name = f"***__{series['FirstName']} {series['LastName']}__***"
-                    student = await session.get(student_data, stuid)
+                    student = await session.get(StudentData, stuid)
                     mention = f' {student.discord_user.mention}' if student.discord_user else ''
                     age = datetime.datetime.today().year - series['Birthyear']
-                    age_portion = ' 🎂 🎉' if age >= 100 or age <= 14 \
-                                  else f'\nCongratulations on turning _**{age}**_ 🎂 🎉'
-                    embed = discord.Embed(description=f"Happy Birthday to {full_name}{mention}🎈 🎊{age_portion}") \
-                            .set_author(name='Happy Birthday! 🎉', icon_url=await EmojiURLs.partying_face)
+                    if age in range(14, 101):
+                        age_portion = f'\nCongratulations on turning _**{age}**_ 🎂 🎉'
+                    else:
+                        age_portion = ' 🎂 🎉'
+
+                    embed = discord.Embed(
+                        description=f"Happy Birthday to {full_name}{mention}🎈 🎊{age_portion}"
+                    ).set_author(
+                        name='Happy Birthday! 🎉',
+                        icon_url=await EmojiURLs.partying_face
+                    )
                     await channel.send(embed=embed)
             await session.close()
         logger.info(f"The 'send_bdays()' coroutine was run.")
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
-        logger.info(f"The next iteration is scheduled for {format(self.send_bdays.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}.")
+        logger.info(
+            f"The next iteration is scheduled for "
+            + format(self.send_bdays.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')
+            + "."
+        )
 
     @send_bdays.error
     async def handle_send_bdays_error(self, error: Exception):
@@ -129,27 +143,27 @@ class AutomatedTasksCog(commands.Cog):
                         place_order=config.place_order
                     )
                     if config.place_order:
-                        logger.info((
+                        logger.info(
                             f"The bot successfully sent candy to {bday_person['AddrLine1']} "
                             f"for {bday_person['FirstName'] + ' ' + bday_person['LastName']} "
                             "via Amazon!"
-                        ))
+                        )
                         for name, discord_id in devs.items():
                             if getattr(config, name.lower()):
                                 dev = await self.bot.get_user(discord_id)
-                                await dev.send((
+                                await dev.send(
                                     f"The bot successfully sent candy to **{bday_person['AddrLine1']}** "
                                     f"for __{bday_person['FirstName'] + ' ' + bday_person['LastName']}__ "
                                     "via Amazon! ✨"
-                                ))
+                                )
                     else:
-                        logger.info((
+                        logger.info(
                             "The bot successfully accessed Amazon, however it did not order "
                             "candy since this was disabled."
-                        ))
+                        )
 
     @order_from_amazon.error
-    async def handle_order_from_amazon_error(self, error):
+    async def handle_order_from_amazon_error(self, error: Exception):
         logger.error(f'The following error occured with the order_from_amazon command: {error!r}')
         await ping_devs(error, 'order_from_amazon', bot=self.bot)
 
@@ -166,7 +180,7 @@ class AutomatedTasksCog(commands.Cog):
                         CITY=bday_person['City'],
                         STATE=bday_person['State'],
                         ZIPCODE=str(int(bday_person['Zipcode'])),
-                        PERSON=await session.get(student_data, 123456)
+                        PERSON=await session.get(StudentData, 123456)
                     )
             await session.close()
 
@@ -175,71 +189,60 @@ class AutomatedTasksCog(commands.Cog):
         if values.bday_today:
             session = sessionmaker()
             for stuid, series in values.today_df.iterrows():
-                student = await session.get(student_data, stuid)
+                student = await session.get(StudentData, stuid)
                 if student.discord_user is not None:
                     user = await self.bot.get_user(student.discord_user.discord_user_id)
                     try:
-                        await user.send((
+                        await user.send(
                             f"Happy birthday from me, {self.bot.user.mention}, "
                             "and all the developers of the bdaybot! Hope you have an awesome birthday!"
-                        ))
+                        )
                         logger.info(f"A happy birthday DM message was sent to {user}.")
                     except discord.Forbidden:
-                        logger.debug((
+                        logger.debug(
                             "The bdaybot failed to send a happy birthday DM message to "
                             f"{user} because the bot and {user} do not have any mutual servers."
-                        ))
+                        )
             await session.close()
 
     @tasks.loop(seconds=5)
     async def change_nicknames(self):
         if len(values.today_df) > 1 or self.new_day:
             self.new_day = False
-            for guild in self.bot.guilds:
-                await self.bot.invoke(fake_ctx(self.bot, 'update_nickname', guild))
+            async with sessionmaker.begin() as session:
+                for guild in self.bot.guilds:
+                    guild: discord.Guild = guild
+                    sql_guild = await session.get(Guild, guild.id)
+                    logger_message = f"The bot unsuccessfully changed its nickname in '{guild}'."
+                    error = None
+                    if guild.me.guild_permissions.change_nickname:
+                        # logger_message = f"The bot changed its nickname in {guild}"
+                        logger_message = None
+                        await guild.me.edit(nick=next(sql_guild.today_names_cycle))
+                    elif config.DM_owner and sql_guild.nickname_notice and guild.owner:
+                        try:
+                            await guild.owner.send(
+                                f"Currently I cannot change my nickname in {guild}. "
+                                "Please give me the `change nickname` permission so I can work properly."
+                            )
+                            sql_guild.nickname_notice = False
+                            logger_message += (
+                                " A DM message requesting to change its "
+                                f"permissions was sent to {guild.owner}."
+                            )
+                        except discord.HTTPException as error:
+                            pass
+                    if logger_message:
+                        logger.warning(logger_message, exc_info=error)
 
     @change_nicknames.error
-    async def handle_change_nicknames_error(self, error):
-        logger.error(f'The following error occured with the change_nicknames command: {error!r}')
+    async def handle_change_nicknames_error(self, error: Exception):
+        logger.error(f'The following error occured with the change_nicknames loop:', exc_info=error)
         await ping_devs(error, 'change_nicknames', bot=self.bot)
-
-    @commands.command(hidden=True)
-    @commands.bot_has_permissions(change_nickname=True)
-    async def update_nickname(self, ctx):
-        if not hasattr(ctx, 'author'):
-            async with sessionmaker.begin() as session:
-                guild = await session.get(guilds, ctx.guild.id)
-                await ctx.guild.me.edit(nick=next(guild.today_names_cycle))
-
-    @update_nickname.error
-    async def handle_update_nickname_error(self, ctx, error):
-        if not hasattr(ctx, 'author'):
-            if isinstance(error, NoResultFound):
-                logger.warning(f"There is an issue with the database, {error!r}")
-                await ping_devs(error, self.update_nickname, ctx)
-                return
-            elif isinstance(error, MultipleResultsFound):
-                logger.warning(f"There is an issue with the database, {error!r}")
-                await ping_devs(error, self.update_nickname, ctx)
-                return
-            async with sessionmaker.begin() as session:
-                guild = await session.get(guilds, ctx.guild.id)
-                if isinstance(error, commands.BotMissingPermissions) and guild.nickname_notice:
-                    logger_message = f"The bot unsucessfully changed its nickname in '{ctx.guild}'. "
-                    if config.DM_owner:
-                        await ctx.guild.owner.send((
-                            f"Currently I cannot change my nickname in {ctx.guild}. "
-                            "Please give me the `change nickname` permission so I can work properly."
-                        ))
-                        logger_message += f"A DM message requesting to change it's permissions was sent to {ctx.guild.owner}."
-                    logger.warning(logger_message)
-                    guild.nickname_notice = False
-                else:
-                    logger.warning(f"Ignoring {error!r}")
 
     async def update_cyclers(self):
         async with sessionmaker.begin() as session:
-            sql_guilds = (await session.execute(select(guilds))).scalars().all()
+            sql_guilds = (await session.execute(select(Guild))).scalars().all()
             new_cycler = itertools.cycle(values.today_df['FirstName'] + ' ' + values.today_df['LastName'])
             for guild in sql_guilds:
                 guild.today_names_cycle = new_cycler
@@ -260,114 +263,132 @@ class AutomatedTasksCog(commands.Cog):
             f"{format(self.update_cycler.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}."
         ))
 
-    async def invoke_update_role(self):
-        for guild in self.bot.guilds:
-            await self.bot.invoke(fake_ctx(self.bot, 'update_role', guild))
-        logger.info(f"The bot updated it's roles for the day.")
+    async def update_roles(self, guilds: List[discord.Guild] = None):
+        if guilds is None:
+            guilds = self.bot.guilds
+        elif isinstance(guilds, discord.Guild):
+            guilds = [guilds]
+        async with sessionmaker.begin() as sess:
+            for guild in guilds:
+                guild: discord.Guild = guild
+                if guild.me.guild_permissions.manage_roles:
+                    sql_guild = await sess.get(Guild, guild.id)
+
+                    if values.bday_today:
+                        role_name, color = (
+                            "🎉 Happy Birthday",
+                            discord.Color.from_rgb(255, 0, 0)
+                        )
+                    else:
+                        role_name, color = (
+                            f"Upcoming Bday-{format(values.today_df.iloc[0]['Birthdate'], '%a %b %d')}",
+                            discord.Color.from_rgb(162, 217, 145)
+                        )
+
+                    bday_role = None
+                    if sql_guild.role_id is not None:
+                        try:
+                            bday_role = guild.get_role(sql_guild.role_id)
+                            await bday_role.edit(name=role_name, color=color)
+                        except (discord.NotFound, commands.RoleNotFound):
+                            bday_role = None
+                        except discord.Forbidden:
+                            error = None
+                            logger_message = (
+                                f"The bot unsucessfully edited its role in '{guild}' "
+                                "due to the fact the bot's highest role was not above the "
+                                f"'{bday_role}' role."
+                            )
+
+                            highest_role, second_highest = heapq.nlargest(2, guild.me.roles)
+                            role_of_interest = highest_role
+                            if highest_role == bday_role:
+                                role_of_interest = second_highest
+
+                            if config.DM_owner and guild.owner:
+                                try:
+                                    await guild.owner.send(
+                                        f"I cannot currently edit my role in **{guild}**. "
+                                        f"Please move the **{role_of_interest}** role to above "
+                                        f"the **{bday_role}** role."
+                                    )
+                                    logger_message += (
+                                        " A DM message requesting to change "
+                                        f"its permissions was sent to {guild.owner}."
+                                    )
+                                except discord.HTTPException as error:
+                                    pass
+
+                            logger.warning(logger_message, exc_info=error)
+
+                    if bday_role is None:
+                        bday_role = await guild.create_role(
+                            name=role_name,
+                            hoist=True,
+                            color=color,
+                            reason=f'Creating {role_name} role'
+                        )
+                        sql_guild.role_id = bday_role.id
+
+                    await guild.me.add_roles(bday_role)
+
+                    counter = itertools.count(bday_role.position)
+                    no_error = True
+                    while no_error:
+                        position = next(counter)
+                        try:
+                            await bday_role.edit(
+                                position=position,
+                                hoist=True,
+                                reason=f'Moving the {role_name} role above other roles'
+                            )
+                        except discord.errors.HTTPException:
+                            no_error = False
+
+                    logger.info(f"The bot's role was changed to '{bday_role.name}' in '{guild}'.")
+                else:
+                    logger_message = (
+                        f"The bot unsuccessfully edited its role in '{guild}' "
+                        "due the the fact the bot was the required missing permissions."
+                    )
+                    error = None
+                    if config.DM_owner and guild.owner:
+                        try:
+                            await guild.owner.send(
+                                f"I cannot currently edit my role in **{guild}**. "
+                                "Please give me the `manage roles` permission so I can work properly."
+                            )
+                            logger_message += (
+                                " A DM message requesting to change its "
+                                f"permissions was sent to {guild.owner}."
+                            )
+                        except discord.HTTPException as error:
+                            pass
+
+                    logger.warning(logger_message, exc_info=error)
 
     async def change_roles_wait_to_run(self, *args):
-        await self.invoke_update_role()
+        try:
+            await self.update_roles()
+        except Exception as error:
+            await self.handle_change_roles_error(error)
         await self.wait_to_run()
 
     @tasks.loop(hours=24)
     async def change_roles(self):
-        await self.invoke_update_role()
+        await self.update_roles()
         logger.info(f"The 'change_roles()' coroutine was run.")
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
-        logger.info((
+        logger.info(
             f"The next iteration is scheduled for "
             f"{format(self.change_roles.next_iteration.astimezone(), '%I:%M:%S:%f %p on %x')}."
-        ))
+        )
 
-    @commands.command(hidden=True)
-    @commands.bot_has_permissions(manage_roles=True)
-    async def update_role(self, ctx):
-        if not hasattr(ctx, 'author'):
-            async with sessionmaker.begin() as session:
-                if values.bday_today:
-                    role_name, color = "🎉 Happy Birthday", discord.Color.from_rgb(255, 0, 0)
-                else:
-                    role_name, color = (
-                        f"Upcoming Bday-{format(values.today_df.iloc[0]['Birthdate'], '%a %b %d')}",
-                        discord.Color.from_rgb(162, 217, 145)
-                    )
-                guild = await session.get(guilds, ctx.guild.id)
-                if guild.role_id is not None:
-                    try:
-                        bday_role = ctx.guild.get_role(guild.role_id)
-                        await bday_role.edit(name=role_name, color=color)
-                    except (discord.NotFound, commands.RoleNotFound):
-                        bday_role = None
-                else:
-                    bday_role = None
-
-                if bday_role is None:
-                    bday_role = await ctx.guild.create_role(
-                        name=role_name,
-                        hoist=True,
-                        color=color,
-                        reason='Creating Happy Birthday/Upcoming Birthday role'
-                    )
-                    guild.role_id = bday_role.id
-
-            await ctx.guild.me.add_roles(bday_role)
-
-            counter = itertools.count(bday_role.position)
-            no_error = True
-            while no_error:
-                position = next(counter)
-                try:
-                    await bday_role.edit(
-                        position=position,
-                        hoist=True,
-                        reason='Moving role above other roles'
-                    )
-                except discord.errors.HTTPException:
-                    no_error = False
-
-            logger.info(f"The bot's role was changed to '{bday_role.name}' in '{ctx.guild}'.")
-
-    @update_role.error
-    async def handle_update_role_error(self, ctx, error):
-        if not hasattr(ctx, 'author'):
-            if isinstance(error, commands.BotMissingPermissions):
-                logger_message = (
-                    f"The bot unsucessfully edited its role in '{ctx.guild}' "
-                    "due the the fact the bot was the required missing permissions."
-                )
-                if config.DM_owner:
-                    await ctx.guild.owner.send((
-                        f"I cannot currently edit my role in **{ctx.guild}**. "
-                        "Please give me the `manage roles` permission so I can work properly"
-                    ))
-                    logger_message += f" A DM message requesting to change its permissions was sent to {ctx.guild.owner}."
-                logger.warning(logger_message)
-            elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden):
-                # TODO: Have the bot fix this problem on its own if possible
-                async with sessionmaker() as session:
-                    guild = await session.get(guilds, ctx.guild.id)
-                current_role = ctx.guild.get_role(guild.role_id)
-                most_likely = [
-                    role for role in ctx.guild.me.roles
-                    if role.id != current_role.id
-                    and "Upcoming Bday-" not in role.name
-                    and "🎉 Happy Birthday" != role.name
-                ]
-                logger_message = (
-                    f"The bot unsucessfully edited its role in '{ctx.guild}' "
-                    f"due to the fact the bot's highest role was not above the '{current_role}' role."
-                )
-                if config.DM_owner:
-                    await ctx.guild.owner.send((
-                        f"I cannot currently edit my role in **{ctx.guild}**. "
-                        f"Please move the **{most_likely[-1]}** role to above the **{current_role}** role."
-                    ))
-                    logger_message += f" A DM message requesting to change its permissions was sent to {ctx.guild.owner}."
-                logger.warning(logger_message)
-            else:
-                logger.error(f'The following error occured with the update_role command: {error!r}')
-                await ping_devs(error, self.update_role, ctx=ctx)
+    @change_roles.error
+    async def handle_change_roles_error(self, error: Exception):
+        logger.error(f'The following error occured with the change_role loop:', exc_info=error)
+        await ping_devs(error, 'change_nicknames', bot=self.bot)
 
     def cog_unload(self):
         if self.send_bdays.is_running():
