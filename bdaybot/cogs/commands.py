@@ -450,6 +450,11 @@ class CommandsCog(commands.Cog):
                 "even though they don't have permission to do so."
             )
             await ctx.respond("You do not have permission to use this command.")
+        elif isinstance(error.original, commands.NoPrivateMessage):
+            logger.info(
+                f"{ctx.author} tried to use the /{ctx.command.qualified_name} in a DM."
+            )
+            await ctx.respond("This command is not available in DM messages.")
         else:
             logger.error(
                 f'The following error occured with the {ctx.command.qualified_name} command:',
