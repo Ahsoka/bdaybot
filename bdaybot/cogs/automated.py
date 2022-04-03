@@ -405,8 +405,8 @@ class AutomatedTasksCog(commands.Cog):
 
     @change_roles.error
     async def handle_change_roles_error(self, error: Exception):
-        logger.error(f'The following error occured with the change_role loop:', exc_info=error)
-        await ping_devs(error, 'change_nicknames', bot=self.bot)
+        logger.error(f'The following error occured with the change_roles loop:', exc_info=error)
+        await ping_devs(error, 'change_roles', bot=self.bot)
 
     def cog_unload(self):
         if self.send_bdays.is_running():
