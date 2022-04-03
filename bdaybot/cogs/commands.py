@@ -390,3 +390,5 @@ class CommandsCog(commands.Cog):
             f"`/{ctx.command.qualified_name}` command.",
             ephemeral=True
         )
+
+        await ping_devs(error, ctx.command, ctx=ctx)
