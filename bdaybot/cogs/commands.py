@@ -444,14 +444,21 @@ class CommandsCog(commands.Cog):
         ctx: discord.ApplicationContext,
         error: discord.ApplicationCommandInvokeError
     ):
-        logger.error(
-            f'The following error occured with the {ctx.command.qualified_name} command:',
-            exc_info=error
-        )
-        await ctx.respond(
-            f"{maybe_mention(ctx)}Congrats, you managed to break the "
-            f"`/{ctx.command.qualified_name}` command.",
-            ephemeral=True
-        )
+        if isinstance(error.original, commands.MissingPermissions):
+            logger.info(
+                f"{ctx.author} tried to use the /{ctx.command.qualified_name} "
+                "even though they don't have permission to do so."
+            )
+            await ctx.respond("You do not have permission to use this command.")
+        else:
+            logger.error(
+                f'The following error occured with the {ctx.command.qualified_name} command:',
+                exc_info=error
+            )
+            await ctx.respond(
+                f"{maybe_mention(ctx)}Congrats, you managed to break the "
+                f"`/{ctx.command.qualified_name}` command.",
+                ephemeral=True
+            )
 
         await ping_devs(error, ctx.command, ctx=ctx)
