@@ -374,3 +374,19 @@ class CommandsCog(commands.Cog):
             logger.error(f'The following error occured with the wishes command: {error!r}')
             await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}wishes` command!")
             await ping_devs(error, self.wishes, ctx=ctx)
+
+    @commands.Cog.listener()
+    async def on_application_command_error(
+        self,
+        ctx: discord.ApplicationContext,
+        error: discord.ApplicationCommandInvokeError
+    ):
+        logger.error(
+            f'The following error occured with the {ctx.command.qualified_name} command:',
+            exc_info=error
+        )
+        await ctx.respond(
+            f"{maybe_mention(ctx)}Congrats, you managed to break the "
+            f"`/{ctx.command.qualified_name}` command.",
+            ephemeral=True
+        )
