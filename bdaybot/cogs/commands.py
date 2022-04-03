@@ -17,6 +17,10 @@ class CommandsCog(commands.Cog):
         'set',
         "Commands used for telling the bdaybot various information about yourself."
     )
+    get_commands = discord.SlashCommandGroup(
+        'get',
+        'Commands used for retrieving certain information from the bdaybot.'
+    )
 
     @commands.slash_command(
         description="Command used for wishing people a happy birthday.",
@@ -175,16 +179,30 @@ class CommandsCog(commands.Cog):
                 "on day when it was no one's birthday."
             )
 
-    @commands.command()
-    async def getID(self, ctx, *message):
+    @get_commands.command(
+        name='id',
+        description="Use this command to get your currently set ID."
+    )
+    async def get_id(self, ctx: discord.ApplicationContext):
         async with sessionmaker() as session:
             discord_user = await session.get(DiscordUser, ctx.author.id)
         if discord_user is None:
-            await ctx.send(f"{maybe_mention(ctx)}You do not currently have a registered ID. Use `{ctx.prefix}setID` to set your ID")
-            logger.debug(f"{ctx.author} tried to access their ID even though they do not have one.")
+            await ctx.respond(
+                "You do not currently have a registered ID. "
+                f"Use `/set id` to set your ID.",
+                ephemeral=True
+            )
+            logger.debug(
+                f"{ctx.author} tried to access their ID "
+                "even though they do not have one."
+            )
         else:
-            await ctx.author.send(f"Your ID is **{discord_user.student_id}**.  If this is a mistake use `{ctx.prefix}setID` to change it.")
-            logger.info(f"{ctx.author} succesfully used the getID command.")
+            await ctx.respond(
+                f"Your ID is **{discord_user.student_id}**. "
+                f"If this is a mistake use `/set id` to change it.",
+                ephemeral=True
+            )
+            logger.info(f"{ctx.author} succesfully used the /get id command.")
 
     @set_commands.command(
         name='id',
