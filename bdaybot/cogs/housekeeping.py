@@ -22,6 +22,10 @@ class CosmicHouseKeepingCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    # TODO: Add listeners for on_guild_role_...
+
+    # IMPORTANT TODO: Add error handling for each listener
+
     @commands.Cog.listener()
     async def on_ready(self):
         async with sessionmaker.begin() as session:
