@@ -127,7 +127,12 @@ def permissions(channel, member, permissions, condition='all'):
     else:
         return getattr(perms, permissions)
 
-async def ping_devs(error, command, ctx=None, bot=None):
+async def ping_devs(
+    error: Exception,
+    command: discord.ApplicationCommand,
+    ctx: discord.ApplicationContext = None,
+    bot = None
+):
     # DEBUG: DO NOT move this import!
     # It is here to avoid circular import issues.
     from . import config
