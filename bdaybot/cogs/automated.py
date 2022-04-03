@@ -306,7 +306,17 @@ class AutomatedTasksCog(commands.Cog):
                     if sql_guild.role_id is not None:
                         try:
                             bday_role = guild.get_role(sql_guild.role_id)
-                            await bday_role.edit(name=role_name, color=color)
+                            if bday_role is None:
+                                bday_role = await guild.create_role(
+                                    name=role_name,
+                                    hoist=True,
+                                    color=color,
+                                    reason=f'Creating {role_name} role'
+                                )
+                                sql_guild.role_id = bday_role.id
+                            elif bday_role.name != role_name or bday_role.color != color:
+                                await bday_role.edit(name=role_name, color=color)
+                            await guild.me.add_roles(bday_role)
                         except (discord.NotFound, commands.RoleNotFound):
                             bday_role = None
                         except discord.Forbidden:
@@ -338,16 +348,7 @@ class AutomatedTasksCog(commands.Cog):
 
                             logger.warning(logger_message, exc_info=error)
 
-                    if bday_role is None:
-                        bday_role = await guild.create_role(
-                            name=role_name,
-                            hoist=True,
-                            color=color,
-                            reason=f'Creating {role_name} role'
-                        )
-                        sql_guild.role_id = bday_role.id
-
-                    await guild.me.add_roles(bday_role)
+                            return
 
                     counter = itertools.count(bday_role.position)
                     no_error = True
