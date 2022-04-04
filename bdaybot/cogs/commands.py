@@ -482,4 +482,4 @@ class CommandsCog(commands.Cog):
                 ephemeral=True
             )
 
-        await ping_devs(error, ctx.command, ctx=ctx)
+            await ping_devs(error, ctx.command, ctx=ctx)
