@@ -473,7 +473,7 @@ class CommandsCog(commands.Cog):
             await ctx.respond("This command is not available in DM messages.")
         else:
             logger.error(
-                f'The following error occured with the {ctx.command.qualified_name} command:',
+                f'The following error occured with the /{ctx.command.qualified_name} command:',
                 exc_info=error
             )
             await ctx.respond(
