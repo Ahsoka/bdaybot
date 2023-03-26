@@ -20,7 +20,7 @@ logger_names = [
     'bdaybot.cogs.commands',
     'bdaybot.cogs.housekeeping',
     'bdaybot.cogs.meme',
-    'bdaybot.help',
+    'bdaybot.cogs.help',
     'bdaybot.bot'
 ]
 for logger_name in logger_names:
