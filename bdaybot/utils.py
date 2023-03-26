@@ -196,13 +196,13 @@ class classproperty:
 
 class EmojiURLs:
     urls = {
-        'confetti_ball': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/confetti-ball_1f38a.png",
-        'partying_face': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/partying-face_1f973.png",
-        'wrapped_gift': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/wrapped-gift_1f381.png",
-        'numbers': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/248/input-numbers_1f522.png",
-        'loudspeaker': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/public-address-loudspeaker_1f4e2.png",
-        'calendar' : "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png",
-        'party_popper': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/party-popper_1f389.png"
+        'confetti_ball': "https://em-content.zobj.net/thumbs/320/microsoft/74/confetti-ball_1f38a.png",
+        'partying_face': "https://em-content.zobj.net/thumbs/120/microsoft/153/face-with-party-horn-and-party-hat_1f973.png",
+        'wrapped_gift': "https://em-content.zobj.net/thumbs/120/microsoft/74/wrapped-present_1f381.png",
+        'numbers': "https://em-content.zobj.net/thumbs/120/twitter/322/abacus_1f9ee.png",
+        'loudspeaker': "https://em-content.zobj.net/thumbs/120/microsoft/74/public-address-loudspeaker_1f4e2.png",
+        'calendar' : "https://em-content.zobj.net/thumbs/120/microsoft/74/calendar_1f4c5.png",
+        'party_popper': "https://em-content.zobj.net/thumbs/120/microsoft/74/party-popper_1f389.png"
     }
 
     @classmethod
