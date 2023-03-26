@@ -2,7 +2,6 @@ click
 pandas
 arsenic
 python-dotenv
-python-Levenshtein
 py-cord==2.0.0b5
 aiohttp
 SQLAlchemy>=1.4.3
