@@ -206,14 +206,25 @@ class EmojiURLs:
     }
 
     @classmethod
-    async def check_url(cls, url, session=None):
+    async def check_url(cls, key, session=None):
+        url = cls.urls[key]
         try:
             if session:
-                async with session.get(url): return url
+                async with session.get(url) as resp:
+                    pass
             else:
-                async with aiohttp.request('GET', url): return url
-        except aiohttp.ClientConnectorError:
-            mapping_reversed_urls = dict(((url, key) for key, url in cls.urls.items()))
+                async with aiohttp.request('GET', url) as resp:
+                    pass
+            if resp.content_type != 'image/png':
+                raise aiohttp.ContentTypeError(
+                    resp.request_info,
+                    resp.history,
+                    status=resp.status,
+                    headers=resp.headers,
+                    message=f'Content type for {key!r} was not a png it was {resp.content_type!r}'
+                )
+            return url
+        except (aiohttp.ClientConnectorError, aiohttp.ContentTypeError) as error:
             logger = None
             for stack in inspect.stack():
                 module = inspect.getmodule(stack.frame)
@@ -221,7 +232,7 @@ class EmojiURLs:
                     logger = logging.getLogger(module.__name__)
                     break
             if logger:
-                logger.warning(f"The {mapping_reversed_urls[url]} ({url}) url is not working!")
+                logger.warning(f"The {key} ({url}) url is not working!", exc_info=error)
             if hasattr(cls, 'bot'):
                 # DEBUG: DO NOT move this import!
                 # It is here to avoid circular import issues.
@@ -229,13 +240,13 @@ class EmojiURLs:
                 for name, discord_id in devs.items():
                     if getattr(config, name.lower()):
                         dev = await cls.bot.get_user(discord_id)
-                        await dev.send(f"The `{mapping_reversed_urls[url]}` url ({url}) is not working!")
+                        await dev.send(f"The `{key}` url ({url}) is not working!")
                         if logger:
                             logger.info(f'{dev} was notified of the situation.')
             return discord.Embed.Empty
 
     for key in urls:
-        async def __func(cls, url_key): return await cls.check_url(cls.urls[url_key])
+        async def __func(cls, url_key): return await cls.check_url(url_key)
         # NOTE: Function name gets changed from
         # __func to _EmojiURLs__func in exec function
         exec(f"{key}=classproperty(functools.partial(_EmojiURLs__func, url_key='{key}'))")
@@ -246,7 +257,7 @@ class EmojiURLs:
         async def get_urls():
             urls_dict = {}
             async with aiohttp.ClientSession() as session:
-                results = await asyncio.gather(*map(lambda url: cls.check_url(url, session), cls.urls.values()))
+                results = await asyncio.gather(*map(lambda key: cls.check_url(key, session), cls.urls))
                 urls_dict = {click.style(cls.urls[key], fg='yellow'): result for key, result in zip(cls.urls, results)}
             return urls_dict
         loop = asyncio.get_event_loop()
