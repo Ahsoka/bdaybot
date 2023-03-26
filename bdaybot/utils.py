@@ -127,7 +127,12 @@ def permissions(channel, member, permissions, condition='all'):
     else:
         return getattr(perms, permissions)
 
-async def ping_devs(error, command, ctx=None, bot=None):
+async def ping_devs(
+    error: Exception,
+    command: discord.ApplicationCommand,
+    ctx: discord.ApplicationContext = None,
+    bot = None
+):
     # DEBUG: DO NOT move this import!
     # It is here to avoid circular import issues.
     from . import config
@@ -155,35 +160,28 @@ async def ping_devs(error, command, ctx=None, bot=None):
         if getattr(config, name.lower()):
             dev = await bot.get_user(discord_id)
             if hasattr(ctx, 'author'):
-                await dev.send((
-                    f"{ctx.author.mention} caused the following error with `{command.name}` in "
-                    f"**{discord_location}**, on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}"
-                ))
+                await dev.send(
+                    f"{ctx.author.mention} caused the following error with "
+                    f"`/{command.qualified_name}` in **{discord_location}**, "
+                    f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}"
+                )
             elif ctx is None:
-                await dev.send((
+                await dev.send(
                     f"The following error occured with the `{command}` task, on "
                     f"{format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
-                ))
+                )
             else:
-                await dev.send((
-                    f"The following error occured with `{command.name}` in **{discord_location}**, "
-                    f"on {format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
-                ))
+                await dev.send(
+                    f"The following error occured with `/{command.qualified_name}` "
+                    f"in **{discord_location}**, on "
+                    f"{format(datetime.datetime.today(), '%b %d at %I:%M %p')}:"
+                )
             for error_content in error_messages_array:
                 await dev.send(f"```\n{error_content}```")
             if hasattr(ctx, 'author'):
-                await dev.send(f"The message that caused the error is the following:\n**{ctx.message.content}**")
+                await dev.send(f"The following is dictionary of the command interaction:\n**{ctx.interaction.data}**")
             logger.info(f'{dev} was sent a message notifying them of the situation.')
 
-    if ctx and ctx.guild and hasattr(ctx, 'author'):
-        # NOTE: Might want this to conform to config values
-        devs_ping_channel = format_iterable(
-            devs,
-            apos=False,
-            conjunction='or',
-            get_str=lambda iterr, index: iterr[list(iterr)[index]].mention
-        )
-        await ctx.send(f"{devs_ping_channel} fix this!")
 
 class classproperty:
     # NOTE: The `classproperty` class
@@ -198,24 +196,35 @@ class classproperty:
 
 class EmojiURLs:
     urls = {
-        'confetti_ball': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/confetti-ball_1f38a.png",
-        'partying_face': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/partying-face_1f973.png",
-        'wrapped_gift': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/241/wrapped-gift_1f381.png",
-        'numbers': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/248/input-numbers_1f522.png",
-        'loudspeaker': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/public-address-loudspeaker_1f4e2.png",
-        'calendar' : "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/calendar_1f4c5.png",
-        'party_popper': "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/party-popper_1f389.png"
+        'confetti_ball': "https://em-content.zobj.net/thumbs/320/microsoft/74/confetti-ball_1f38a.png",
+        'partying_face': "https://em-content.zobj.net/thumbs/120/microsoft/153/face-with-party-horn-and-party-hat_1f973.png",
+        'wrapped_gift': "https://em-content.zobj.net/thumbs/120/microsoft/74/wrapped-present_1f381.png",
+        'numbers': "https://em-content.zobj.net/thumbs/120/twitter/322/abacus_1f9ee.png",
+        'loudspeaker': "https://em-content.zobj.net/thumbs/120/microsoft/74/public-address-loudspeaker_1f4e2.png",
+        'calendar' : "https://em-content.zobj.net/thumbs/120/microsoft/74/calendar_1f4c5.png",
+        'party_popper': "https://em-content.zobj.net/thumbs/120/microsoft/74/party-popper_1f389.png"
     }
 
     @classmethod
-    async def check_url(cls, url, session=None):
+    async def check_url(cls, key, session=None):
+        url = cls.urls[key]
         try:
             if session:
-                async with session.get(url): return url
+                async with session.get(url) as resp:
+                    pass
             else:
-                async with aiohttp.request('GET', url): return url
-        except aiohttp.ClientConnectorError:
-            mapping_reversed_urls = dict(((url, key) for key, url in cls.urls.items()))
+                async with aiohttp.request('GET', url) as resp:
+                    pass
+            if resp.content_type != 'image/png':
+                raise aiohttp.ContentTypeError(
+                    resp.request_info,
+                    resp.history,
+                    status=resp.status,
+                    headers=resp.headers,
+                    message=f'Content type for {key!r} was not a png it was {resp.content_type!r}'
+                )
+            return url
+        except (aiohttp.ClientConnectorError, aiohttp.ContentTypeError) as error:
             logger = None
             for stack in inspect.stack():
                 module = inspect.getmodule(stack.frame)
@@ -223,7 +232,7 @@ class EmojiURLs:
                     logger = logging.getLogger(module.__name__)
                     break
             if logger:
-                logger.warning(f"The {mapping_reversed_urls[url]} ({url}) url is not working!")
+                logger.warning(f"The {key} ({url}) url is not working!", exc_info=error)
             if hasattr(cls, 'bot'):
                 # DEBUG: DO NOT move this import!
                 # It is here to avoid circular import issues.
@@ -231,13 +240,13 @@ class EmojiURLs:
                 for name, discord_id in devs.items():
                     if getattr(config, name.lower()):
                         dev = await cls.bot.get_user(discord_id)
-                        await dev.send(f"The `{mapping_reversed_urls[url]}` url ({url}) is not working!")
+                        await dev.send(f"The `{key}` url ({url}) is not working!")
                         if logger:
                             logger.info(f'{dev} was notified of the situation.')
             return discord.Embed.Empty
 
     for key in urls:
-        async def __func(cls, url_key): return await cls.check_url(cls.urls[url_key])
+        async def __func(cls, url_key): return await cls.check_url(url_key)
         # NOTE: Function name gets changed from
         # __func to _EmojiURLs__func in exec function
         exec(f"{key}=classproperty(functools.partial(_EmojiURLs__func, url_key='{key}'))")
@@ -248,7 +257,7 @@ class EmojiURLs:
         async def get_urls():
             urls_dict = {}
             async with aiohttp.ClientSession() as session:
-                results = await asyncio.gather(*map(lambda url: cls.check_url(url, session), cls.urls.values()))
+                results = await asyncio.gather(*map(lambda key: cls.check_url(key, session), cls.urls))
                 urls_dict = {click.style(cls.urls[key], fg='yellow'): result for key, result in zip(cls.urls, results)}
             return urls_dict
         loop = asyncio.get_event_loop()

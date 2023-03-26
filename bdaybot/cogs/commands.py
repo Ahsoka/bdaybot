@@ -4,78 +4,88 @@ import datetime
 
 from discord.ext import commands
 from sqlalchemy import select, or_
+from discord.commands import Option
 from .. import values, sessionmaker
 from sqlalchemy.exc import IntegrityError
 from ..tables import DiscordUser, StudentData, Guild, Wish
-from ..utils import get_bday_names, apostrophe, maybe_mention, ping_devs, EmojiURLs, format_iterable
+from ..utils import (
+    EmojiURLs,
+    ping_devs,
+    apostrophe,
+    permissions,
+    maybe_mention,
+    get_bday_names,
+    format_iterable
+)
 
 logger = logging.getLogger(__name__)
 
 class CommandsCog(commands.Cog):
-    @commands.command()
-    @commands.bot_has_guild_permissions(manage_messages=True)
-    async def wish(self, ctx, *message):
+    set_commands = discord.SlashCommandGroup(
+        'set',
+        "Commands used for telling the bdaybot various information about yourself."
+    )
+    get_commands = discord.SlashCommandGroup(
+        'get',
+        'Commands used for retrieving certain information from the bdaybot.'
+    )
+
+    @commands.slash_command(
+        description="Command used for wishing people a happy birthday.",
+        options=[
+            Option(
+                str,
+                name='name',
+                description="Name of person who you want to wish a happy birthday to.",
+                required=False
+            )
+        ]
+    )
+    @commands.guild_only()
+    async def wish(self, ctx: discord.ApplicationContext, name: str = None):
         # TODO: Make it so you cannot wish yourself a happy birthday
         wish_embed = discord.Embed()
-        try:
-            input_id = int(message[-1])
-            message = message[:-1]
-            await ctx.message.delete()
-            wish_embed.set_footer(text="[Original wish message deleted because it contained your ID]")
-        except (IndexError, ValueError):
-            input_id = None
-
         if values.bday_today:
             async with sessionmaker.begin() as session:
                 discord_user = await session.get(DiscordUser, ctx.author.id)
                 if discord_user is None:
-                    if input_id is None:
-                        wish_embed.description = "You are first-time wisher. You must include your 6-digit student ID at the end of the wish command to send a wish."
-                        await ctx.send(ctx.author.mention, embed=wish_embed)
-                        logger.debug(f"{ctx.author} unsucessfully used the wish command because they forgot to put their student ID.")
-                        return
-                    student_user = await session.get(StudentData, input_id)
-                    if student_user is None:
-                        wish_embed.description = "Your ID is invalid, please use a valid 6-digit ID"
-                        await ctx.send(ctx.author.mention, embed=wish_embed)
-                        logger.debug(f"{ctx.author} unsucessfully used the wish command because they included an invalid ID.")
-                        return
-                    discord_user = DiscordUser(discord_user_id=ctx.author.id, student_data=student_user)
-                    session.add(discord_user)
-
-                if input_id is not None:
-                    # await session.refresh(discord_user)
-                    if discord_user.student_data.stuid != input_id:
-                        wish_embed.description = ("The ID you submitted does not match the ID you submitted previously.\n"
-                                                "Please use the same ID you have used in the past or don't use an ID at all")
-                        await ctx.send(ctx.author.mention, embed=wish_embed)
-                        logger.debug(f"{ctx.author} unsucessfully used the with command because they used a different ID than their previously stored ID.")
-                        return
-                    elif input_id not in values.bday_df.index:
-                        await ctx.send((f"Yay! {ctx.author.mention} Your ID is valid, however, "
-                                        "you are not in the bdaybot's birthday database.\n"
-                                        "Add yourself to database here ⬇\n"
-                                        "**http://drneato.com/Bday/Bday2.php**"))
-                    else:
-                        await ctx.send((f"{ctx.author.mention} Once you've submitted your ID once, "
-                                        "you do not need to submitted it again to send wishes!"))
+                    wish_embed.description = (
+                        "You are first-time wisher. Use the `/set ID` command "
+                        "to set your ID so you can use this command."
+                    )
+                    await ctx.respond(embed=wish_embed)
+                    logger.debug(
+                        f"{ctx.author} unsuccessfully used the wish command "
+                        "because they do not have an associated student ID."
+                    )
+                    return
+                input_id = discord_user.student_id
 
                 today_df = values.today_df.copy()
-                if len(message) == 0 and len(today_df) > 1:
-                    wish_embed.description = (f"Today is {get_bday_names()} birthday\n"
-                                            "You must specify who you want wish a happy birthday!")
-                    await ctx.send(ctx.author.mention, embed=wish_embed)
-                    logger.debug(f"{ctx.author} unsucessfully used the wish command because they failed to include who they wanted to wish.")
+                if name is None and len(today_df) > 1:
+                    wish_embed.description = (
+                        f"Today is {get_bday_names()} birthday\n"
+                        "You must specify who you want wish a happy birthday!"
+                    )
+                    await ctx.respond(embed=wish_embed)
+                    logger.debug(
+                        f"{ctx.author} unsuccessfully used the wish command "
+                        "because they failed to include who they wanted to wish."
+                    )
                     return
-                elif len(message) == 0:
+                elif name is None:
                     wishee_id = today_df.index.values[0]
-                elif len(message) >= 1:
+                else:
                     # Can use first name, last name, or first and last name together to wish someone
                     # Also firstname and lastname as one word ex: 'ahsokatano'
+                    message = name.split()
                     comparing = map(lambda string: string.capitalize(), message)
                     columns = ['FirstName', 'LastName']
                     if len(message) == 1:
-                        today_df['FullNameLower'] = today_df['FirstName'].str.lower() + today_df['LastName'].str.lower()
+                        today_df['FullNameLower'] = (
+                            today_df['FirstName'].str.lower()
+                            + today_df['LastName'].str.lower()
+                        )
                         comparing = [*comparing, message[0].lower()]
                         columns += ['FullNameLower']
                     is_in = today_df[columns].isin(comparing)
@@ -90,20 +100,33 @@ class CommandsCog(commands.Cog):
                                 name = ' '.join(message[:-1])
                             else:
                                 name = ' '.join(message)
-                            discrim = or_(StudentData.firstname == firstname.capitalize(),
-                                        StudentData.lastname == firstname.capitalize(),
-                                        StudentData.firstname == secondname.capitalize(),
-                                        StudentData.lastname == secondname.capitalize())
-                        fail_wishee = (await session.execute(select(StudentData).filter(discrim))).scalar()
+                            discrim = or_(
+                                StudentData.firstname == firstname.capitalize(),
+                                StudentData.lastname == firstname.capitalize(),
+                                StudentData.firstname == secondname.capitalize(),
+                                StudentData.lastname == secondname.capitalize()
+                            )
+                        fail_wishee = (
+                            await session.execute(select(StudentData).filter(discrim))
+                        ).scalar()
                         if fail_wishee is None:
                             wish_embed.description = f"'{name}' is not a name in the birthday database!"
-                            logger.debug(f"{ctx.author} unsucessfully used the wish command because tried to wish someone whose birthday is not today.")
+                            logger.debug(
+                                f"{ctx.author} unsuccessfully used the wish command "
+                                "because tried to wish someone whose birthday is not today."
+                            )
                         else:
-                            wish_embed.description = (f"Today is not **{fail_wishee.firstname} "
-                                                    f"{fail_wishee.lastname}{apostrophe(fail_wishee.lastname)}** birthday.\n"
-                                                    f"It is {get_bday_names()} birthday today. Wish them a happy birthday!")
-                            logger.debug(f"{ctx.author} unsuccessfully used the wish command because they used a name that is not in the birthday database.")
-                        await ctx.send(ctx.author.mention, embed=wish_embed)
+                            wish_embed.description = (
+                                f"Today is not **{fail_wishee.firstname} "
+                                f"{fail_wishee.lastname}{apostrophe(fail_wishee.lastname)}** "
+                                f"birthday.\nIt is {get_bday_names()} birthday today. "
+                                "Wish them a happy birthday!"
+                            )
+                            logger.debug(
+                                f"{ctx.author} unsuccessfully used the wish command because "
+                                "they used a name that is not in the birthday database."
+                            )
+                        await ctx.respond(embed=wish_embed)
                         return
 
                     wishee_id = today_df[is_in.any(axis='columns')].index.values[0]
@@ -111,75 +134,100 @@ class CommandsCog(commands.Cog):
                 wishee = await session.get(StudentData, int(wishee_id))
                 assert wishee is not None, "Some how wishee is None"
 
-                wish = await session.get(Wish, (discord_user.discord_user_id, datetime.datetime.today().year, wishee.stuid))
+                wish = await session.get(
+                    Wish,
+                    (
+                        discord_user.discord_user_id,
+                        datetime.datetime.today().year,
+                        wishee.stuid
+                    )
+                )
                 if wish:
-                    wish_embed.description = (f"You cannot wish **{wish.wishee.fullname}** a happy birthday more than once!"
-                                            "\nTry wishing someone else a happy birthday!")
-                    logger.debug(f"{ctx.author} tried to wish {wish.wishee.fullname} a happy birthday even though they already wished them before.")
+                    wish_embed.description = (
+                        f"You cannot wish **{wish.wishee.fullname}** "
+                        "a happy birthday more than once!"
+                        "\nTry wishing someone else a happy birthday!"
+                    )
+                    logger.debug(
+                        f"{ctx.author} tried to wish {wish.wishee.fullname} "
+                        "a happy birthday even though they already wished them before."
+                    )
                 else:
-                    wish = Wish(year=datetime.datetime.today().year, wishee=wishee, discord_user=discord_user)
+                    wish = Wish(
+                        year=datetime.datetime.today().year,
+                        wishee=wishee,
+                        discord_user=discord_user
+                    )
                     session.add(wish)
-                    wish_embed.description = (f"Congrats {discord_user.student_data.firstname}! 🎈 ✨ 🎉\n"
-                                            f"You wished ***__{wish.wishee.fullname}__*** a happy birthday!")
-                    logger.info(f"{ctx.author} successfully wished {wish.wishee.fullname} a happy birthday!")
-            await ctx.send(ctx.author.mention, embed=wish_embed)
-        else:
-            wish_embed.description = (f"You cannot use the `{ctx.prefix}wish` command if it is no one's birthday today.\n"
-                                      f"However, it will be **{get_bday_names()}** birthday on "
-                                      f"**{format(values.today_df.iloc[0]['Birthdate'], '%A, %B %d')}**")
-            await ctx.send(ctx.author.mention, embed=wish_embed)
-            logger.debug(f"{ctx.author} tried to use the wish command on day when it was no one's birthday.")
+                    wish_embed.description = (
+                        f"Congrats {discord_user.student_data.firstname}! 🎈 ✨ 🎉\n"
+                        f"You wished ***__{wish.wishee.fullname}__*** a happy birthday!"
+                    )
+                    logger.info(
+                        f"{ctx.author} successfully wished "
+                        f"{wish.wishee.fullname} a happy birthday!"
+                    )
+            await ctx.respond(embed=wish_embed)
 
-    @wish.error
-    async def handle_wish_error(self, ctx, error):
-        if isinstance(error, commands.NoPrivateMessage):
-            logger.debug(f"{ctx.author} tried to use the wish command in a DM")
-            await ctx.send(f"The `{ctx.prefix}wish` command is not currently available in DMs. Please try using it in a server with me.")
-        elif isinstance(error, commands.BotMissingPermissions):
-            logger.warning(f"The wish command was used in {ctx.guild} without the 'manage_messages' permission by {ctx.author}")
-            await ctx.send((
-                f"The `{ctx.prefix}wish` command is currently unavailable because I do not have the `manage messages` permission.\n"
-                f"If you would like to use the `{ctx.prefix}wish` command please, give me the `manage messages` permission."
-            ))
+            if input_id not in values.bday_df.index:
+                await ctx.respond(
+                    "Hey there I noticed that you are not in the "
+                    "bdaybot's birthday database.\n"
+                    "Add yourself to database here: ⬇\n"
+                    "**http://drneato.com/Bday/Bday2.php**"
+                )
         else:
-            logger.error(f'The following error occured with the wish command: {error!r}')
-            await ctx.send(f"{ctx.author.mention} Congratulations, you managed to break the wish command.")
-            await ping_devs(error, self.wish, ctx=ctx)
+            wish_embed.description = (
+                f"You cannot use the `/wish` command if it is no one's birthday today.\n"
+                f"However, it will be **{get_bday_names()}** birthday on "
+                f"**{format(values.today_df.iloc[0]['Birthdate'], '%A, %B %d')}**"
+            )
+            await ctx.respond(embed=wish_embed)
+            logger.debug(
+                f"{ctx.author} tried to use the wish command "
+                "on day when it was no one's birthday."
+            )
 
-    @commands.command()
-    async def getID(self, ctx, *message):
+    @get_commands.command(
+        name='id',
+        description="Use this command to get your currently set ID."
+    )
+    async def get_id(self, ctx: discord.ApplicationContext):
         async with sessionmaker() as session:
             discord_user = await session.get(DiscordUser, ctx.author.id)
         if discord_user is None:
-            await ctx.send(f"{maybe_mention(ctx)}You do not currently have a registered ID. Use `{ctx.prefix}setID` to set your ID")
-            logger.debug(f"{ctx.author} tried to access their ID even though they do not have one.")
+            await ctx.respond(
+                "You do not currently have a registered ID. "
+                f"Use `/set id` to set your ID.",
+                ephemeral=True
+            )
+            logger.debug(
+                f"{ctx.author} tried to access their ID "
+                "even though they do not have one."
+            )
         else:
-            await ctx.author.send(f"Your ID is **{discord_user.student_id}**.  If this is a mistake use `{ctx.prefix}setID` to change it.")
-            logger.info(f"{ctx.author} succesfully used the getID command.")
+            await ctx.respond(
+                f"Your ID is **{discord_user.student_id}**. "
+                f"If this is a mistake use `/set id` to change it.",
+                ephemeral=True
+            )
+            logger.info(f"{ctx.author} succesfully used the /get id command.")
 
-    def dm_allowed_bot_has_guild_permissions(**perms):
-        invalid = set(perms) - set(discord.Permissions.VALID_FLAGS)
-        if invalid:
-            raise TypeError('Invalid permission(s): %s' % (', '.join(invalid)))
-
-        def predicate(ctx):
-            if ctx.guild:
-                permissions = ctx.me.guild_permissions
-                missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
-                if not missing:
-                    return True
-                raise commands.BotMissingPermissions(missing)
-            return True
-
-        return commands.check(predicate)
-
-    @commands.command()
-    @dm_allowed_bot_has_guild_permissions(manage_messages=True)
-    async def setID(self, ctx, new_id: int):
+    @set_commands.command(
+        name='id',
+        description="Use this command to tell me your school ID so you can use the other commands. ",
+        options=[
+            Option(
+                int,
+                name='id',
+                description="Your 6-digit school ID.",
+                required=True
+            )
+        ]
+    )
+    async def set_id(self, ctx: discord.ApplicationContext, new_id: int):
         # TODO: Unlikely, however, if someone CHANGES their ID (from one that has been set in the past)
         # to another ID we should also transfer any of their wishes with the new id
-        if ctx.guild:
-            await ctx.message.delete()
         try:
             async with sessionmaker.begin() as session:
                 if new_id > 2147483647 or new_id < -2147483648:
@@ -187,7 +235,10 @@ class CommandsCog(commands.Cog):
                 else:
                     student = await session.get(StudentData, new_id)
                 if student is None:
-                    await ctx.author.send(f"**{new_id}** is not a valid ID. Please use a valid 6-digit ID.")
+                    await ctx.respond(
+                        f"**{new_id}** is not a valid ID. Please use a valid 6-digit ID.",
+                        ephemeral=True
+                    )
                     logger.debug(f"{ctx.author} tried to set their ID to an invalid ID.")
                     return
 
@@ -204,146 +255,165 @@ class CommandsCog(commands.Cog):
                 logger.info(f"{ctx.author} successfully updated their ID from {old_id} to {new_id}.")
             else:
                 logger.info(f"{ctx.author} successfully set their ID to {new_id}.")
-            await ctx.author.send(f"Your ID has now been set to **{new_id}**!")
+            await ctx.respond(
+                f"Your ID has now been set to **{new_id}**!",
+                ephemeral=True
+            )
         except IntegrityError:
-            await ctx.author.send(f"**{new_id}** is already in use. Please use another ID.")
+            await ctx.respond(
+                f"**{new_id}** is already in use. Please use another ID.",
+                ephemeral=True
+            )
             logger.debug(f"{ctx.author} tried to set their ID to an ID already in use.")
 
-    @setID.error
-    async def handle_setID_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"{maybe_mention(ctx)}You must give me a new ID to replace your old one with")
-            logger.debug(f"{ctx.author} unsucessfully used the setID command because they did not include an ID.")
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send((
-                f"{maybe_mention(ctx)}"
-                f"**{' '.join(ctx.message.content.split()[1:])}** is not a valid number."
-            ))
-            logger.debug(f"{ctx.author} tried to set their ID to a non-numeric value.")
-        elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send((
-                f"The `{ctx.prefix}setID` command is currently unavailable because I do not have the `manage messages` permission.\n"
-                f"If you would like to use the `{ctx.prefix}setID` command please, give me the `manage messages` permission."
-            ))
-            logger.warning(f"The setID command was used in {ctx.guild} without the 'manage_messages' permission by {ctx.author}")
-        else:
-            logger.error(f'The following error occured with the setID command: {error!r}')
-            await ctx.send(f"{maybe_mention(ctx)}Congrats, you managed to break the `{ctx.prefix}setID` command.")
-            await ping_devs(error, self.setID, ctx=ctx)
-
-    @commands.command(aliases=['up'])
-    @commands.guild_only()
-    async def upcoming(self, ctx, num=5):
+    @commands.slash_command(
+        description="Use this command to see the upcoming birthdays.",
+        options=[
+            Option(
+                int,
+                name='number',
+                description='How many people will appear per page.',
+                required=False,
+                default=5,
+                min_value=1,
+                max_value=10
+            )
+        ]
+    )
+    async def upcoming(self, ctx: discord.ApplicationContext, num: int = 5):
         if num <= 0:
-            await ctx.send(f"{ctx.author.mention} **{num}** is less than 1. Please use a number that is not less than 1.")
-            logger.debug(f"{ctx.author} tried to use the upcoming command with a number less than 1.")
+            await ctx.respond(
+                f"**{num}** is less than 1. Please use a number that is not less than 1."
+            )
+            logger.debug(
+                f"{ctx.author} tried to use the upcoming command with a number less than 1."
+            )
             return
-        upcoming_embed = discord.Embed().set_author(name=f"Upcoming Birthday{'s' if num != 1 else ''}", icon_url=await EmojiURLs.calendar)
+        upcoming_embed = discord.Embed().set_author(
+            name=f"Upcoming Birthday{'s' if num != 1 else ''}",
+            icon_url=await EmojiURLs.calendar
+        )
         upcoming_df = values.bday_df.drop(values.today_df.index) if values.bday_today else values.bday_df
         # INFO: The maximum without erroring out is 76
         max_num = 10
         if num > max_num:
-            upcoming_embed.set_footer(text=f"The input value exceeded {max_num}. Automatically showing the top {max_num} results.")
+            upcoming_embed.set_footer(
+                text=(
+                    f"The input value exceeded {max_num}. "
+                    f"Automatically showing the top {max_num} results."
+                )
+            )
             num = max_num
 
         upcoming_bdays = []
         async with sessionmaker() as session:
             for stuid, row in upcoming_df.iloc[:num].iterrows():
-                discord_user = (await session.execute(select(DiscordUser).where(DiscordUser.student_id == stuid))).scalar_one_or_none()
+                discord_user = (
+                    await session.execute(
+                        select(DiscordUser).where(DiscordUser.student_id == stuid)
+                    )
+                ).scalar_one_or_none()
                 mention = '' if discord_user is None else discord_user.mention
                 upcoming_bdays.append([
                     f"{(row['FirstName'] + ' ' + row['LastName'])} {mention}",
                     format(row['Birthdate'], '%b %d'),
                     f"{row['Timedelta'].days} day{'s' if row['Timedelta'].days != 1 else ''}"
                 ])
-        upcoming_embed.add_field(name='Name', value='\n'.join(map(lambda iterr: iterr[0], upcoming_bdays))) \
-                      .add_field(name='Birthday', value='\n'.join(map(lambda iterr: iterr[1], upcoming_bdays))) \
-                      .add_field(name='Upcoming In', value='\n'.join(map(lambda iterr: iterr[2], upcoming_bdays)))
+        upcoming_embed.add_field(
+            name='Name',
+            value='\n'.join(map(lambda iterr: iterr[0], upcoming_bdays))
+        )
+        upcoming_embed.add_field(
+            name='Birthday',
+            value='\n'.join(map(lambda iterr: iterr[1], upcoming_bdays))
+        )
+        upcoming_embed.add_field(
+            name='Upcoming In',
+            value='\n'.join(map(lambda iterr: iterr[2], upcoming_bdays))
+        )
 
-        # Commented out line below is to mention the user when they use upcoming
-        # await ctx.send(f"{ctx.author.mention}", embed=upcoming_embed)
-        await ctx.send(embed=upcoming_embed)
-        logger.info(f"{ctx.author} succesfully used the upcoming command!")
+        await ctx.respond(embed=upcoming_embed)
+        logger.info(f"{ctx.author} successfully used the upcoming command!")
 
-    @upcoming.error
-    async def handle_upcoming_error(self, ctx, error):
-        if isinstance(error, commands.BadArgument):
-            await ctx.send(f"{ctx.author.mention} **{' '.join(ctx.message.content.split()[1:])}** is not a valid integer.")
-            logger.debug(f"{ctx.author} tried to use an non-integer value.")
-        elif isinstance(error, commands.NoPrivateMessage):
-            logger.debug(f"{ctx.author} tried to use the upcoming command in a DM.")
-            await ctx.send(f"The `{ctx.prefix}upcoming` command is currently unavailable in DMs. Please try using it in a server with me.")
-        else:
-            logger.error(f'The following error occured with the upcoming command: {error!r}')
-            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}upcoming` command.")
-            await ping_devs(error, self.upcoming, ctx)
-
-    @commands.command(aliases=['setann'])
+    @set_commands.command(
+        name='announcements',
+        description="Use this command to set the announcements channel in this server.",
+        options=[
+            Option(
+                discord.TextChannel,
+                name='channel',
+                description=(
+                    "Select channel to be the announcements channel, "
+                    "if there's no input the current channel is selected."
+                ),
+                required=False
+            )
+        ]
+    )
     @commands.has_guild_permissions(administrator=True)
-    async def setannouncements(self, ctx, channel=commands.TextChannelConverter()):
-        if not isinstance(channel, discord.TextChannel):
+    async def set_announcements(
+        self,
+        ctx: discord.ApplicationContext,
+        channel: discord.TextChannel = None
+    ):
+        if channel is None:
             channel = ctx.channel
-        async with sessionmaker.begin() as session:
-            guild = await session.get(Guild, ctx.guild.id)
-            guild.announcements_id = channel.id
-        await ctx.send(f"The new announcements channel is now {channel.mention}!")
-
-    @setannouncements.error
-    async def handle_setannouncements_error(self, ctx, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send((
-                f"{ctx.author.mention} You do not have the required permissions to set the announcements channel. "
-                "You must have a role that has the 'admin' permission."
-            ))
-            logger.debug(f"{ctx.author} failed to set the announcements channel due to the lack of appropriate permissions.")
-        elif isinstance(error, commands.NoPrivateMessage):
-            await ctx.send(f"The `{ctx.prefix}setannouncements` command is unavailable in DMs. Please try using it in a server with me.")
-            logger.debug(f"{ctx.author} tried to used the setannouncements command in a DM.")
-        elif isinstance(error, commands.ChannelNotFound):
-            await ctx.send(f"{ctx.author.mention} '{ctx.message.content.split()[1:]}' is not a valid TextChannel")
+        if permissions(channel, channel.guild.me, 'send_messages'):
+            async with sessionmaker.begin() as session:
+                guild = await session.get(Guild, ctx.guild.id)
+                guild.announcements_id = channel.id
+            await ctx.respond(f"The new announcements channel is now {channel.mention}!")
         else:
-            logger.error(f'The following error occured with the setannouncements command: {error!r}')
-            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}setannouncements` command!")
-            await ping_devs(error, self.setannouncements, ctx=ctx)
+            await ctx.respond(
+                f"I cannot send messages in {channel.mention}. Please give me permission "
+                f"to send messages in {channel.mention} before setting it as the announcements "
+                "channel."
+            )
 
-    @commands.command(aliases=['getann'])
+    @get_commands.command(
+        name='announcements',
+        description="Use this command to get the current announcements channel."
+    )
     @commands.guild_only()
-    async def getannouncements(self, ctx, *args):
+    async def get_announcements(self, ctx: discord.ApplicationContext):
         async with sessionmaker() as session:
             guild = await session.get(Guild, ctx.guild.id)
         if guild.announcements_id is None:
-            await ctx.send((
-                f"{ctx.author.mention} There is not currently an announcements channel set. "
-                f"Use `{ctx.prefix}setann` to set an announcements channel."
-            ))
+            await ctx.respond(
+                f"There is not currently an announcements channel set. "
+                f"Use `/set announcements` to set an announcements channel."
+            )
         else:
-            await ctx.send((
-                f"{ctx.author.mention} The current announcements channel is {guild.mention_ann}. "
-                f"If you like to change the announcements channel use `{ctx.prefix}setann`."
-            ))
+            await ctx.respond(
+                f"The current announcements channel is {guild.mention_ann}. "
+                f"If you like to change the announcements channel use `/set announcements`."
+            )
 
-    @getannouncements.error
-    async def handle_getannouncements_error(self, ctx, error):
-        if isinstance(error, commands.NoPrivateMessage):
-            await ctx.send(f"The `{ctx.prefix}getannouncements` command is unavailable in DMs. Please try using it in server with me.")
-            logger.debug(f"{ctx.author} tried to use the getannouncements command in a DM.")
-        else:
-            logger.error(f'The following error occured with the getannouncements command: {error!r}')
-            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}getannouncements` command!")
-            await ping_devs(error, self.getannouncements, ctx=ctx)
-
-    @commands.command()
-    @commands.guild_only()
-    async def wishes(self, ctx, person=commands.MemberConverter()):
-        if not isinstance(person, discord.Member):
-            person = ctx.author
+    @get_commands.command(
+        description="Use this command to get the wishes of a certain user.",
+        options=[
+            Option(
+                discord.Member,
+                name='user',
+                description="The user to get the wishes of.",
+                required=True
+            )
+        ]
+    )
+    async def wishes(self, ctx: discord.ApplicationContext, person: discord.Member):
         session = sessionmaker()
         discord_user = await session.get(DiscordUser, person.id)
-        embed = discord.Embed().set_author(name=f"{person}'s Wishes Received!", icon_url=person.avatar_url)
+        embed = discord.Embed().set_author(
+            name=f"{person}'s Wishes Received!",
+            icon_url=person.display_avatar.url
+        )
         if discord_user:
             wishes_received = discord_user.student_data.wishes_received
-            embed.description = (f"{person.mention} currently has {len(wishes_received)} wish"
-                                 f"{'es' if len(wishes_received) != 1 else ''}{'.' if len(wishes_received) < 5 else '!'}")
+            embed.description = (
+                f"{person.mention} currently has {len(wishes_received)} wish"
+                f"{'es' if len(wishes_received) != 1 else ''}"
+                f"{'.' if len(wishes_received) < 5 else '!'}"
+            )
             if wishes_received:
                 wishers_dict = {}
                 more_than_one = False
@@ -354,7 +424,15 @@ class CommandsCog(commands.Cog):
                     else:
                         more_than_one = True
                         wishers_dict[wish.discord_user].append(wish)
-                embed.add_field(name='Wishers', value='\n'.join(map(lambda discord_user: discord_user.mention, wishers_dict)))
+                embed.add_field(
+                    name='Wishers',
+                    value='\n'.join(
+                        map(
+                            lambda discord_user: discord_user.mention,
+                            wishers_dict
+                        )
+                    )
+                )
                 embed.add_field(
                     name=f"Year{'s' if more_than_one else ''}",
                     value='\n'.join(
@@ -374,18 +452,35 @@ class CommandsCog(commands.Cog):
         else:
             embed.description = f"{person.mention} currently has 0 wishes."
             embed.set_footer(text=f"{person} is not currently in the database 🙁")
-        await ctx.send(embed=embed)
+        await ctx.respond(embed=embed)
         await session.close()
 
-    @wishes.error
-    async def handle_wishes_error(self, ctx, error):
-        if isinstance(error, commands.NoPrivateMessage):
-            await ctx.send(f"The `{ctx.prefix}wishes` command is unavailable in DMs. Please try using it in server with me.")
-            logger.debug(f"{ctx.author} tried to use the wishes command in a DM.")
-        elif isinstance(error, commands.MemberNotFound):
-            await ctx.send(f"'{ctx.message.content.split()[1:]}' is not a valid user.")
-            logger.debug(f"{ctx.author} inputted an invalid user.")
+    @commands.Cog.listener()
+    async def on_application_command_error(
+        self,
+        ctx: discord.ApplicationContext,
+        error: discord.DiscordException
+    ):
+        if isinstance(error, commands.MissingPermissions):
+            logger.info(
+                f"{ctx.author} tried to use the /{ctx.command.qualified_name} "
+                "even though they don't have permission to do so."
+            )
+            await ctx.respond("You do not have permission to use this command.")
+        elif isinstance(error, commands.NoPrivateMessage):
+            logger.info(
+                f"{ctx.author} tried to use the /{ctx.command.qualified_name} in a DM."
+            )
+            await ctx.respond("This command is not available in DM messages.")
         else:
-            logger.error(f'The following error occured with the wishes command: {error!r}')
-            await ctx.send(f"{ctx.author.mention} Congrats! You managed to break the `{ctx.prefix}wishes` command!")
-            await ping_devs(error, self.wishes, ctx=ctx)
+            logger.error(
+                f'The following error occured with the /{ctx.command.qualified_name} command:',
+                exc_info=error
+            )
+            await ctx.respond(
+                f"{maybe_mention(ctx)}Congrats, you managed to break the "
+                f"`/{ctx.command.qualified_name}` command.",
+                ephemeral=True
+            )
+
+            await ping_devs(error, ctx.command, ctx=ctx)
