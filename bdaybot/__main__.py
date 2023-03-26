@@ -11,7 +11,7 @@ load_dotenv(override=True)
 
 the_bot = Bdaybot(
     # debug_guilds=[713095060652163113],
-    debug_guilds=[810742455745773579],
+    debug_guilds=[810742455745773579] if config.testing else None,
     intents=discord.Intents(guilds=True, members=True)
 )
 logger_names = [
