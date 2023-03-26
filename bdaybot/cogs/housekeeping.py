@@ -9,14 +9,6 @@ from ..utils import find_ann_channel, permissions
 
 logger = logging.getLogger(__name__)
 
-@property
-def mention(self):
-    # NOTE: Keep an eye on Discord mobile because they might change it
-    # so it does not always say '#invalid-channel' and actually shows the channel
-    return f'**#{self}**' if self.guild.owner and self.guild.owner.is_on_mobile() \
-           else f'<#{self.id}>'
-
-discord.TextChannel.mention = mention
 
 class CosmicHouseKeepingCog(commands.Cog):
     def __init__(self, bot):
