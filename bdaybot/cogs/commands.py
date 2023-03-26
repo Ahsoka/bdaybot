@@ -41,6 +41,7 @@ class CommandsCog(commands.Cog):
             )
         ]
     )
+    @commands.guild_only()
     async def wish(self, ctx: discord.ApplicationContext, name: str = None):
         # TODO: Make it so you cannot wish yourself a happy birthday
         wish_embed = discord.Embed()
