@@ -1,7 +1,6 @@
 import discord
 import logging
 
-# from .help import HelpCommand
 from .utils import EmojiURLs
 from .tables import Base, Guild
 from . import engine, config, sessionmaker
@@ -12,7 +11,6 @@ logger = logging.getLogger(__name__)
 class Bdaybot(discord.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.help_command = HelpCommand()
 
         self.housekeeping_cog = CosmicHouseKeepingCog(self)
         self.automation_cog = AutomatedTasksCog(self)
