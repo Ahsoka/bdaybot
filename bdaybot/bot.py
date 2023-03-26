@@ -5,7 +5,7 @@ import logging
 from .utils import EmojiURLs
 from .tables import Base, Guild
 from . import engine, config, sessionmaker
-from .cogs import AutomatedTasksCog, CommandsCog, CosmicHouseKeepingCog, EasterEggsCog
+from .cogs import AutomatedTasksCog, CommandsCog, CosmicHouseKeepingCog, EasterEggsCog, HelpCommandCog
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ class Bdaybot(discord.Bot):
         self.automation_cog = AutomatedTasksCog(self)
         self.commands_cog = CommandsCog()
         self.easter_egg_cog = EasterEggsCog()
+        self.help_cog = HelpCommandCog(self)
 
         if kwargs.get('housekeeping', True):
             self.add_cog(self.housekeeping_cog)
@@ -27,6 +28,8 @@ class Bdaybot(discord.Bot):
             self.add_cog(self.commands_cog)
         if kwargs.get('easter_egg', True):
             self.add_cog(self.easter_egg_cog)
+        if kwargs.get('help', True):
+            self.add_cog(self.help_cog)
 
         EmojiURLs.bot = self
 
