@@ -173,7 +173,7 @@ class CommandsCog(commands.Cog):
                 await ctx.respond(
                     "Hey there I noticed that you are not in the "
                     "bdaybot's birthday database.\n"
-                    "Add yourself to database here: ⬇\n"
+                    "Add yourself to the database here: ⬇\n"
                     "**http://drneato.com/Bday/Bday2.php**"
                 )
         else:
