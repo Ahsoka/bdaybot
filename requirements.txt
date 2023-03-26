@@ -2,7 +2,7 @@ click
 pandas
 arsenic
 python-dotenv
-py-cord==2.0.0b5
+py-cord>=2.0.1
 aiohttp
 SQLAlchemy>=1.4.3
 asyncpg
