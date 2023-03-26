@@ -459,15 +459,15 @@ class CommandsCog(commands.Cog):
     async def on_application_command_error(
         self,
         ctx: discord.ApplicationContext,
-        error: discord.ApplicationCommandInvokeError
+        error: discord.DiscordException
     ):
-        if isinstance(error.original, commands.MissingPermissions):
+        if isinstance(error, commands.MissingPermissions):
             logger.info(
                 f"{ctx.author} tried to use the /{ctx.command.qualified_name} "
                 "even though they don't have permission to do so."
             )
             await ctx.respond("You do not have permission to use this command.")
-        elif isinstance(error.original, commands.NoPrivateMessage):
+        elif isinstance(error, commands.NoPrivateMessage):
             logger.info(
                 f"{ctx.author} tried to use the /{ctx.command.qualified_name} in a DM."
             )
