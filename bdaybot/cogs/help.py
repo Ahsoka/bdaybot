@@ -1,5 +1,4 @@
 from discord.commands import Option
-from .commands import CommandsCog
 from discord.ext import commands
 from discord import SlashCommand
 from ..utils import EmojiURLs
