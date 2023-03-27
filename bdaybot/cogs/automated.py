@@ -270,8 +270,8 @@ class AutomatedTasksCog(commands.Cog):
 
     @tasks.loop(hours=24)
     async def update_cycler(self):
-        self.new_day = True
         await self.update_cyclers()
+        self.new_day = True
         logger.info(f"The 'update_cycler()' coroutine was run.")
         # By default next_iteration returns the time in the 'UTC' timezone which caused much confusion
         # In the code below it is now converted to the local time zone automatically
