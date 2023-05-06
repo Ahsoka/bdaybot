@@ -44,7 +44,7 @@ class HelpCommandCog(commands.Cog):
         elif name == 'help':
             logger.info(f"{ctx.author} discovered the Mental Illness easter egg!")
             await ctx.respond(
-                "It sounds like your having a personal problem there, please seek a therapist for real help."
+                "It sounds like you're having a personal problem there, please seek a therapist for real help."
             )
         else:
             logger.info(f"{ctx.author} accessed the help command for the {name} command.")
